@@ -1,0 +1,6 @@
+{
+  "jupyter-config-data": {
+    "contentsStorageDrivers": ["memoryDriver"],
+    "contentsStorageName": "lini-jupyterlite"
+  }
+}
