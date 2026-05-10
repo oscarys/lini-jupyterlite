@@ -482,7 +482,7 @@ tr:nth-child(even) td { background: var(--bg); }
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Fundamentos del Aprendizaje Estadístico</span>
-      <span class="slide-counter">1 / 7</span>
+      <span class="slide-counter">1 / 8</span>
     </div>
     <div class="cover-body">
       <div class="cover-tag">Sesión 01 · Introducción</div>
@@ -507,7 +507,7 @@ tr:nth-child(even) td { background: var(--bg); }
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Variables Aleatorias y Distribuciones</span>
-      <span class="slide-counter">2 / 7</span>
+      <span class="slide-counter">2 / 8</span>
     </div>
     <div class="slide-body">
       <h2 class="slide-title">Variables Aleatorias, <span>PDF y CDF</span></h2>
@@ -551,7 +551,7 @@ F    = dist.<span class="fn">cdf</span>(x)  <span class="cm"># acumulada</span><
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Estimación de Máxima Verosimilitud</span>
-      <span class="slide-counter">3 / 7</span>
+      <span class="slide-counter">3 / 8</span>
     </div>
     <div class="slide-body">
       <h2 class="slide-title">Estimación de <span>Máxima Verosimilitud</span></h2>
@@ -599,7 +599,7 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Probabilidad Total y Clasificación de Bayes</span>
-      <span class="slide-counter">4 / 7</span>
+      <span class="slide-counter">4 / 8</span>
     </div>
     <div class="slide-body">
       <h2 class="slide-title">Ley de Probabilidad Total <span>y Doble Frontera</span></h2>
@@ -641,14 +641,75 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
     </div>
   </div>
 
+
   <!-- ══════════════════════════════════════════════════
-       SLIDE 5 — CUADERNO JUPYTER
+       SLIDE 5 — REGLAS DE LA SUMA Y DEL PRODUCTO (BISHOP FIG. 1.11)
   ══════════════════════════════════════════════════ -->
   <div class="slide" id="slide-5">
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Reglas de la Suma y del Producto</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Probabilidad Discreta — <span>Estilo Bishop Fig. 1.11</span></h2>
+      <p style="font-size:13px;color:var(--slate);margin-bottom:14px">
+        Antes de las densidades continuas, Bishop ancla la intuición en dos variables discretas
+        dentro de una cuadrícula. Las tres reglas fundamentales emergen de esa cuadrícula de forma visual.
+      </p>
+      <div class="two-col wide">
+        <div>
+          <!-- Joint grid -->
+          <h3 class="section">Distribución conjunta p(X, Y)</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">
+            X = glucosa en ayunas (mg/dL) &nbsp;·&nbsp; Y = diagnóstico clínico
+          </p>
+          <div id="bishop-grid" style="overflow-x:auto"></div>
+          <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11.5px;color:var(--slate)">
+              <strong style="color:var(--teal)">Regla de la suma:</strong>
+              p(X) = Σ<sub>Y</sub> p(X,Y) &nbsp;↓&nbsp; (sumar filas de cada columna)
+            </span>
+            <span style="font-size:11.5px;color:var(--slate)">
+              <strong style="color:var(--teal)">Regla del producto:</strong>
+              p(X,Y) = p(Y|X)·p(X)
+            </span>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Condicional p(Y | X) — columna normalizada</h3>
+          <div id="bishop-cond" style="overflow-x:auto"></div>
+          <div class="card teal" style="margin-top:12px">
+            <h3 class="section">Regla de Bayes</h3>
+            <code class="math" style="font-size:11.5px">p(Y|X) = p(X|Y)·p(Y) / p(X)</code>
+            <p style="font-size:12px;margin-top:6px">
+              Se obtiene aplicando la regla del producto dos veces.<br>
+              <strong>p(Y)</strong> = prior &nbsp;·&nbsp;
+              <strong>p(X|Y)</strong> = verosimilitud &nbsp;·&nbsp;
+              <strong>p(X)</strong> = evidencia.
+            </p>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Conexión con el cuaderno</h3>
+            <p style="font-size:12px">
+              La Parte 3b del cuaderno reproduce esta figura con código ejecutable
+              y verifica la regla de Bayes numéricamente. La diferencia máxima entre
+              el cálculo directo y la regla de Bayes debe ser &lt; 10⁻¹⁵ (error de máquina).
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       SLIDE 5 — CUADERNO JUPYTER
+  ══════════════════════════════════════════════════ -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Práctica Interactiva</span>
-      <span class="slide-counter">5 / 7</span>
+      <span class="slide-counter">6 / 8</span>
     </div>
     <div class="slide-body" style="padding-bottom:16px">
       <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
@@ -675,11 +736,11 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
   <!-- ══════════════════════════════════════════════════
        SLIDE 6 — AUTOEVALUACIÓN
   ══════════════════════════════════════════════════ -->
-  <div class="slide" id="slide-6">
+  <div class="slide" id="slide-7">
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Autoevaluación Formativa</span>
-      <span class="slide-counter">6 / 7</span>
+      <span class="slide-counter">7 / 8</span>
     </div>
     <div class="slide-body">
       <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
@@ -763,11 +824,11 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
   <!-- ══════════════════════════════════════════════════
        SLIDE 7 — RESUMEN
   ══════════════════════════════════════════════════ -->
-  <div class="slide" id="slide-7">
+  <div class="slide" id="slide-8">
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
       <span class="slide-label">Resumen y Lecturas</span>
-      <span class="slide-counter">7 / 7</span>
+      <span class="slide-counter">8 / 8</span>
     </div>
     <div class="slide-body">
       <h2 class="slide-title">Resumen de la <span>Sesión 01</span></h2>
@@ -819,7 +880,7 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
 </div><!-- /shell -->
 
 <script>
-const N_SLIDES = 7;
+const N_SLIDES = 8;
 let current = 1;
 
 /* ── Dots ── */
@@ -862,6 +923,77 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  go(1);
   if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    go(-1);
 });
+
+
+/* ── Bishop grid ── */
+(function() {
+  const glucosa = ['<100', '100–125', '126–160', '>160'];
+  const dx      = ['Normal', 'Prediabetes', 'Diabetes'];
+  const colors  = ['#3B82F6', '#F59E0B', '#EF4444'];
+
+  const pJoint = [
+    [0.38, 0.10, 0.02, 0.00],
+    [0.08, 0.14, 0.06, 0.01],
+    [0.01, 0.03, 0.10, 0.07],
+  ];
+
+  const pX = glucosa.map((_, j) => pJoint.reduce((s, row) => s + row[j], 0));
+  const pY = dx.map((_, i) => pJoint[i].reduce((s, v) => s + v, 0));
+
+  // Joint table
+  let html = '<table style="font-size:12px;border-collapse:collapse;width:100%">';
+  html += '<tr><th style="background:#1B3A6B;color:white;padding:5px 8px">Y \ X</th>';
+  glucosa.forEach(g => {
+    html += `<th style="background:#1B3A6B;color:white;padding:5px 6px;font-size:11px">${g}</th>`;
+  });
+  html += '<th style="background:#1A7A8A;color:white;padding:5px 6px">p(Y)</th></tr>';
+
+  pJoint.forEach((row, i) => {
+    html += `<tr>`;
+    html += `<td style="padding:5px 8px;font-weight:600;color:${colors[i]}">${dx[i]}</td>`;
+    row.forEach(v => {
+      const bg = v > 0.18 ? '#1B3A6B' : v > 0.08 ? '#BFDBFE' : '#EFF6FF';
+      const fc = v > 0.18 ? 'white' : '#1B3A6B';
+      html += `<td style="padding:5px 6px;text-align:center;background:${bg};color:${fc};font-weight:bold;border:2px solid white">${v.toFixed(2)}</td>`;
+    });
+    html += `<td style="padding:5px 6px;text-align:center;background:#E8F4F6;color:#1A7A8A;font-weight:bold">${pY[i].toFixed(2)}</td>`;
+    html += '</tr>';
+  });
+
+  // p(X) row
+  html += '<tr><td style="padding:5px 8px;background:#1A7A8A;color:white;font-weight:600">p(X)</td>';
+  pX.forEach(v => {
+    html += `<td style="padding:5px 6px;text-align:center;background:#E8F4F6;color:#1A7A8A;font-weight:bold">${v.toFixed(2)}</td>`;
+  });
+  html += '<td style="padding:5px 6px;text-align:center;background:#1B3A6B;color:white;font-weight:bold">1.00</td>';
+  html += '</tr></table>';
+  document.getElementById('bishop-grid').innerHTML = html;
+
+  // Conditional p(Y|X) table
+  const pYgX = pJoint.map((row, i) => row.map((v, j) => v / pX[j]));
+  let html2 = '<table style="font-size:12px;border-collapse:collapse;width:100%">';
+  html2 += '<tr><th style="background:#1B3A6B;color:white;padding:5px 8px">Y \ X</th>';
+  glucosa.forEach(g => {
+    html2 += `<th style="background:#1B3A6B;color:white;padding:5px 6px;font-size:11px">${g}</th>`;
+  });
+  html2 += '</tr>';
+  pYgX.forEach((row, i) => {
+    html2 += `<tr><td style="padding:5px 8px;font-weight:600;color:${colors[i]}">${dx[i]}</td>`;
+    row.forEach(v => {
+      const bg = v > 0.55 ? colors[i] : v > 0.25 ? colors[i] + '44' : '#F7F9FC';
+      const fc = v > 0.55 ? 'white' : '#1B3A6B';
+      html2 += `<td style="padding:5px 6px;text-align:center;background:${bg};color:${fc};font-weight:bold;border:2px solid white">${v.toFixed(2)}</td>`;
+    });
+    html2 += '</tr>';
+  });
+  // Sum row — should all be 1.00
+  html2 += '<tr><td style="padding:5px 8px;background:#1A7A8A;color:white;font-weight:600">Σ</td>';
+  pX.forEach(() => {
+    html2 += `<td style="padding:5px 6px;text-align:center;background:#E8F4F6;color:#1A7A8A;font-weight:bold">1.00</td>`;
+  });
+  html2 += '</tr></table>';
+  document.getElementById('bishop-cond').innerHTML = html2;
+})();
 
 /* ── Quiz ── */
 const feedbacks = {
