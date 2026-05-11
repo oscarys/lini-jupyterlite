@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 03 — Métricas de Clasificación y AUROC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:      #1B3A6B;
+  --teal:      #1A7A8A;
+  --teal-lt:   #E8F4F6;
+  --amber:     #D97706;
+  --amber-lt:  #FEF3C7;
+  --slate:     #4A5568;
+  --muted:     #8896A8;
+  --bg:        #F7F9FC;
+  --white:     #FFFFFF;
+  --border:    #CBD5E0;
+  --mod-I:     #3B82F6;
+  --correct:   #059669;
+  --wrong:     #DC2626;
+  --radius:    10px;
+  --shadow-lg: 0 8px 40px rgba(27,58,107,0.16);
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --slide-w: 860px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--navy); font-family: var(--font-body); }
+
+.shell { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; gap: 16px; }
+
+.slide { display: none; width: var(--slide-w); max-width: 100%; background: var(--white); border-radius: 16px; box-shadow: var(--shadow-lg); overflow: hidden; animation: slideIn .35s cubic-bezier(.22,.68,0,1.2) both; }
+.slide.active { display: flex; flex-direction: column; }
+@keyframes slideIn { from { opacity:0; transform:translateY(18px) scale(.98); } to { opacity:1; transform:none; } }
+
+.slide-header { background: var(--navy); padding: 18px 28px 16px; display: flex; align-items: center; gap: 12px; }
+.slide-badge { background: var(--mod-I); color: white; font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
+.slide-label { color: rgba(255,255,255,.7); font-size: 12px; flex: 1; }
+.slide-counter { color: rgba(255,255,255,.4); font-family: var(--font-mono); font-size: 11px; }
+.slide-body { padding: 28px 32px 24px; flex: 1; overflow-y: auto; }
+
+.cover-body { background: linear-gradient(145deg, #1B3A6B 0%, #0F2347 60%, #0A1A30 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 44px 40px; min-height: 440px; position: relative; overflow: hidden; }
+.cover-body::before { content: ''; position: absolute; width: 420px; height: 420px; border-radius: 50%; background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 70%); top: -100px; right: -100px; }
+.cover-tag { background: rgba(59,130,246,.2); border: 1px solid rgba(59,130,246,.4); color: #93C5FD; font-size: 11px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; padding: 4px 14px; border-radius: 20px; margin-bottom: 20px; position: relative; z-index: 1; }
+.cover-title { font-family: var(--font-display); font-size: 36px; line-height: 1.15; color: white; margin-bottom: 10px; position: relative; z-index: 1; }
+.cover-title em { color: #93C5FD; font-style: normal; }
+.cover-subtitle { font-size: 15px; color: rgba(255,255,255,.55); margin-bottom: 28px; position: relative; z-index: 1; }
+.cover-objectives { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: var(--radius); padding: 18px 22px; text-align: left; max-width: 600px; width: 100%; position: relative; z-index: 1; }
+.cover-objectives h3 { color: #93C5FD; font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 10px; }
+.cover-objectives li { color: rgba(255,255,255,.75); font-size: 13px; line-height: 1.6; list-style: none; padding-left: 16px; position: relative; margin-bottom: 4px; }
+.cover-objectives li::before { content: '→'; position: absolute; left: 0; color: var(--teal); font-size: 12px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.two-col.wide { grid-template-columns: 3fr 2fr; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+h2.slide-title { font-family: var(--font-display); font-size: 24px; color: var(--navy); margin-bottom: 16px; line-height: 1.2; }
+h2.slide-title span { color: var(--teal); }
+h3.section { font-size: 13px; font-weight: 600; color: var(--teal); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+p, li { font-size: 13.5px; color: var(--slate); line-height: 1.65; }
+ul { padding-left: 18px; }
+ul li { margin-bottom: 4px; }
+
+.math { font-family: var(--font-mono); background: #F0F7FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 10px 14px; font-size: 12.5px; color: var(--navy); margin: 8px 0; display: block; line-height: 1.7; }
+
+.card { background: var(--bg); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+.card.blue  { background: #EFF6FF; border-left: 3px solid var(--mod-I); }
+.card.teal  { background: var(--teal-lt); border-left: 3px solid var(--teal); }
+.card.amber { background: var(--amber-lt); border-left: 3px solid var(--amber); }
+.card.red   { background: #FEF2F2; border-left: 3px solid #EF4444; }
+.card.green { background: #F0FDF4; border-left: 3px solid var(--correct); }
+.card.navy  { background: #1B3A6B; }
+.card.navy p, .card.navy li, .card.navy h3 { color: rgba(255,255,255,.85); }
+.card.navy .math { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.2); color: white; }
+
+pre { background: #0F172A; color: #E2E8F0; border-radius: 8px; padding: 12px 14px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.7; overflow-x: auto; margin: 8px 0; }
+pre .kw { color: #7DD3FC; } pre .fn { color: #86EFAC; } pre .cm { color: #6B7280; } pre .nu { color: #FDE68A; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 8px 0; }
+th { background: var(--navy); color: white; padding: 7px 10px; text-align: left; font-weight: 500; }
+td { padding: 6px 10px; color: var(--slate); border-bottom: 1px solid var(--border); }
+tr:nth-child(even) td { background: var(--bg); }
+
+/* ROC canvas */
+#roc-canvas-wrap { position: relative; width: 100%; }
+canvas#roc-canvas { display: block; width: 100%; }
+
+/* Confusion matrix */
+.cm-grid { display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr 1fr; gap: 3px; max-width: 340px; margin: 8px auto; }
+.cm-cell { display: flex; align-items: center; justify-content: center; padding: 10px 8px; border-radius: 6px; font-size: 12.5px; text-align: center; line-height: 1.3; }
+.cm-header { font-weight: 600; color: var(--navy); background: transparent; font-size: 11px; }
+.cm-vp { background: #DCFCE7; color: #166534; font-weight: 700; }
+.cm-fn { background: #FEF2F2; color: #991B1B; font-weight: 700; }
+.cm-fp { background: #FEF2F2; color: #991B1B; font-weight: 700; }
+.cm-vn { background: #DCFCE7; color: #166534; font-weight: 700; }
+
+.nb-wrap { display: flex; flex-direction: column; gap: 10px; }
+.nb-label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--slate); }
+.nb-label::before { content: '⚡'; font-size: 15px; }
+.nb-frame { border-radius: 10px; overflow: hidden; border: 2px solid var(--border); }
+.nb-frame iframe { display: block; width: 100%; height: 380px; border: none; }
+.nb-fallback { font-size: 11.5px; color: var(--muted); text-align: center; }
+.nb-fallback a { color: var(--teal); }
+
+.quiz-q { margin-bottom: 16px; }
+.quiz-q-text { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 8px; line-height: 1.5; }
+.quiz-q-num { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.quiz-options { display: flex; flex-direction: column; gap: 6px; }
+.quiz-opt { padding: 9px 14px; border-radius: 8px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 13px; color: var(--slate); transition: all .18s ease; text-align: left; }
+.quiz-opt:hover:not(.answered) { border-color: var(--teal); background: var(--teal-lt); }
+.quiz-opt.correct { border-color: var(--correct); background: #ECFDF5; color: #065F46; }
+.quiz-opt.wrong   { border-color: var(--wrong);   background: #FEF2F2; color: #991B1B; }
+.quiz-opt.reveal  { border-color: var(--correct); background: #ECFDF5; color: #065F46; opacity: .7; }
+.quiz-feedback { margin-top: 6px; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; display: none; }
+.quiz-feedback.show { display: block; }
+.quiz-feedback.ok  { background: #ECFDF5; color: #065F46; }
+.quiz-feedback.bad { background: #FEF2F2; color: #991B1B; }
+.quiz-score-bar { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 16px; background: var(--bg); border-radius: var(--radius); font-size: 13px; color: var(--slate); }
+.score-pill { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--navy); background: white; border: 1.5px solid var(--border); padding: 3px 12px; border-radius: 20px; }
+.quiz-reset { margin-left: auto; font-size: 12px; color: var(--teal); cursor: pointer; text-decoration: underline; background: none; border: none; }
+
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.summary-block { border-radius: var(--radius); padding: 14px 16px; }
+.summary-block h4 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+.next-session { background: var(--amber-lt); border: 1px solid #FCD34D; border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: #78350F; }
+
+.nav-bar { display: flex; align-items: center; gap: 10px; width: var(--slide-w); max-width: 100%; }
+.nav-btn { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: white; padding: 8px 22px; border-radius: 8px; font-size: 13px; font-family: var(--font-body); cursor: pointer; transition: all .18s ease; }
+.nav-btn:hover:not(:disabled) { background: rgba(255,255,255,.22); }
+.nav-btn:disabled { opacity: .3; cursor: default; }
+.nav-btn.primary { background: var(--mod-I); border-color: var(--mod-I); margin-left: auto; }
+.nav-btn.primary:hover { background: #2563EB; }
+.progress-dots { flex: 1; display: flex; justify-content: center; gap: 6px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); cursor: pointer; transition: all .18s ease; }
+.dot.active  { background: white; transform: scale(1.3); }
+.dot.visited { background: var(--mod-I); }
+
+.cite { margin-top: 8px; padding: 7px 12px; background: var(--bg); border-radius: 6px; border-left: 3px solid var(--muted); }
+.cite p { font-size: 11px; color: var(--muted); line-height: 1.5; margin: 0; }
+.cite a { color: var(--teal); }
+
+@media (max-width: 900px) { :root { --slide-w: 100%; } .two-col, .two-col.wide, .three-col, .summary-grid { grid-template-columns: 1fr; } .cover-title { font-size: 28px; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SLIDE 1 — PORTADA -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Fundamentos del Aprendizaje Estadístico</span>
+      <span class="slide-counter">1 / 8</span>
+    </div>
+    <div class="cover-body">
+      <div class="cover-tag">Sesión 03 · Evaluación de Clasificadores</div>
+      <h1 class="cover-title">Métricas de Clasificación<br>y <em>AUROC</em></h1>
+      <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+      <div class="cover-objectives">
+        <h3>Objetivos de aprendizaje</h3>
+        <ul>
+          <li>Derivar exactitud, precisión, sensibilidad, F1 y exactitud balanceada desde la matriz de confusión</li>
+          <li>Construir la curva ROC paso a paso y calcular el AUROC</li>
+          <li>Seleccionar el umbral óptimo según Youden y costos asimétricos</li>
+          <li>Construir la curva PR y explicar cuándo preferir AUPRC sobre AUROC</li>
+          <li>Calcular IC bootstrap para el AUROC y aplicar la prueba de DeLong</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — MATRIZ DE CONFUSIÓN -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Matriz de Confusión y Métricas</span>
+      <span class="slide-counter">2 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">La Matriz de Confusión — <span>Fuente de Todas las Métricas</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Cuatro conteos fundamentales</h3>
+          <div class="cm-grid">
+            <div class="cm-cell cm-header"></div>
+            <div class="cm-cell cm-header">Predicho +</div>
+            <div class="cm-cell cm-header">Predicho −</div>
+            <div class="cm-cell cm-header">Real +</div>
+            <div class="cm-cell cm-vp">VP<br><small>Verdadero positivo</small></div>
+            <div class="cm-cell cm-fn">FN<br><small>Falso negativo</small></div>
+            <div class="cm-cell cm-header">Real −</div>
+            <div class="cm-cell cm-fp">FP<br><small>Falso positivo</small></div>
+            <div class="cm-cell cm-vn">VN<br><small>Verdadero negativo</small></div>
+          </div>
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Fuente del ejemplo:</strong> Attia, Z.I. et al. (2019). Screening for cardiac contractile dysfunction using an AI-enabled ECG. <em>Nature Medicine</em>, 25, 70–74. <a href="https://doi.org/10.1038/s41591-018-0240-2" target="_blank">doi:10.1038/s41591-018-0240-2</a></p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Métricas derivadas</h3>
+          <table>
+            <tr><th>Métrica</th><th>Fórmula</th></tr>
+            <tr><td><strong>Sensibilidad</strong></td><td>VP / (VP+FN)</td></tr>
+            <tr><td><strong>Especificidad</strong></td><td>VN / (VN+FP)</td></tr>
+            <tr><td><strong>Precisión</strong></td><td>VP / (VP+FP)</td></tr>
+            <tr><td><strong>Exactitud</strong></td><td>(VP+VN) / N</td></tr>
+            <tr><td><strong>F1</strong></td><td>2·Prec·Rec / (Prec+Rec)</td></tr>
+            <tr><td><strong>Bal. accuracy</strong></td><td>(Sens+Espec) / 2</td></tr>
+          </table>
+          <div class="card red" style="margin-top:10px">
+            <h3 class="section">⚠ La exactitud miente con desbalance</h3>
+            <p style="font-size:13px">Un clasificador que siempre predice "No FA" con 18% de prevalencia tiene exactitud del 82% — pero sensibilidad de 0%.</p>
+            <p style="font-size:13px;margin-top:4px">→ Con desbalance, usar <strong>F1</strong> o <strong>exactitud balanceada</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — CURVA ROC Y AUROC -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Curva ROC y AUROC</span>
+      <span class="slide-counter">3 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">La Curva ROC <span>y el AUROC</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Construcción paso a paso</h3>
+          <p style="font-size:13px">Para cada umbral posible, calcular (FPR, TPR) y trazar el punto. La curva va de (0,0) a (1,1) conforme el umbral baja.</p>
+          <div id="roc-canvas-wrap">
+            <canvas id="roc-canvas" width="340" height="280"></canvas>
+          </div>
+          <div class="cite">
+            <p><strong>Referencia:</strong> Fawcett, T. (2006). An introduction to ROC analysis. <em>Pattern Recognition Letters</em>, 27(8), 861–874. <a href="https://doi.org/10.1016/j.patrec.2005.10.010" target="_blank">doi:10.1016/j.patrec.2005.10.010</a></p>
+          </div>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Interpretación probabilística</h3>
+            <code class="math">AUROC = P(score₊ > score₋)</code>
+            <p style="font-size:13px;margin-top:6px">Probabilidad de que un ejemplo positivo elegido al azar tenga un score mayor que uno negativo elegido al azar.</p>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Valores de referencia</h3>
+            <table>
+              <tr><th>AUROC</th><th>Interpretación</th></tr>
+              <tr><td>1.00</td><td>Clasificador perfecto</td></tr>
+              <tr><td>0.90–0.99</td><td>Excelente</td></tr>
+              <tr><td>0.80–0.89</td><td>Bueno</td></tr>
+              <tr><td>0.70–0.79</td><td>Moderado</td></tr>
+              <tr><td>0.50</td><td>Aleatorio (inútil)</td></tr>
+            </table>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Ventaja clave del AUROC</h3>
+            <p style="font-size:13px">Es <strong>independiente de la prevalencia</strong> y del umbral — evalúa el poder discriminativo intrínseco del clasificador. Permite comparar clasificadores sin fijar un umbral.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 — CURVA PR vs ROC -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Curva PR vs ROC — Desbalance de Clases</span>
+      <span class="slide-counter">4 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Curva PR <span>y Desbalance de Clases</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">¿Cuándo preferir AUPRC?</h3>
+          <p style="font-size:13px">Con alta desbalanza, los VN abundantes inflan la especificidad → el AUROC es optimista. La curva PR es más sensible al rendimiento en la clase minoritaria.</p>
+
+          <table style="margin-top:10px">
+            <tr><th></th><th>Curva ROC</th><th>Curva PR</th></tr>
+            <tr><td><strong>Eje Y</strong></td><td>TPR (sensibilidad)</td><td>Precisión</td></tr>
+            <tr><td><strong>Eje X</strong></td><td>FPR (1−espec.)</td><td>Recall (sensibilidad)</td></tr>
+            <tr><td><strong>Línea base</strong></td><td>y=x (AUROC=0.5)</td><td>y=prevalencia</td></tr>
+            <tr><td><strong>Afectada por desbalance</strong></td><td>Poco</td><td>Sí, mucho</td></tr>
+            <tr><td><strong>Cuándo usar</strong></td><td>Evaluación general</td><td>Clases minoritarias</td></tr>
+          </table>
+
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Referencia:</strong> Saito, T. & Rehmsmeier, M. (2015). The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets. <em>PLOS ONE</em>, 10(3), e0118432. <a href="https://doi.org/10.1371/journal.pone.0118432" target="_blank">doi:10.1371/journal.pone.0118432</a></p>
+          </div>
+        </div>
+        <div>
+          <div class="card amber">
+            <h3 class="section">Regla práctica</h3>
+            <ul style="font-size:13px">
+              <li>Desbalance &lt; 1:10 → AUROC es fiable</li>
+              <li>Desbalance ≥ 1:10 → reportar ambos, priorizar AUPRC</li>
+              <li>Siempre reportar la <strong>prevalencia</strong> junto al AUPRC (es la línea base)</li>
+            </ul>
+          </div>
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Ejemplo biomédico: FA en tres contextos</h3>
+            <table>
+              <tr><th>Contexto</th><th>Prev.</th><th>AUROC</th><th>AUPRC</th></tr>
+              <tr><td>Consulta general</td><td>2%</td><td>~0.93</td><td>~0.55</td></tr>
+              <tr><td>Unidad arritmias</td><td>30%</td><td>~0.93</td><td>~0.87</td></tr>
+              <tr><td>UCI cardiológica</td><td>60%</td><td>~0.93</td><td>~0.95</td></tr>
+            </table>
+            <p style="font-size:11.5px;margin-top:6px;color:var(--slate)">El AUROC es estable; el AUPRC varía enormemente con la prevalencia.</p>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">F1 = punto en la curva PR</h3>
+            <p style="font-size:13px">El F1-score es la media armónica de precisión y recall — corresponde a un único punto en la curva PR para el umbral elegido. El AUPRC resume <em>todos</em> los umbrales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 — SELECCIÓN DE UMBRAL Y BOOTSTRAP -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Umbral Óptimo e Intervalos de Confianza</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Umbral Óptimo <span>e IC Bootstrap</span></h2>
+      <div class="two-col">
+        <div>
+          <h3 class="section">Criterio de Youden</h3>
+          <code class="math">J = Sensibilidad + Especificidad − 1
+u* = argmax_u J(u)</code>
+          <p style="font-size:13px;margin-top:6px">Maximiza la suma de sensibilidad y especificidad — equivalente a costos iguales para FP y FN.</p>
+
+          <h3 class="section" style="margin-top:14px">Costos asimétricos</h3>
+          <code class="math">Costo(u) = C_FN·FN(u) + C_FP·FP(u)</code>
+          <table style="margin-top:8px">
+            <tr><th>Escenario</th><th>C_FN</th><th>C_FP</th><th>Umbral</th></tr>
+            <tr><td>Tamizaje</td><td>5</td><td>1</td><td>Bajo (más sensible)</td></tr>
+            <tr><td>Confirmación</td><td>1</td><td>5</td><td>Alto (más específico)</td></tr>
+            <tr><td>Youden</td><td>1</td><td>1</td><td>Intermedio</td></tr>
+          </table>
+
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">⚠ No hay umbral universalmente óptimo</h3>
+            <p style="font-size:12.5px">El umbral correcto depende del contexto clínico. Un umbral publicado en un artículo puede no ser el óptimo en tu institución.</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">IC Bootstrap para el AUROC</h3>
+          <p style="font-size:13px">Un AUROC sin IC es un resultado incompleto. El bootstrap no paramétrico es robusto sin asumir distribuciones.</p>
+          <code class="math" style="margin-top:8px">Algoritmo:
+1. Remuestrear (con reemplazo) N veces
+2. Calcular AUROC en cada muestra
+3. IC95% = percentiles 2.5% y 97.5%</code>
+
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">IC vs tamaño muestral</h3>
+            <div id="ic-bars"></div>
+            <p style="font-size:11.5px;margin-top:6px;color:var(--slate)">El IC se estrecha como ≈ 1/√N. Para reducirlo a la mitad necesitas 4× más datos.</p>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Prueba de DeLong</h3>
+            <p style="font-size:13px">Para comparar dos AUROCs en los <em>mismos</em> pacientes, la prueba de DeLong (1988) es más potente que bootstrap independiente porque aprovecha la correlación entre modelos.</p>
+          </div>
+          <div class="cite">
+            <p><strong>Ref:</strong> DeLong et al. (1988). <em>Biometrics</em> 44(3):837–845.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — RESUMEN COMPARATIVO -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Guía de Selección de Métricas</span>
+      <span class="slide-counter">6 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">¿Qué métrica <span>usar cuándo?</span></h2>
+      <table style="margin-bottom:14px">
+        <tr>
+          <th>Situación clínica</th>
+          <th>Métrica recomendada</th>
+          <th>Por qué</th>
+        </tr>
+        <tr><td>Evaluación general del poder discriminativo</td><td><strong>AUROC</strong></td><td>Independiente de umbral y prevalencia</td></tr>
+        <tr><td>Alta desbalanza de clases (≥1:10)</td><td><strong>AUPRC</strong> + AUROC</td><td>La curva PR es más informativa con clases minoritarias</td></tr>
+        <tr><td>Comparar dos clasificadores en misma muestra</td><td><strong>DeLong</strong></td><td>Considera la correlación entre modelos</td></tr>
+        <tr><td>Seleccionar umbral clínico</td><td><strong>Youden / costos</strong></td><td>El óptimo depende del contexto clínico</td></tr>
+        <tr><td>Informe regulatorio / publicación</td><td><strong>AUROC + IC95%</strong></td><td>Un número puntual sin IC es incompleto</td></tr>
+        <tr><td>Clases muy desbalanceadas, umbral fijo</td><td><strong>F1 / Bal. accuracy</strong></td><td>La exactitud simple es engañosa</td></tr>
+        <tr><td>Utilidad clínica neta</td><td><strong>Análisis de curvas de decisión</strong></td><td>Incorpora costos de FP y FN explícitamente (Sesión 09)</td></tr>
+      </table>
+      <div class="three-col" style="margin-top:6px">
+        <div class="card blue">
+          <h3 class="section">Siempre reportar</h3>
+          <ul style="font-size:12.5px">
+            <li>AUROC con IC95%</li>
+            <li>N total y prevalencia</li>
+            <li>Umbral elegido y criterio</li>
+            <li>Sens y Espec en ese umbral</li>
+          </ul>
+        </div>
+        <div class="card amber">
+          <h3 class="section">Errores comunes</h3>
+          <ul style="font-size:12.5px">
+            <li>Reportar exactitud con desbalance</li>
+            <li>AUROC sin IC</li>
+            <li>Umbral elegido en test (data leakage)</li>
+            <li>Comparar AUROCs sin prueba estadística</li>
+          </ul>
+        </div>
+        <div class="card teal">
+          <h3 class="section">Próximas sesiones</h3>
+          <ul style="font-size:12.5px">
+            <li>Sesión 04: validación cruzada y LOSO</li>
+            <li>Sesión 09: análisis de curvas de decisión (DCA)</li>
+            <li>Sesión 15: Grad-CAM — más allá de las métricas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — CUADERNO JUPYTER -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Práctica Interactiva</span>
+      <span class="slide-counter">7 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+      <p style="margin-bottom:14px;font-size:13px">El cuaderno implementa desde cero: construcción de la curva ROC, AUROC por la regla del trapecio, curva PR, selección de umbral por Youden y costos asimétricos, bootstrap estratificado para el IC95%, y la prueba de DeLong para comparar dos clasificadores de FA.</p>
+      <div class="nb-wrap">
+        <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+        <div class="nb-frame">
+          <iframe
+            src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_03_metricas_auroc.ipynb"
+            title="Cuaderno Sesión 03 — Métricas de Clasificación y AUROC"
+            allow="cross-origin-isolated"
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="nb-fallback">
+          ¿No carga?
+          <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_03_metricas_auroc.ipynb"
+             target="_blank">Ábrelo en una pestaña nueva →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — AUTOEVALUACIÓN + RESUMEN -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Autoevaluación y Resumen</span>
+      <span class="slide-counter">8 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+      <div id="quiz">
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 1 de 5</div>
+          <div class="quiz-q-text">Un clasificador de FA tiene AUROC = 0.93. ¿Cuál es la interpretación correcta?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El 93% de los pacientes son clasificados correctamente</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q1')">Si tomamos un paciente con FA y uno sin FA al azar, hay 93% de probabilidad de que el modelo asigne mayor score al primero</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">La sensibilidad del clasificador es 93%</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El 93% del área bajo la curva ROC está por encima de la diagonal</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 2 de 5</div>
+          <div class="quiz-q-text">Con una prevalencia de FA del 2% y alta desbalanza (1:49), ¿qué métrica es más adecuada para evaluar el clasificador?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Exactitud (accuracy) — es la más común</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">AUROC únicamente — es independiente de la prevalencia</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q2')">AUPRC además del AUROC — la curva PR es más informativa con clases muy minoritarias</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Especificidad — porque hay más negativos</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 3 de 5</div>
+          <div class="quiz-q-text">Para un sistema de tamizaje de FA donde perder un caso positivo (FN) es mucho más grave que una derivación innecesaria (FP), el umbral óptimo debería ser:</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">Alto — para maximizar la especificidad</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q3')">Bajo — para maximizar la sensibilidad, asumiendo mayor número de FP</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">El criterio de Youden siempre da el óptimo independientemente del contexto</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">0.5 — es el umbral estándar</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 4 de 5</div>
+          <div class="quiz-q-text">¿Por qué se usa la prueba de DeLong en vez de bootstrap independiente para comparar dos clasificadores evaluados en los mismos pacientes?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque el bootstrap no es válido para comparar AUROCs</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q4')">Porque los dos AUROCs están correlacionados al evaluarse en los mismos pacientes — ignorar esa correlación subestima la significancia de la diferencia</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque DeLong da siempre intervalos más amplios y es más conservador</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque el bootstrap estratificado no funciona con datos desbalanceados</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 5 de 5</div>
+          <div class="quiz-q-text">Si duplicas el tamaño muestral N, ¿en qué factor se reduce aproximadamente la anchura del IC95% bootstrap del AUROC?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Se reduce a la mitad (factor 2)</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q5')">Se reduce por un factor de √2 ≈ 1.41</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Se reduce al cuarto (factor 4)</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">No cambia — el IC depende solo del AUROC, no de N</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+
+        <div class="quiz-score-bar" id="score-bar" style="display:none">
+          <span>Resultado:</span>
+          <span class="score-pill" id="score-text">0 / 5</span>
+          <span id="score-msg"></span>
+          <button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+        </div>
+      </div>
+
+      <div class="summary-grid" style="margin-top:14px">
+        <div class="summary-block" style="background:#EFF6FF;border-left:3px solid var(--mod-I)">
+          <h4 style="color:var(--mod-I)">Conceptos clave</h4>
+          <ul style="font-size:12.5px">
+            <li>Matriz de confusión — VP, FP, FN, VN</li>
+            <li>Sensibilidad, especificidad, F1, exactitud balanceada</li>
+            <li>Curva ROC, AUROC, interpretación probabilística</li>
+            <li>Curva PR, AUPRC y desbalance de clases</li>
+            <li>IC bootstrap, prueba de DeLong</li>
+          </ul>
+        </div>
+        <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+          <h4 style="color:var(--teal)">Reglas de oro</h4>
+          <ul style="font-size:12.5px">
+            <li>Exactitud con desbalance → engañosa</li>
+            <li>AUROC sin IC → incompleto</li>
+            <li>Umbral elegido en test → data leakage</li>
+            <li>Desbalance ≥1:10 → reportar AUPRC</li>
+            <li>Mismos pacientes → usar DeLong</li>
+          </ul>
+        </div>
+      </div>
+      <div class="next-session">
+        <strong>Próxima sesión:</strong> Pruebas estadísticas y validación de modelos — sesgo-varianza, validación cruzada LOSO, comparaciones múltiples y fuga de información en datos fisiológicos.
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="progress-dots" id="dots"></div>
+    <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+  </div>
+
+</div>
+
+<script>
+const N_SLIDES = 8;
+let current = 1;
+
+/* ── Dots ── */
+const dotsEl = document.getElementById('dots');
+for (let i = 1; i <= N_SLIDES; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 1 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+}
+function updateDots() {
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = 'dot' + (i+1===current?' active':'') + (i+1<current?' visited':'');
+  });
+}
+function goTo(n) {
+  document.getElementById('slide-'+current).classList.remove('active');
+  current = Math.max(1, Math.min(N_SLIDES, n));
+  const s = document.getElementById('slide-'+current);
+  s.classList.add('active');
+  s.style.animation='none'; s.offsetHeight; s.style.animation='';
+  document.getElementById('btn-prev').disabled = current===1;
+  document.getElementById('btn-next').disabled = current===N_SLIDES;
+  updateDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (current === 3) drawROC();
+  if (current === 5) drawICBars();
+}
+function go(dir) { goTo(current+dir); }
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') go(1);
+  if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   go(-1);
+});
+
+/* ── ROC Canvas (Slide 3) ── */
+function drawROC() {
+  const canvas = document.getElementById('roc-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth, H = canvas.offsetHeight;
+  canvas.width = W; canvas.height = H;
+
+  const pad = 40;
+  const w = W - 2*pad, h = H - 2*pad;
+
+  // Simulated ROC curve points
+  const pts = [[0,0],[0.02,0.35],[0.05,0.62],[0.10,0.78],
+               [0.15,0.85],[0.22,0.90],[0.30,0.93],[0.40,0.95],
+               [0.55,0.97],[0.70,0.98],[0.85,0.99],[1,1]];
+
+  ctx.clearRect(0,0,W,H);
+
+  // Grid
+  ctx.strokeStyle = '#E2E8F0'; ctx.lineWidth = 1;
+  [0.25,0.5,0.75].forEach(t => {
+    ctx.beginPath(); ctx.moveTo(pad+t*w,pad); ctx.lineTo(pad+t*w,pad+h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad,pad+(1-t)*h); ctx.lineTo(pad+w,pad+(1-t)*h); ctx.stroke();
+  });
+
+  // Diagonal
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(pad,pad+h); ctx.lineTo(pad+w,pad); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // AUC fill
+  ctx.fillStyle='rgba(59,130,246,0.10)';
+  ctx.beginPath(); ctx.moveTo(pad, pad+h);
+  pts.forEach(([x,y]) => ctx.lineTo(pad+x*w, pad+(1-y)*h));
+  ctx.lineTo(pad+w,pad+h); ctx.closePath(); ctx.fill();
+
+  // ROC curve
+  ctx.strokeStyle='#3B82F6'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(pad,pad+h);
+  pts.forEach(([x,y]) => ctx.lineTo(pad+x*w, pad+(1-y)*h));
+  ctx.stroke();
+
+  // Youden point
+  let best=0, bx=0, by=0;
+  pts.forEach(([x,y]) => { if(y-x>best){best=y-x;bx=x;by=y;} });
+  ctx.fillStyle='#EF4444';
+  ctx.beginPath(); ctx.arc(pad+bx*w,pad+(1-by)*h,7,0,2*Math.PI); ctx.fill();
+
+  // Labels
+  ctx.fillStyle='#4A5568'; ctx.font='11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('FPR (1 − Especificidad)', pad+w/2, H-6);
+  ctx.save(); ctx.translate(12,pad+h/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('TPR (Sensibilidad)',0,0); ctx.restore();
+
+  // AUROC label
+  const auc = pts.reduce((s,p,i)=>i>0?s+(pts[i][0]-pts[i-1][0])*(pts[i][1]+pts[i-1][1])/2:s,0);
+  ctx.fillStyle='#1B3A6B'; ctx.font='bold 12px DM Sans,sans-serif'; ctx.textAlign='left';
+  ctx.fillText(`AUROC ≈ ${auc.toFixed(3)}`, pad+8, pad+20);
+  ctx.fillStyle='#EF4444'; ctx.font='11px DM Sans,sans-serif';
+  ctx.fillText(`Youden (${bx.toFixed(2)}, ${by.toFixed(2)})`, pad+bx*w+10, pad+(1-by)*h-4);
+}
+
+/* ── IC bars (Slide 5) ── */
+function drawICBars() {
+  const el = document.getElementById('ic-bars');
+  if (!el || el.children.length > 0) return;
+  const data = [{n:50,w:0.18},{n:100,w:0.13},{n:200,w:0.09},{n:500,w:0.058},{n:1000,w:0.040}];
+  const maxW = 0.20;
+  el.innerHTML = data.map(d => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--slate);min-width:48px">N=${d.n}</span>
+      <div style="flex:1;background:#E2E8F0;border-radius:4px;height:14px;overflow:hidden">
+        <div style="width:${(d.w/maxW*100).toFixed(0)}%;background:var(--mod-I);height:100%;border-radius:4px;transition:width .6s ease"></div>
+      </div>
+      <span style="font-family:var(--font-mono);font-size:11px;color:var(--navy);min-width:36px">±${d.w.toFixed(3)}</span>
+    </div>`).join('');
+}
+
+/* ── Quiz ── */
+const feedbacks = {
+  q1: ['¡Correcto! El AUROC es P(score₊ > score₋) — la probabilidad de que el clasificador ordene correctamente un par positivo-negativo elegido al azar.',
+       'Incorrecto. El AUROC no es la exactitud ni la sensibilidad. Es una medida probabilística de la capacidad de ordenamiento del clasificador.'],
+  q2: ['¡Correcto! Con desbalance ≥1:10, la curva PR es más informativa porque no se ve inflada por los VN abundantes. Siempre reportar ambas métricas.',
+       'Incorrecto. La exactitud es especialmente engañosa con desbalance. El AUROC solo no es suficiente — el AUPRC revela el rendimiento real en la clase minoritaria.'],
+  q3: ['¡Correcto! Con C_FN >> C_FP, el umbral óptimo debe ser más bajo para capturar más verdaderos positivos, aceptando más falsos positivos como costo aceptable.',
+       'Incorrecto. El criterio de Youden asume costos iguales — solo es óptimo cuando FP y FN tienen el mismo costo clínico, lo que raramente ocurre en tamizaje.'],
+  q4: ['¡Correcto! Al usar los mismos pacientes para ambos modelos, los AUROCs están correlacionados. Ignorar esa correlación (bootstrap independiente) subestima la significancia estadística de la diferencia.',
+       'Incorrecto. El bootstrap es válido, pero si se aplica de forma independiente a cada modelo ignora la correlación, reduciendo la potencia estadística de la comparación.'],
+  q5: ['¡Correcto! El IC del AUROC decrece como 1/√N. Al duplicar N, √(2N)/√N = √2 ≈ 1.41. Para reducir a la mitad el IC necesitas 4× más datos (ya que √4 = 2).',
+       'Incorrecto. El IC no se reduce a la mitad al duplicar N — decrece como 1/√N. Reducirlo a la mitad requiere cuadruplicar el tamaño muestral.'],
+};
+let answered={}, score=0;
+function answer(btn,isCorrect,qid){
+  if(answered[qid])return; answered[qid]=true;
+  const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  if(isCorrect){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}
+  const fb=document.getElementById('fb-'+qid);
+  fb.textContent=feedbacks[qid][isCorrect?0:1];
+  fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');
+  if(Object.keys(answered).length===5)showScore();
+}
+function showScore(){
+  document.getElementById('score-bar').style.display='flex';
+  document.getElementById('score-text').textContent=`${score} / 5`;
+  const msgs=['Revisa el material y vuelve a intentarlo.',
+              'Buen progreso — repasa AUROC y curva PR.',
+              '¡Muy bien! Revisa la pregunta que fallaste.',
+              '¡Excelente comprensión!','¡Perfecto!'];
+  document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];
+}
+function resetQuiz(){
+  answered={};score=0;
+  document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});
+  document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});
+  document.getElementById('score-bar').style.display='none';
+}
+</script>
+</body>
+</html>

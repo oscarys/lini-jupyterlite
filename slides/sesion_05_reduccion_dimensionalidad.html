@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 05 — Selección de Características y Reducción de Dimensionalidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;
+  --amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;
+  --white:#FFFFFF;--border:#CBD5E0;--mod-I:#3B82F6;
+  --correct:#059669;--wrong:#DC2626;--radius:10px;
+  --shadow-lg:0 8px 40px rgba(27,58,107,0.16);
+  --font-display:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --slide-w:860px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--mod-I);color:white;font-family:var(--font-mono);font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}
+.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.18) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93C5FD;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:32px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#93C5FD;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:18px 22px;text-align:left;max-width:600px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#93C5FD;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:var(--teal);font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--teal)}
+h3.section{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}
+ul{padding-left:18px}
+ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F0F7FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--navy);margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid var(--mod-I)}
+.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}
+.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}
+.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.green{background:#F0FDF4;border-left:3px solid var(--correct)}
+.card.navy{background:#1B3A6B}
+.card.navy p,.card.navy li,.card.navy h3{color:rgba(255,255,255,.85)}
+.card.navy .math{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:white}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+pre .kw{color:#7DD3FC}pre .fn{color:#86EFAC}pre .cm{color:#6B7280}pre .nu{color:#FDE68A}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--navy);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}
+.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}
+.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}
+.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}
+.nb-fallback a{color:var(--teal)}
+.quiz-q{margin-bottom:16px}
+.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}
+.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}
+.quiz-opt.correct{border-color:var(--correct);background:#ECFDF5;color:#065F46}
+.quiz-opt.wrong{border-color:var(--wrong);background:#FEF2F2;color:#991B1B}
+.quiz-opt.reveal{border-color:var(--correct);background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.ok{background:#ECFDF5;color:#065F46}
+.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:var(--radius);font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.summary-block{border-radius:var(--radius);padding:14px 16px}
+.summary-block h4{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.next-session{background:var(--amber-lt);border:1px solid #FCD34D;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#78350F}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--mod-I);border-color:var(--mod-I);margin-left:auto}
+.nav-btn.primary:hover{background:#2563EB}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}
+.dot.active{background:white;transform:scale(1.3)}
+.dot.visited{background:var(--mod-I)}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}
+.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+.cite a{color:var(--teal)}
+/* PCA scree canvas */
+#scree-canvas{display:block;width:100%;max-width:340px}
+/* ICA diagram */
+.ica-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.ica-src{width:90px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600}
+.ica-wave{flex:1;height:28px;position:relative;overflow:hidden}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SLIDE 1 — PORTADA -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Fundamentos del Aprendizaje Estadístico</span>
+      <span class="slide-counter">1 / 8</span>
+    </div>
+    <div class="cover-body">
+      <div class="cover-tag">Sesión 05 · Cierre del Módulo I</div>
+      <h1 class="cover-title">Selección de Características<br>y <em>Reducción de Dimensionalidad</em></h1>
+      <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+      <div class="cover-objectives">
+        <h3>Objetivos de aprendizaje</h3>
+        <ul>
+          <li>Aplicar PCA, construir la gráfica de codos y cuantificar el error de reconstrucción</li>
+          <li>Comparar PCA (no supervisado) con LDA (supervisado) para reducción</li>
+          <li>Aplicar ICA para separación ciega de fuentes y eliminación de artefactos EEG</li>
+          <li>Implementar y comparar filtro por IM, ANOVA y RFE</li>
+          <li>Demostrar la fuga de información en el pipeline de reducción de dimensionalidad</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — PCA -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Análisis de Componentes Principales</span>
+      <span class="slide-counter">2 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">PCA — <span>Análisis de Componentes Principales</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Fundamento matemático</h3>
+          <p style="font-size:13px">PCA busca las direcciones de máxima varianza mediante la descomposición en valores propios de la covarianza:</p>
+          <code class="math">Σ = (1/(N-1)) XᵀX = WΛWᵀ
+Z = XW  (proyección)
+Varianza CP_k = λ_k / Σλ_i</code>
+
+          <h3 class="section" style="margin-top:12px">Gráfica de codos — EEG 64 canales</h3>
+          <canvas id="scree-canvas" width="320" height="160"></canvas>
+
+          <div class="cite" style="margin-top:8px">
+            <p><strong>Ref:</strong> Bishop (2006). <em>PRML</em> §12.1. Springer.</p>
+          </div>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Cuándo usar PCA</h3>
+            <ul style="font-size:13px">
+              <li>Visualización en 2D/3D de datos de alta dimensión</li>
+              <li>Compresión de señales multi-canal (EEG, fMRI)</li>
+              <li>Eliminación de ruido por truncamiento de componentes</li>
+              <li>Decorrelación de características como preprocesamiento</li>
+            </ul>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Regla de selección de k</h3>
+            <table>
+              <tr><th>Criterio</th><th>k típico (EEG 64ch)</th></tr>
+              <tr><td>Codo de la gráfica</td><td>5–10</td></tr>
+              <tr><td>95% varianza explicada</td><td>15–25</td></tr>
+              <tr><td>99% varianza explicada</td><td>30–45</td></tr>
+              <tr><td>Error reconstrucción &lt;1%</td><td>40–50</td></tr>
+            </table>
+          </div>
+          <div class="card red" style="margin-top:10px">
+            <h3 class="section">⚠ Limitación crítica</h3>
+            <p style="font-size:13px">PCA no usa las etiquetas de clase. Las primeras componentes explican la mayor varianza — que puede ser ruido o artefactos, no señal útil para clasificación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — PCA vs LDA -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">PCA vs LDA</span>
+      <span class="slide-counter">3 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">PCA vs LDA — <span>No supervisado vs Supervisado</span></h2>
+      <div class="two-col">
+        <div>
+          <div class="card blue">
+            <h3 class="section">PCA — máxima varianza</h3>
+            <code class="math">w* = argmax Var(Xw)
+    = eigenvec(Σ)</code>
+            <p style="font-size:12.5px;margin-top:6px">No usa etiquetas. Las direcciones de mayor varianza no son necesariamente las más discriminativas.</p>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">LDA — máxima separabilidad</h3>
+            <code class="math">w* = argmax (wᵀ S_B w)/(wᵀ S_W w)
+   = eigenvec(S_W⁻¹ S_B)</code>
+            <p style="font-size:12.5px;margin-top:6px">S_B = dispersión entre clases. S_W = dispersión dentro de clases. LDA maximiza la ratio señal/ruido entre clases.</p>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Limitaciones del LDA</h3>
+            <ul style="font-size:12.5px">
+              <li>Solo K−1 discriminantes para K clases</li>
+              <li>Falla si N &lt; d (necesita regularización)</li>
+              <li>Asume gaussianidad intra-clase</li>
+              <li>Requiere etiquetas → no sirve en inferencia</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Comparación visual</h3>
+          <canvas id="pca-lda-canvas" width="340" height="300" style="display:block;width:100%"></canvas>
+          <div class="card green" style="margin-top:10px">
+            <h3 class="section">Regla práctica</h3>
+            <p style="font-size:13px">Para <strong>clasificación</strong>: LDA casi siempre supera a PCA porque usa las etiquetas. Para <strong>visualización sin etiquetas</strong> o <strong>compresión</strong>: PCA es la opción.</p>
+            <p style="font-size:13px;margin-top:4px">En la práctica EEG: <strong>PCA primero</strong> (eliminar ruido, reducir de 64 a ~30 componentes) → <strong>LDA después</strong> (discriminar clases).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 — ICA -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">ICA — Separación Ciega de Fuentes</span>
+      <span class="slide-counter">4 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">ICA — <span>Separación de Fuentes y Artefactos EEG</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Modelo de mezcla lineal</h3>
+          <code class="math">x = A·s  →  s = W·x = A⁻¹·x
+x: señales observadas (electrodos)
+s: fuentes independientes
+A: matriz de mezcla (desconocida)</code>
+
+          <h3 class="section" style="margin-top:12px">Independencia estadística</h3>
+          <p style="font-size:13px">ICA maximiza la no-gaussianidad de las fuentes estimadas (equivalente a minimizar la información mutua entre ellas). Algoritmos: FastICA, InfoMax, JADE.</p>
+
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Flujo de trabajo en EEG</h3>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="background:var(--mod-I);color:white;border-radius:4px;padding:4px 8px;font-size:11px;white-space:nowrap">1. PCA</div>
+                <p style="font-size:12px;margin:0">Reducir a ~30 componentes (eliminar ruido)</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="background:var(--teal);color:white;border-radius:4px;padding:4px 8px;font-size:11px;white-space:nowrap">2. ICA</div>
+                <p style="font-size:12px;margin:0">Separar fuentes independientes</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="background:var(--amber);color:white;border-radius:4px;padding:4px 8px;font-size:11px;white-space:nowrap">3. Identificar</div>
+                <p style="font-size:12px;margin:0">EOG, ECG, EMG por topografía y morfología</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="background:var(--correct);color:white;border-radius:4px;padding:4px 8px;font-size:11px;white-space:nowrap">4. Suprimir</div>
+                <p style="font-size:12px;margin:0">Poner a cero las componentes de artefacto</p>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="background:#8B5CF6;color:white;border-radius:4px;padding:4px 8px;font-size:11px;white-space:nowrap">5. Reconstruir</div>
+                <p style="font-size:12px;margin:0">x̂ = A·s̃ (proyectar de vuelta a electrodos)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Fuente:</strong> Delorme, A. & Makeig, S. (2004). EEGLAB. <em>J. Neurosci. Methods</em>, 134(1), 9–21. <a href="https://doi.org/10.1016/j.jneumeth.2003.10.009" target="_blank">doi:10.1016/j.jneumeth.2003.10.009</a></p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Separación de fuentes — ejemplo</h3>
+          <canvas id="ica-canvas" width="300" height="340" style="display:block;width:100%"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 — SELECCIÓN DE CARACTERÍSTICAS -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Selección de Características</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Métodos de <span>Selección de Características</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Tres familias</h3>
+          <table>
+            <tr><th>Familia</th><th>Método</th><th>Ventaja</th><th>Limitación</th></tr>
+            <tr><td><strong>Filtro</strong></td><td>IM, ANOVA, χ²</td><td>Rápido, agnóstico</td><td>No considera interacciones</td></tr>
+            <tr><td><strong>Envolvente</strong></td><td>RFE, SFS, SBS</td><td>Interacciones</td><td>Costoso, sobreajuste</td></tr>
+            <tr><td><strong>Incrustado</strong></td><td>LASSO, RF import.</td><td>Eficiente</td><td>Específico del modelo</td></tr>
+          </table>
+
+          <h3 class="section" style="margin-top:12px">Información mutua</h3>
+          <code class="math">I(X;Y) = Σ p(x,y) log[p(x,y)/(p(x)p(y))]</code>
+          <p style="font-size:12.5px;margin-top:4px">Mide la dependencia estadística general — detecta relaciones no lineales que ANOVA no puede.</p>
+
+          <h3 class="section" style="margin-top:10px">RFE (Eliminación Recursiva)</h3>
+          <code class="math" style="font-size:11.5px">mientras |feats| > n_top:
+  importancias = eval_importancia(X[:,feats])
+  eliminar feats[argmin(importancias)]</code>
+
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Ref:</strong> Guyon & Elisseeff (2003). <em>JMLR</em>, 3, 1157–1182.</p>
+          </div>
+        </div>
+        <div>
+          <div class="card red">
+            <h3 class="section">⚠ Regla de oro: selección DENTRO del fold</h3>
+            <p style="font-size:13px">La selección de características debe realizarse <strong>dentro de cada fold</strong> de la validación cruzada. Realizarla antes introduce fuga de información.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <div style="background:#FEF2F2;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:10px;color:#DC2626;font-weight:600">Con fuga (global)</div>
+                <div style="font-size:22px;font-weight:700;color:#DC2626">~75%</div>
+                <div style="font-size:10px;color:var(--muted)">datos de ruido puro</div>
+              </div>
+              <div style="background:#F0FDF4;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:10px;color:var(--correct);font-weight:600">Sin fuga (en fold)</div>
+                <div style="font-size:22px;font-weight:700;color:var(--correct)">~50%</div>
+                <div style="font-size:10px;color:var(--muted)">resultado honesto</div>
+              </div>
+            </div>
+          </div>
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Aplicación HRV — estrés vs reposo</h3>
+            <p style="font-size:12.5px">Con 40 características HRV (dominio tiempo, frecuencia y no lineal) y 10 relevantes reales, la precisión de recuperación varía por método:</p>
+            <table style="margin-top:8px;font-size:12px">
+              <tr><th>Método</th><th>Top-5</th><th>Top-10</th></tr>
+              <tr><td>Info. Mutua</td><td>~60–80%</td><td>~70–90%</td></tr>
+              <tr><td>ANOVA F</td><td>~60–80%</td><td>~70–90%</td></tr>
+              <tr><td>RFE</td><td>~70–90%</td><td>~80–100%</td></tr>
+            </table>
+            <div class="cite" style="margin-top:6px">
+              <p><strong>Fuente HRV:</strong> Schmidt et al. (2018). WESAD. <em>ACM ICMI</em>. <a href="https://doi.org/10.1145/3242969.3242985" target="_blank">doi:10.1145/3242969.3242985</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — RESUMEN MÓDULO I -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Cierre del Módulo I</span>
+      <span class="slide-counter">6 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Cierre del <span>Módulo I — Lo que llevamos</span></h2>
+      <div class="two-col" style="margin-bottom:14px">
+        <div>
+          <h3 class="section">Las 5 sesiones del Módulo I</h3>
+          <table>
+            <tr><th>Sesión</th><th>Tema central</th><th>Herramienta clave</th></tr>
+            <tr><td><strong>01</strong></td><td>Probabilidad y EMV</td><td>PDF, CDF, QDA</td></tr>
+            <tr><td><strong>02</strong></td><td>Inferencia bayesiana</td><td>VPP/VPN, MAP, conjugados</td></tr>
+            <tr><td><strong>03</strong></td><td>Métricas y AUROC</td><td>ROC, PR, DeLong, bootstrap</td></tr>
+            <tr><td><strong>04</strong></td><td>Validación y pruebas</td><td>LOSO, FDR, permutaciones</td></tr>
+            <tr><td><strong>05</strong></td><td>Dimensionalidad</td><td>PCA, LDA, ICA, RFE</td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="card teal">
+            <h3 class="section">El hilo conductor</h3>
+            <p style="font-size:13px">Cada sesión del Módulo I atacó una amenaza diferente a la validez de los resultados:</p>
+            <ul style="font-size:12.5px;margin-top:6px">
+              <li>S01–02: fundamentos probabilísticos — sin ellos, cualquier resultado es incompleto</li>
+              <li>S03: métricas correctas para datos desbalanceados</li>
+              <li>S04: estrategia de evaluación honesta (LOSO, FDR)</li>
+              <li>S05: preprocesamiento sin fuga de información</li>
+            </ul>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Próximo: Módulo II</h3>
+            <p style="font-size:13px">Con estos fundamentos sólidos, el Módulo II introduce los clasificadores discriminativos: regresión logística, SVM con kernels y métodos de ensamble — ahora con herramientas para evaluarlos correctamente.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card navy">
+        <h3 class="section">Principios que sobreviven a los modelos</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px">
+          <div style="text-align:center;padding:8px">
+            <div style="font-size:22px;margin-bottom:4px">🎯</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.8)">Evalúa con la estrategia correcta para <strong>tus</strong> datos</p>
+          </div>
+          <div style="text-align:center;padding:8px">
+            <div style="font-size:22px;margin-bottom:4px">🔒</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.8)">El preprocesamiento va <strong>dentro</strong> del loop de validación</p>
+          </div>
+          <div style="text-align:center;padding:8px">
+            <div style="font-size:22px;margin-bottom:4px">📊</div>
+            <p style="font-size:12px;color:rgba(255,255,255,.8)">Un número sin IC y sin prueba estadística es un resultado incompleto</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — CUADERNO -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Práctica Interactiva</span>
+      <span class="slide-counter">7 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+      <p style="margin-bottom:14px;font-size:13px">El cuaderno implementa PCA desde cero con gráfica de codos y error de reconstrucción, compara PCA y LDA en clasificación de estados mentales EEG, implementa FastICA para separación de artefactos EOG/ECG, y compara filtro por información mutua, ANOVA y RFE en características HRV.</p>
+      <div class="nb-wrap">
+        <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+        <div class="nb-frame">
+          <iframe
+            src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_05_reduccion_dimensionalidad.ipynb"
+            title="Cuaderno Sesión 05"
+            allow="cross-origin-isolated"
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_05_reduccion_dimensionalidad.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — AUTOEVALUACIÓN + RESUMEN -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Autoevaluación y Resumen</span>
+      <span class="slide-counter">8 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+      <div id="quiz">
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 1 de 5</div>
+          <div class="quiz-q-text">En un EEG de 64 canales, los primeros 3 componentes principales explican el 85% de la varianza. ¿Qué afirmación es correcta?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">Estos 3 componentes son los más útiles para clasificar estados mentales</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q1')">Estos 3 componentes explican la mayor varianza, pero no necesariamente la señal más discriminativa — pueden ser artefactos o actividad de gran amplitud no relacionada con la tarea</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">Se puede descartar el 85% restante de los datos sin perder información relevante</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">PCA garantiza que los componentes retenidos son estadísticamente independientes entre sí</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 2 de 5</div>
+          <div class="quiz-q-text">¿Por qué LDA generalmente supera a PCA para clasificación de imaginería motora EEG?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">LDA reduce a más dimensiones que PCA</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q2')">LDA maximiza la separabilidad entre clases usando las etiquetas, mientras PCA maximiza la varianza total sin considerar las clases</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">LDA es más rápido computacionalmente que PCA</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">LDA no asume ninguna distribución de los datos</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 3 de 5</div>
+          <div class="quiz-q-text">En ICA aplicada a EEG, ¿qué propiedad estadística se maximiza para separar las fuentes?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La varianza de cada componente independiente</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La correlación entre componentes adyacentes</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q3')">La no-gaussianidad (curtosis o negentropía) de cada fuente estimada, equivalente a maximizar su independencia estadística</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La energía espectral en la banda alfa (8–13 Hz)</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 4 de 5</div>
+          <div class="quiz-q-text">¿Cuál de estas afirmaciones sobre la selección de características describe mejor el método de filtro por información mutua?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Selecciona las características iterativamente entrenando el modelo en cada paso</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q4')">Puntúa cada característica individualmente por su dependencia estadística con la etiqueta — independiente del modelo clasificador y puede detectar relaciones no lineales</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Está integrado en el proceso de entrenamiento del modelo (como LASSO)</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Solo es válido para características numéricas continuas</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 5 de 5</div>
+          <div class="quiz-q-text">Se aplica PCA a todo el dataset EEG ANTES de dividir en train/test, y luego se hace validación cruzada con los componentes resultantes. ¿Cuál es el problema?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">No hay problema — PCA es no supervisado y no usa las etiquetas</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q5')">Fuga de información: la dirección de los componentes principales se calculó usando los datos de prueba, por lo que el modelo ha "visto" implícitamente el test durante el preprocesamiento</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Solo hay problema si se retienen más del 95% de los componentes</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Es aceptable porque PCA es un paso de normalización, no de entrenamiento</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+        <div class="quiz-score-bar" id="score-bar" style="display:none">
+          <span>Resultado:</span>
+          <span class="score-pill" id="score-text">0 / 5</span>
+          <span id="score-msg"></span>
+          <button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+        </div>
+      </div>
+      <div class="summary-grid" style="margin-top:14px">
+        <div class="summary-block" style="background:#EFF6FF;border-left:3px solid var(--mod-I)">
+          <h4 style="color:var(--mod-I)">Conceptos clave</h4>
+          <ul style="font-size:12.5px">
+            <li>PCA — valores propios, varianza explicada, gráfica de codos</li>
+            <li>LDA — S_B, S_W, problema generalizado de valores propios</li>
+            <li>ICA — mezcla lineal, independencia estadística, FastICA</li>
+            <li>Selección: filtro (IM, ANOVA), envolvente (RFE), incrustado</li>
+          </ul>
+        </div>
+        <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+          <h4 style="color:var(--teal)">Reglas de oro del Módulo I</h4>
+          <ul style="font-size:12.5px">
+            <li>PCA no discrimina — LDA sí, pero requiere etiquetas</li>
+            <li>ICA separa fuentes, PCA decorrelaciona — no es lo mismo</li>
+            <li>Todo preprocesamiento dentro del loop de CV</li>
+            <li>Siempre LOSO para datos EEG/ECG multi-sujeto</li>
+          </ul>
+        </div>
+      </div>
+      <div class="next-session">
+        <strong>Próximo — Módulo II:</strong> Modelos Discriminativos — regresión logística implementada desde cero, SVMs con kernels, y métodos de ensamble con SHAP para explicabilidad clínica.
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="progress-dots" id="dots"></div>
+    <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+const N_SLIDES=8; let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===1?' active':'');
+  d.onclick=()=>goTo(i); dotsEl.appendChild(d);
+}
+function updateDots(){
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');
+  });
+}
+function goTo(n){
+  document.getElementById('slide-'+current).classList.remove('active');
+  current=Math.max(1,Math.min(N_SLIDES,n));
+  const s=document.getElementById('slide-'+current);
+  s.classList.add('active');
+  s.style.animation='none';s.offsetHeight;s.style.animation='';
+  document.getElementById('btn-prev').disabled=current===1;
+  document.getElementById('btn-next').disabled=current===N_SLIDES;
+  updateDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(current===2) drawScree();
+  if(current===3) drawPCALDA();
+  if(current===4) drawICA();
+}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(-1);
+});
+
+/* ── Scree plot (Slide 2) ── */
+function drawScree(){
+  const canvas=document.getElementById('scree-canvas');
+  if(!canvas||canvas.dataset.drawn)return;
+  canvas.dataset.drawn='1';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth,H=160;
+  canvas.width=W;canvas.height=H;
+  // Simulated eigenvalues (decreasing)
+  const vars=[];
+  let rem=100;
+  for(let i=0;i<15;i++){
+    const v=rem*(0.35-i*0.02);
+    vars.push(Math.max(v,0.5));
+    rem-=vars[i];
+  }
+  const total=vars.reduce((a,b)=>a+b,0);
+  const pad={l:30,r:10,t:10,b:28};
+  const w=W-pad.l-pad.r, h=H-pad.t-pad.b;
+  const maxV=vars[0];
+  ctx.clearRect(0,0,W,H);
+  // Bars
+  vars.forEach((v,i)=>{
+    const bw=w/vars.length*0.7;
+    const x=pad.l+i*(w/vars.length)+(w/vars.length-bw)/2;
+    const bh=(v/maxV)*h;
+    ctx.fillStyle=i<3?'#3B82F6':'#93C5FD';
+    ctx.fillRect(x,pad.t+h-bh,bw,bh);
+  });
+  // Elbow annotation
+  ctx.fillStyle='#EF4444';
+  ctx.font='10px DM Sans,sans-serif';
+  ctx.fillText('codo',pad.l+3*(w/vars.length),pad.t+h-vars[2]/maxV*h-6);
+  // Axes
+  ctx.fillStyle='#8896A8';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Componente principal',pad.l+w/2,H-4);
+  ctx.textAlign='left';
+  ctx.fillText('Var. expl. (%)',0,pad.t+8);
+}
+
+/* ── PCA vs LDA canvas (Slide 3) ── */
+function drawPCALDA(){
+  const canvas=document.getElementById('pca-lda-canvas');
+  if(!canvas||canvas.dataset.drawn)return;
+  canvas.dataset.drawn='1';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth,H=300;
+  canvas.width=W;canvas.height=H;
+  // Draw two panels side by side
+  const panels=[
+    {title:'PCA',colors:['#93C5FD','#FCA5A5','#86EFAC'],
+     means:[[.25,.55],[.5,.45],[.75,.55]],spread:0.12,label:'Varianza máx.'},
+    {title:'LDA',colors:['#3B82F6','#EF4444','#22C55E'],
+     means:[[.2,.5],[.5,.5],[.8,.5]],spread:0.06,label:'Separabilidad máx.'},
+  ];
+  const pw=W/2;
+  panels.forEach((panel,pi)=>{
+    const ox=pi*pw;
+    ctx.fillStyle='#F7F9FC';
+    ctx.fillRect(ox,0,pw,H);
+    ctx.fillStyle='#1B3A6B';
+    ctx.font='bold 11px DM Sans,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(panel.title,ox+pw/2,16);
+    ctx.font='9px DM Sans,sans-serif';
+    ctx.fillStyle='#8896A8';
+    ctx.fillText(panel.label,ox+pw/2,28);
+    // Clusters
+    const seed=pi*137;
+    panel.means.forEach(([mx,my],ci)=>{
+      for(let i=0;i<30;i++){
+        const angle=(seed+i*137.5+ci*200)*Math.PI/180;
+        const r=panel.spread*(0.3+0.7*((i*73+ci*31)%100)/100);
+        const px=ox+mx*pw+Math.cos(angle)*r*pw;
+        const py=40+my*(H-50)+Math.sin(angle)*r*(H-50);
+        ctx.fillStyle=panel.colors[ci]+'99';
+        ctx.beginPath();ctx.arc(px,py,4,0,2*Math.PI);ctx.fill();
+      }
+      // Centroid
+      ctx.fillStyle=panel.colors[ci];
+      ctx.beginPath();ctx.arc(ox+mx*pw,40+my*(H-50),7,0,2*Math.PI);ctx.fill();
+    });
+    // Arrow showing projection direction
+    ctx.strokeStyle=pi===0?'#3B82F6':'#EF4444';
+    ctx.lineWidth=2;ctx.setLineDash([4,3]);
+    if(pi===0){
+      // Diagonal arrow (max variance)
+      ctx.beginPath();ctx.moveTo(ox+10,H-20);ctx.lineTo(ox+pw-10,40);ctx.stroke();
+    } else {
+      // Horizontal arrow (max separation)
+      ctx.beginPath();ctx.moveTo(ox+10,H/2);ctx.lineTo(ox+pw-10,H/2);ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    // Divider
+    if(pi===0){ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pw,0);ctx.lineTo(pw,H);ctx.stroke();}
+  });
+}
+
+/* ── ICA diagram (Slide 4) ── */
+function drawICA(){
+  const canvas=document.getElementById('ica-canvas');
+  if(!canvas||canvas.dataset.drawn)return;
+  canvas.dataset.drawn='1';
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth,H=340;
+  canvas.width=W;canvas.height=H;
+  const t=Array.from({length:200},(_,i)=>i/50);
+  // Sources
+  const srcs=[
+    {name:'Alfa (10Hz)',color:'#3B82F6',fn:i=>Math.sin(2*Math.PI*10*t[i])},
+    {name:'EOG ←artefacto',color:'#EF4444',fn:i=>[30,80,150].reduce((s,c)=>s+Math.exp(-((i-c)**2)/100)*2,0)},
+    {name:'ECG',color:'#22C55E',fn:i=>[25,75,125,175].reduce((s,c)=>s+Math.exp(-((i-c)**2)/20)*1.5,0)},
+    {name:'Ruido',color:'#9CA3AF',fn:i=>(Math.sin(i*0.7)+Math.cos(i*1.3))*0.3},
+  ];
+  const rowH=H/4;
+  srcs.forEach((src,si)=>{
+    const y0=si*rowH;
+    // Background
+    ctx.fillStyle=si===1?'#FEF2F2':'#F7F9FC';
+    ctx.fillRect(0,y0,W,rowH-2);
+    // Label
+    ctx.fillStyle=src.color;
+    ctx.font='bold 10px DM Sans,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(si===1?'❌ '+src.name:src.name,4,y0+14);
+    // Waveform
+    const vals=Array.from({length:200},(_,i)=>src.fn(i));
+    const vmin=Math.min(...vals),vmax=Math.max(...vals);
+    const mid=y0+rowH/2, amp=(rowH/2-8)/(vmax-vmin+0.01);
+    ctx.strokeStyle=src.color+(si===1?'':'BB');
+    ctx.lineWidth=si===1?2:1.5;
+    ctx.beginPath();
+    vals.forEach((v,i)=>{
+      const x=(i/200)*(W-8)+4;
+      const y=mid-(v-vmin-(vmax-vmin)/2)*amp;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Strike-through for EOG
+    if(si===1){
+      ctx.strokeStyle='#DC262688';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(4,y0+rowH/2-16);ctx.lineTo(W-4,y0+rowH/2+16);ctx.stroke();
+      ctx.lineWidth=1;
+    }
+  });
+  // Arrow indicating suppression
+  ctx.fillStyle='#DC2626';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='right';
+  ctx.fillText('→ suprimir',W-4,rowH*1+14);
+}
+
+/* ── Quiz ── */
+const feedbacks={
+  q1:['¡Correcto! PCA maximiza varianza total — no discriminabilidad. Los artefactos de parpadeo (EOG) tienen altísima varianza y típicamente dominan los primeros componentes principales.',
+      'Incorrecto. PCA no tiene en cuenta las etiquetas de clase. Las primeras componentes capturan la mayor varianza, que puede ser ruido o artefactos, no necesariamente señal neural relevante para la tarea.'],
+  q2:['¡Correcto! LDA usa S_B (dispersión entre clases) y S_W (dispersión intra-clase) para encontrar la proyección que maximiza la separabilidad. PCA no tiene ese objetivo.',
+      'Incorrecto. LDA produce K−1 discriminantes para K clases — menos dimensiones que PCA. Su ventaja no es la cantidad de dimensiones sino la orientación de la proyección.'],
+  q3:['¡Correcto! ICA maximiza la no-gaussianidad de las fuentes estimadas (curtosis o negentropía), lo que equivale a maximizar su independencia estadística. Por el teorema del límite central, señales mezcladas son más gaussianas que las fuentes originales.',
+      'Incorrecto. ICA no maximiza la varianza (eso es PCA) ni la correlación temporal. El criterio de independencia estadística es la no-gaussianidad.'],
+  q4:['¡Correcto! Los métodos de filtro puntúan cada característica de forma independiente del clasificador. La información mutua detecta cualquier tipo de dependencia estadística, no solo lineal.',
+      'Incorrecto. Eso describe los métodos envolventes (como RFE) o incrustados (como LASSO). Los métodos de filtro evalúan cada característica de forma independiente, sin entrenar el clasificador.'],
+  q5:['¡Correcto! Aunque PCA es no supervisado, la dirección de los componentes principales se estimó usando las estadísticas de todo el dataset, incluyendo el conjunto de prueba. Esto produce componentes ligeramente "adaptados" al test.',
+      'Incorrecto. PCA no usa etiquetas, pero sí usa las estadísticas de los datos (media, covarianza). Si se calcula con todos los datos antes de dividir, la transformación está contaminada por el test — aunque sea de forma sutil.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){
+  if(answered[qid])return;answered[qid]=true;
+  const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  if(isCorrect){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}
+  const fb=document.getElementById('fb-'+qid);
+  fb.textContent=feedbacks[qid][isCorrect?0:1];
+  fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');
+  if(Object.keys(answered).length===5)showScore();
+}
+function showScore(){
+  document.getElementById('score-bar').style.display='flex';
+  document.getElementById('score-text').textContent=`${score} / 5`;
+  const msgs=['Revisa PCA, LDA e ICA en el cuaderno.',
+              'Buen progreso — repasa la diferencia PCA vs LDA.',
+              '¡Bien! Revisa la pregunta sobre fuga en PCA.',
+              '¡Excelente comprensión del Módulo I!','¡Perfecto! Listo para el Módulo II.'];
+  document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];
+}
+function resetQuiz(){
+  answered={};score=0;
+  document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});
+  document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});
+  document.getElementById('score-bar').style.display='none';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 04 — Pruebas Estadísticas y Validación de Modelos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:      #1B3A6B;
+  --teal:      #1A7A8A;
+  --teal-lt:   #E8F4F6;
+  --amber:     #D97706;
+  --amber-lt:  #FEF3C7;
+  --slate:     #4A5568;
+  --muted:     #8896A8;
+  --bg:        #F7F9FC;
+  --white:     #FFFFFF;
+  --border:    #CBD5E0;
+  --mod-I:     #3B82F6;
+  --correct:   #059669;
+  --wrong:     #DC2626;
+  --radius:    10px;
+  --shadow-lg: 0 8px 40px rgba(27,58,107,0.16);
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --slide-w: 860px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--navy); font-family: var(--font-body); }
+.shell { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px; gap:16px; }
+.slide { display:none; width:var(--slide-w); max-width:100%; background:var(--white); border-radius:16px; box-shadow:var(--shadow-lg); overflow:hidden; animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both; }
+.slide.active { display:flex; flex-direction:column; }
+@keyframes slideIn { from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none} }
+.slide-header { background:var(--navy); padding:18px 28px 16px; display:flex; align-items:center; gap:12px; }
+.slide-badge { background:var(--mod-I); color:white; font-family:var(--font-mono); font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; }
+.slide-label { color:rgba(255,255,255,.7); font-size:12px; flex:1; }
+.slide-counter { color:rgba(255,255,255,.4); font-family:var(--font-mono); font-size:11px; }
+.slide-body { padding:28px 32px 24px; flex:1; overflow-y:auto; }
+.cover-body { background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:44px 40px; min-height:440px; position:relative; overflow:hidden; }
+.cover-body::before { content:''; position:absolute; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle,rgba(59,130,246,.18) 0%,transparent 70%); top:-100px; right:-100px; }
+.cover-tag { background:rgba(59,130,246,.2); border:1px solid rgba(59,130,246,.4); color:#93C5FD; font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; padding:4px 14px; border-radius:20px; margin-bottom:20px; position:relative; z-index:1; }
+.cover-title { font-family:var(--font-display); font-size:34px; line-height:1.15; color:white; margin-bottom:10px; position:relative; z-index:1; }
+.cover-title em { color:#93C5FD; font-style:normal; }
+.cover-subtitle { font-size:15px; color:rgba(255,255,255,.55); margin-bottom:28px; position:relative; z-index:1; }
+.cover-objectives { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:var(--radius); padding:18px 22px; text-align:left; max-width:600px; width:100%; position:relative; z-index:1; }
+.cover-objectives h3 { color:#93C5FD; font-size:12px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; margin-bottom:10px; }
+.cover-objectives li { color:rgba(255,255,255,.75); font-size:13px; line-height:1.6; list-style:none; padding-left:16px; position:relative; margin-bottom:4px; }
+.cover-objectives li::before { content:'→'; position:absolute; left:0; color:var(--teal); font-size:12px; }
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.two-col.wide { grid-template-columns:3fr 2fr; }
+.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+h2.slide-title { font-family:var(--font-display); font-size:24px; color:var(--navy); margin-bottom:16px; line-height:1.2; }
+h2.slide-title span { color:var(--teal); }
+h3.section { font-size:13px; font-weight:600; color:var(--teal); letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px; }
+p, li { font-size:13.5px; color:var(--slate); line-height:1.65; }
+ul { padding-left:18px; }
+ul li { margin-bottom:4px; }
+.math { font-family:var(--font-mono); background:#F0F7FF; border:1px solid #BFDBFE; border-radius:6px; padding:10px 14px; font-size:12.5px; color:var(--navy); margin:8px 0; display:block; line-height:1.7; }
+.card { background:var(--bg); border-radius:var(--radius); padding:14px 16px; margin-bottom:10px; }
+.card.blue  { background:#EFF6FF; border-left:3px solid var(--mod-I); }
+.card.teal  { background:var(--teal-lt); border-left:3px solid var(--teal); }
+.card.amber { background:var(--amber-lt); border-left:3px solid var(--amber); }
+.card.red   { background:#FEF2F2; border-left:3px solid #EF4444; }
+.card.green { background:#F0FDF4; border-left:3px solid var(--correct); }
+.card.navy  { background:#1B3A6B; }
+.card.navy p,.card.navy li,.card.navy h3 { color:rgba(255,255,255,.85); }
+.card.navy .math { background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); color:white; }
+pre { background:#0F172A; color:#E2E8F0; border-radius:8px; padding:12px 14px; font-family:var(--font-mono); font-size:11.5px; line-height:1.7; overflow-x:auto; margin:8px 0; }
+pre .kw{color:#7DD3FC} pre .fn{color:#86EFAC} pre .cm{color:#6B7280} pre .nu{color:#FDE68A}
+table { width:100%; border-collapse:collapse; font-size:12.5px; margin:8px 0; }
+th { background:var(--navy); color:white; padding:7px 10px; text-align:left; font-weight:500; }
+td { padding:6px 10px; color:var(--slate); border-bottom:1px solid var(--border); }
+tr:nth-child(even) td { background:var(--bg); }
+.nb-wrap { display:flex; flex-direction:column; gap:10px; }
+.nb-label { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--slate); }
+.nb-label::before { content:'⚡'; font-size:15px; }
+.nb-frame { border-radius:10px; overflow:hidden; border:2px solid var(--border); }
+.nb-frame iframe { display:block; width:100%; height:380px; border:none; }
+.nb-fallback { font-size:11.5px; color:var(--muted); text-align:center; }
+.nb-fallback a { color:var(--teal); }
+.quiz-q { margin-bottom:16px; }
+.quiz-q-text { font-size:14px; font-weight:500; color:var(--navy); margin-bottom:8px; line-height:1.5; }
+.quiz-q-num { font-family:var(--font-mono); font-size:11px; color:var(--muted); margin-bottom:4px; }
+.quiz-options { display:flex; flex-direction:column; gap:6px; }
+.quiz-opt { padding:9px 14px; border-radius:8px; border:1.5px solid var(--border); background:white; cursor:pointer; font-size:13px; color:var(--slate); transition:all .18s ease; text-align:left; }
+.quiz-opt:hover:not(.answered) { border-color:var(--teal); background:var(--teal-lt); }
+.quiz-opt.correct { border-color:var(--correct); background:#ECFDF5; color:#065F46; }
+.quiz-opt.wrong   { border-color:var(--wrong);   background:#FEF2F2; color:#991B1B; }
+.quiz-opt.reveal  { border-color:var(--correct); background:#ECFDF5; color:#065F46; opacity:.7; }
+.quiz-feedback { margin-top:6px; padding:8px 12px; border-radius:6px; font-size:12.5px; display:none; }
+.quiz-feedback.show { display:block; }
+.quiz-feedback.ok  { background:#ECFDF5; color:#065F46; }
+.quiz-feedback.bad { background:#FEF2F2; color:#991B1B; }
+.quiz-score-bar { display:flex; align-items:center; gap:10px; margin-top:14px; padding:12px 16px; background:var(--bg); border-radius:var(--radius); font-size:13px; color:var(--slate); }
+.score-pill { font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--navy); background:white; border:1.5px solid var(--border); padding:3px 12px; border-radius:20px; }
+.quiz-reset { margin-left:auto; font-size:12px; color:var(--teal); cursor:pointer; text-decoration:underline; background:none; border:none; }
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.summary-block { border-radius:var(--radius); padding:14px 16px; }
+.summary-block h4 { font-size:12px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:8px; }
+.next-session { background:var(--amber-lt); border:1px solid #FCD34D; border-radius:var(--radius); padding:12px 16px; font-size:13px; color:#78350F; }
+.nav-bar { display:flex; align-items:center; gap:10px; width:var(--slide-w); max-width:100%; }
+.nav-btn { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:white; padding:8px 22px; border-radius:8px; font-size:13px; font-family:var(--font-body); cursor:pointer; transition:all .18s ease; }
+.nav-btn:hover:not(:disabled) { background:rgba(255,255,255,.22); }
+.nav-btn:disabled { opacity:.3; cursor:default; }
+.nav-btn.primary { background:var(--mod-I); border-color:var(--mod-I); margin-left:auto; }
+.nav-btn.primary:hover { background:#2563EB; }
+.progress-dots { flex:1; display:flex; justify-content:center; gap:6px; }
+.dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.25); cursor:pointer; transition:all .18s ease; }
+.dot.active  { background:white; transform:scale(1.3); }
+.dot.visited { background:var(--mod-I); }
+.cite { margin-top:8px; padding:7px 12px; background:var(--bg); border-radius:6px; border-left:3px solid var(--muted); }
+.cite p { font-size:11px; color:var(--muted); line-height:1.5; margin:0; }
+.cite a { color:var(--teal); }
+/* Bias-variance visual */
+.bv-bar-wrap { display:flex; flex-direction:column; gap:6px; margin:10px 0; }
+.bv-row { display:flex; align-items:center; gap:8px; }
+.bv-label { font-size:11.5px; color:var(--slate); min-width:60px; }
+.bv-bar-bg { flex:1; height:16px; background:#E2E8F0; border-radius:4px; overflow:hidden; display:flex; }
+.bv-seg { height:100%; border-radius:0; transition:width .5s ease; }
+.bv-total { font-family:var(--font-mono); font-size:11px; color:var(--navy); min-width:40px; }
+/* Leakage diagram */
+.pipeline { display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin:10px 0; }
+.pipe-step { border-radius:6px; padding:7px 10px; font-size:11.5px; font-weight:600; text-align:center; }
+.pipe-arrow { color:var(--muted); font-size:16px; }
+/* CV diagram */
+.cv-grid { display:grid; gap:3px; margin:8px 0; }
+.cv-cell { height:18px; border-radius:3px; }
+@media (max-width:900px) { :root{--slide-w:100%} .two-col,.two-col.wide,.three-col,.summary-grid{grid-template-columns:1fr} .cover-title{font-size:26px} }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SLIDE 1 — PORTADA -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Fundamentos del Aprendizaje Estadístico</span>
+      <span class="slide-counter">1 / 8</span>
+    </div>
+    <div class="cover-body">
+      <div class="cover-tag">Sesión 04 · Validación y Pruebas Estadísticas</div>
+      <h1 class="cover-title">Pruebas Estadísticas<br>y <em>Validación de Modelos</em></h1>
+      <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+      <div class="cover-objectives">
+        <h3>Objetivos de aprendizaje</h3>
+        <ul>
+          <li>Visualizar y cuantificar la descomposición sesgo-varianza</li>
+          <li>Elegir la estrategia de CV adecuada para datos fisiológicos (k-fold vs LOSO)</li>
+          <li>Demostrar cuantitativamente la fuga de información antes de la CV</li>
+          <li>Aplicar correcciones de Bonferroni y FDR (Benjamini-Hochberg)</li>
+          <li>Implementar la prueba de permutaciones como alternativa no paramétrica</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — SESGO-VARIANZA -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Descomposición Sesgo-Varianza</span>
+      <span class="slide-counter">2 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">El Compromiso <span>Sesgo-Varianza</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Descomposición del error</h3>
+          <code class="math">E[(y - ŷ)²] = Sesgo²[ŷ] + Var[ŷ] + σ²
+              ↑               ↑          ↑
+         sistemático    sensibilidad  irreducible</code>
+
+          <div id="bv-bars" class="bv-bar-wrap" style="margin-top:12px"></div>
+
+          <div class="card red" style="margin-top:10px">
+            <h3 class="section">El dilema</h3>
+            <ul style="font-size:13px">
+              <li><strong>Modelo simple</strong> → sesgo alto, varianza baja → subajuste</li>
+              <li><strong>Modelo complejo</strong> → sesgo bajo, varianza alta → sobreajuste</li>
+              <li><strong>Óptimo</strong> → minimiza sesgo² + varianza</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Diagnóstico con curvas de aprendizaje</h3>
+            <table>
+              <tr><th>Síntoma</th><th>Diagnóstico</th><th>Solución</th></tr>
+              <tr><td>Error train y val altos</td><td>Sesgo alto</td><td>Más complejidad</td></tr>
+              <tr><td>Error train bajo, val alto</td><td>Varianza alta</td><td>Más datos / regularizar</td></tr>
+              <tr><td>Ambos bajos</td><td>Bien ajustado</td><td>—</td></tr>
+            </table>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Aplicación en señales biomédicas</h3>
+            <p style="font-size:13px">En clasificación EEG/ECG con pocas muestras por sujeto (N=20–100), la varianza domina. Métodos de regularización, modelos simples y validación cuidadosa son esenciales.</p>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Ruido irreducible</h3>
+            <p style="font-size:13px">El ruido biológico (variabilidad intrínseca de las señales EEG, ECG) es irreducible. Ningún modelo, por complejo que sea, puede eliminarlo — solo aprender a pesar de él.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — VALIDACIÓN CRUZADA Y LOSO -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Estrategias de Validación Cruzada</span>
+      <span class="slide-counter">3 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">k-fold vs LOSO — <span>¿Cuál usar?</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Visualización de las estrategias</h3>
+          <div id="cv-diagram"></div>
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Ref:</strong> Blankertz, B. et al. (2007). <em>IEEE Trans. Biomed. Eng.</em> 54(12):2141–2150. <a href="https://doi.org/10.1109/TBME.2007.906956" target="_blank">doi:10.1109/TBME.2007.906956</a></p>
+          </div>
+          <div class="card red" style="margin-top:10px">
+            <h3 class="section">⚠ El problema del k-fold en BCI</h3>
+            <p style="font-size:13px">Con 10 sujetos × 40 ensayos, k-fold mezcla ensayos del <em>mismo sujeto</em> entre train y test. El modelo aprende la <strong>firma fisiológica individual</strong>, no la tarea cognitiva.</p>
+            <p style="font-size:13px;margin-top:6px">Resultado: exactitud inflada 15–30 puntos porcentuales respecto al rendimiento real.</p>
+          </div>
+        </div>
+        <div>
+          <table>
+            <tr><th>Estrategia</th><th>Cuándo usar</th></tr>
+            <tr><td><strong>k-fold</strong></td><td>Muestras i.i.d. (tabular, sin estructura de sujeto)</td></tr>
+            <tr><td><strong>k-fold estratificado</strong></td><td>Desbalance de clases</td></tr>
+            <tr><td><strong>LOSO</strong></td><td>Señales fisiológicas multi-sujeto</td></tr>
+            <tr><td><strong>Ventana deslizante</strong></td><td>Series temporales (sin solapamiento train/test)</td></tr>
+            <tr><td><strong>CV anidada</strong></td><td>Selección de hiperparámetros + evaluación</td></tr>
+          </table>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">LOSO — interpretación clínica</h3>
+            <p style="font-size:13px">LOSO evalúa la generalización a <em>sujetos nuevos</em> — el único escenario clínicamente relevante. Un clasificador de FA que funciona bien solo en sujetos ya vistos no tiene utilidad práctica.</p>
+          </div>
+          <div class="card navy" style="margin-top:10px">
+            <h3 class="section">En Python</h3>
+            <pre><span class="cm"># LOSO correcto</span>
+<span class="kw">for</span> sujeto <span class="kw">in</span> sujetos_unicos:
+    mask_te = ids == sujeto
+    X_tr = X[~mask_te]
+    X_te = X[ mask_te]
+    <span class="cm"># normalizar con stats de train</span>
+    mu = X_tr.<span class="fn">mean</span>(<span class="nu">0</span>)
+    X_tr = (X_tr - mu) / std
+    X_te = (X_te - mu) / std</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 — FUGA DE INFORMACIÓN -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Fuga de Información</span>
+      <span class="slide-counter">4 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Fuga de Información — <span>Data Leakage</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Regla fundamental</h3>
+          <p style="font-size:13px">Cualquier paso de preprocesamiento que use estadísticas del conjunto de prueba introduce fuga. El modelo parece mejor de lo que es.</p>
+
+          <h3 class="section" style="margin-top:12px">Pipeline correcto</h3>
+          <div class="pipeline">
+            <div class="pipe-step" style="background:#EFF6FF;color:var(--mod-I)">Dividir<br>train/test</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#F0FDF4;color:var(--correct)">Ajustar scaler<br>en train</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#F0FDF4;color:var(--correct)">Transformar<br>train y test</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#F0FDF4;color:var(--correct)">Entrenar<br>modelo</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#EFF6FF;color:var(--mod-I)">Evaluar<br>en test</div>
+          </div>
+
+          <h3 class="section" style="margin-top:12px">Pipeline con fuga</h3>
+          <div class="pipeline">
+            <div class="pipe-step" style="background:#FEF2F2;color:#DC2626">Normalizar<br>TODO el dataset</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#FEF2F2;color:#DC2626">Dividir<br>train/test</div>
+            <span class="pipe-arrow">→</span>
+            <div class="pipe-step" style="background:#FEF2F2;color:#DC2626">Entrenar y<br>evaluar</div>
+          </div>
+          <p style="font-size:12px;color:#DC2626;margin-top:4px">↑ El test ya "contaminó" la normalización — el modelo ha visto el test implícitamente</p>
+
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Ref:</strong> Kapoor, S. & Narayanan, A. (2023). Leakage and the reproducibility crisis. <em>Patterns</em>, 4(9), 100804. <a href="https://doi.org/10.1016/j.patter.2023.100804" target="_blank">doi:10.1016/j.patter.2023.100804</a></p>
+          </div>
+        </div>
+        <div>
+          <div class="card red">
+            <h3 class="section">Fuentes comunes de fuga</h3>
+            <table>
+              <tr><th>Tipo</th><th>Ejemplo</th></tr>
+              <tr><td>Normalización global</td><td>StandardScaler antes de dividir</td></tr>
+              <tr><td>Selección de características</td><td>Correlación con etiquetas antes de CV</td></tr>
+              <tr><td>Estructura de sujeto</td><td>k-fold ignorando sujeto ID</td></tr>
+              <tr><td>Ventanas solapadas</td><td>Misma grabación en train y test</td></tr>
+              <tr><td>Imputación global</td><td>Imputar con media de todo el dataset</td></tr>
+            </table>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Impacto cuantificado</h3>
+            <p style="font-size:13px">En el experimento del cuaderno, con datos puramente de <strong>ruido</strong> (sin señal real):</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+              <div style="background:white;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:10px;color:var(--correct);font-weight:600">Sin fuga</div>
+                <div style="font-size:24px;font-weight:700;color:var(--correct)">~50%</div>
+                <div style="font-size:10px;color:var(--muted)">exactitud real</div>
+              </div>
+              <div style="background:white;border-radius:6px;padding:8px;text-align:center">
+                <div style="font-size:10px;color:#DC2626;font-weight:600">Con fuga</div>
+                <div style="font-size:24px;font-weight:700;color:#DC2626">~75%</div>
+                <div style="font-size:10px;color:var(--muted)">resultado ficticio</div>
+              </div>
+            </div>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Solución: Pipeline dentro del loop CV</h3>
+            <p style="font-size:13px">Usa <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">sklearn.pipeline.Pipeline</code> — garantiza que el scaler, el selector de características y el modelo se ajusten <em>solo</em> con los datos de entrenamiento de cada fold.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 — COMPARACIONES MÚLTIPLES -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Comparaciones Múltiples</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">El Problema de las <span>Comparaciones Múltiples</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">El problema</h3>
+          <p style="font-size:13px">Con <em>m</em> pruebas de hipótesis simultáneas:</p>
+          <code class="math">P(al menos un FP) = 1 − (1−α)ᵐ ≈ mα
+
+m=20,  α=0.05 → P(FP) ≈ 64%
+m=100, α=0.05 → P(FP) ≈ 99.4%</code>
+
+          <h3 class="section" style="margin-top:12px">Correcciones</h3>
+          <table>
+            <tr><th>Método</th><th>Controla</th><th>Umbral</th><th>Potencia</th></tr>
+            <tr><td><strong>Sin corrección</strong></td><td>Nada</td><td>α</td><td>Alta (demasiado)</td></tr>
+            <tr><td><strong>Bonferroni</strong></td><td>FWER</td><td>α/m</td><td>Baja (muy conservador)</td></tr>
+            <tr><td><strong>B-H (FDR)</strong></td><td>FDR</td><td>Variable</td><td>Intermedia (recomendado)</td></tr>
+          </table>
+
+          <div id="mc-chart" style="margin-top:12px"></div>
+
+          <div class="cite" style="margin-top:8px">
+            <p><strong>Ref:</strong> Benjamini, Y. & Hochberg, Y. (1995). Controlling the false discovery rate. <em>JRSS-B</em>, 57(1), 289–300.</p>
+          </div>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Algoritmo Benjamini-Hochberg</h3>
+            <pre style="font-size:11px"><span class="cm"># Ordenar p-valores</span>
+p_ord = sort(p_valores)
+m     = len(p_valores)
+
+<span class="cm"># Umbral para cada rango k</span>
+umbral_k = α × k / m
+
+<span class="cm"># Rechazar p_k ≤ umbral_k</span>
+k_max = max k: p_ord[k] ≤ umbral_k
+rechazar los primeros k_max</pre>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Contexto biomédico</h3>
+            <p style="font-size:13px">Ejemplo: análisis de activación fMRI con 10,000 vóxeles, 200 con activación real (d=0.6):</p>
+            <table style="margin-top:8px;font-size:12px">
+              <tr><th>Método</th><th>VP</th><th>FP</th><th>FDR obs.</th></tr>
+              <tr><td>Sin corrección</td><td>~131</td><td>~468</td><td>~78%</td></tr>
+              <tr><td>Bonferroni</td><td>~60</td><td>~0</td><td>~0%</td></tr>
+              <tr><td>FDR (B-H)</td><td>~120</td><td>~5</td><td>~4%</td></tr>
+            </table>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">FWER vs FDR</h3>
+            <p style="font-size:13px"><strong>FWER</strong> (Bonferroni): cero falsos positivos — correcto cuando cada falso positivo tiene consecuencias graves (p. ej. aprobación de un fármaco).</p>
+            <p style="font-size:13px;margin-top:4px"><strong>FDR</strong> (B-H): acepta una proporción pequeña de FP a cambio de mucha más potencia — correcto en exploración (neuroimagen, genómica).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — PRUEBA DE PERMUTACIONES -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Prueba de Permutaciones</span>
+      <span class="slide-counter">6 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Prueba de <span>Permutaciones</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">El algoritmo</h3>
+          <code class="math">1. Calcular T_obs (p. ej. AUROC con LOSO)
+2. Repetir B veces:
+   a. Permutar etiquetas
+   b. Calcular T_b con el mismo pipeline
+3. p-valor = #{b : T_b ≥ T_obs} / B</code>
+
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Ventajas sobre las pruebas paramétricas</h3>
+            <ul style="font-size:13px">
+              <li>Válida para <em>cualquier</em> estadístico (AUROC, exactitud, F1)</li>
+              <li>No asume distribución de los datos</li>
+              <li>Respeta la estructura del pipeline completo</li>
+              <li>Estándar de referencia en BCI y neuroimagen</li>
+            </ul>
+          </div>
+
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Permutación restringida</h3>
+            <p style="font-size:13px">Para datos multi-sujeto, permutar <em>dentro de cada sujeto</em> (no globalmente). Esto preserva la estructura de correlación temporal y espacial, generando una distribución nula más apropiada.</p>
+          </div>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Cuándo usar cada enfoque</h3>
+            <table>
+              <tr><th>Situación</th><th>Prueba recomendada</th></tr>
+              <tr><td>Distribución conocida, N grande</td><td>t-test, z-test</td></tr>
+              <tr><td>Distribución desconocida</td><td>Permutaciones</td></tr>
+              <tr><td>Comparar dos AUROCs, mismos pacientes</td><td>DeLong (Sesión 03)</td></tr>
+              <tr><td>Validar modelo de BCI / EEG</td><td>Permutaciones + LOSO</td></tr>
+              <tr><td>Múltiples modelos</td><td>Corrección B-H sobre p-permutaciones</td></tr>
+            </table>
+          </div>
+          <div id="perm-chart" style="margin-top:12px"></div>
+          <div class="card red" style="margin-top:10px">
+            <h3 class="section">⚠ Número de permutaciones</h3>
+            <p style="font-size:13px">Para p-valor de 0.05 necesitas al menos B=1000 permutaciones. Para p=0.01, B=10,000. Con LOSO sobre señales largas, cada permutación puede ser costosa — considera paralelizar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — CUADERNO -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Práctica Interactiva</span>
+      <span class="slide-counter">7 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+      <p style="margin-bottom:14px;font-size:13px">El cuaderno implementa: descomposición sesgo-varianza sobre 50 conjuntos de entrenamiento, comparación cuantitativa de k-fold vs LOSO vs k-fold con fuga, análisis de comparaciones múltiples en 10,000 vóxeles simulados, y prueba de permutaciones restringida para validar un clasificador BCI.</p>
+      <div class="nb-wrap">
+        <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+        <div class="nb-frame">
+          <iframe
+            src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_04_validacion_modelos.ipynb"
+            title="Cuaderno Sesión 04"
+            allow="cross-origin-isolated"
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_04_validacion_modelos.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — AUTOEVALUACIÓN + RESUMEN -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Autoevaluación y Resumen</span>
+      <span class="slide-counter">8 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+      <div id="quiz">
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 1 de 5</div>
+          <div class="quiz-q-text">Un modelo de regresión polinomial de grado 12 ajustado a 20 puntos tiene error de entrenamiento muy bajo pero error de validación muy alto. ¿Cuál es el diagnóstico?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">Sesgo alto — el modelo es demasiado simple para capturar la señal</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q1')">Varianza alta — el modelo sobreajusta los datos de entrenamiento y no generaliza</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">Ruido irreducible alto — el problema no tiene solución</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El modelo está correctamente ajustado — el error de validación siempre es mayor</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 2 de 5</div>
+          <div class="quiz-q-text">Para un clasificador de imaginería motora EEG con 15 sujetos y 60 ensayos por sujeto, ¿qué estrategia de validación cruzada es la más adecuada?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">k-fold con k=5, mezclando todos los ensayos aleatoriamente</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q2')">LOSO — dejar fuera un sujeto completo en cada iteración</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">k-fold estratificado — para mantener la proporción de clases</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Holdout simple — 80% entrenamiento, 20% prueba aleatorio</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 3 de 5</div>
+          <div class="quiz-q-text">Se tiene un dataset EEG de 500 canales y se seleccionan los 20 más correlacionados con las etiquetas ANTES de aplicar validación cruzada. ¿Cuál es el problema?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">Ninguno — la selección de características siempre mejora el rendimiento</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q3')">Fuga de información — la selección usa estadísticas del conjunto de prueba, inflando artificialmente el AUROC</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">Sobreajuste — pero solo si se usan menos de 50 características</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">Solo es un problema si la correlación es mayor a 0.9</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 4 de 5</div>
+          <div class="quiz-q-text">En un análisis de conectividad EEG con 2016 pares de electrodos (α=0.05), ¿cuántos falsos positivos se esperan sin corrección?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Aproximadamente 1 — el α ya controla los falsos positivos</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q4')">Aproximadamente 101 (2016 × 0.05) — la mayoría de los "significativos" son ruido</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Cero — la prueba estadística garantiza que no haya falsos positivos</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Depende del tamaño del efecto, no del número de pruebas</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 5 de 5</div>
+          <div class="quiz-q-text">La prueba de permutaciones para un clasificador EEG con LOSO produce p=0.03. ¿Qué significa esto?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">El 3% de los sujetos tienen clasificación incorrecta</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">El AUROC del clasificador es 0.97</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q5')">Solo el 3% de las permutaciones aleatorias de etiquetas produjeron un AUROC tan alto o mayor — el resultado es estadísticamente significativo</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">La exactitud del clasificador es 97% en el conjunto de prueba</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+
+        <div class="quiz-score-bar" id="score-bar" style="display:none">
+          <span>Resultado:</span>
+          <span class="score-pill" id="score-text">0 / 5</span>
+          <span id="score-msg"></span>
+          <button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+        </div>
+      </div>
+
+      <div class="summary-grid" style="margin-top:14px">
+        <div class="summary-block" style="background:#EFF6FF;border-left:3px solid var(--mod-I)">
+          <h4 style="color:var(--mod-I)">Conceptos clave</h4>
+          <ul style="font-size:12.5px">
+            <li>Sesgo² + Varianza + Ruido irreducible</li>
+            <li>k-fold vs LOSO para datos fisiológicos</li>
+            <li>Fuga de información — fuentes y detección</li>
+            <li>Bonferroni (FWER) vs B-H (FDR)</li>
+            <li>Prueba de permutaciones restringida</li>
+          </ul>
+        </div>
+        <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+          <h4 style="color:var(--teal)">Reglas de oro</h4>
+          <ul style="font-size:12.5px">
+            <li>LOSO para señales fisiológicas multi-sujeto</li>
+            <li>Preprocesamiento SIEMPRE dentro del loop CV</li>
+            <li>m pruebas → corrección FDR o Bonferroni</li>
+            <li>Permutaciones restringidas respetan la estructura</li>
+            <li>CV anidada si hay selección de hiperparámetros</li>
+          </ul>
+        </div>
+      </div>
+      <div class="next-session">
+        <strong>Próxima sesión:</strong> Selección de características y reducción de dimensionalidad — PCA, LDA, ICA y separación de fuentes para eliminación de artefactos EEG.
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="progress-dots" id="dots"></div>
+    <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+  </div>
+
+</div>
+<script>
+const N_SLIDES = 8;
+let current = 1;
+const dotsEl = document.getElementById('dots');
+for (let i=1;i<=N_SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===1?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+function updateDots(){
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');
+  });
+}
+function goTo(n){
+  document.getElementById('slide-'+current).classList.remove('active');
+  current=Math.max(1,Math.min(N_SLIDES,n));
+  const s=document.getElementById('slide-'+current);
+  s.classList.add('active');
+  s.style.animation='none';s.offsetHeight;s.style.animation='';
+  document.getElementById('btn-prev').disabled=current===1;
+  document.getElementById('btn-next').disabled=current===N_SLIDES;
+  updateDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(current===2) drawBVBars();
+  if(current===3) drawCVDiagram();
+  if(current===5) drawMCChart();
+  if(current===6) drawPermChart();
+}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(-1);
+});
+
+/* ── Bias-Variance bars (Slide 2) ── */
+function drawBVBars(){
+  const el=document.getElementById('bv-bars');
+  if(!el||el.children.length>0)return;
+  const data=[
+    {label:'Grado 1', bias2:0.42, var:0.03, noise:0.16},
+    {label:'Grado 3', bias2:0.08, var:0.06, noise:0.16},
+    {label:'Grado 6', bias2:0.02, var:0.18, noise:0.16},
+    {label:'Grado 12',bias2:0.01, var:0.55, noise:0.16},
+  ];
+  const maxTotal=0.75;
+  el.innerHTML=data.map(d=>{
+    const total=d.bias2+d.var+d.noise;
+    const w=v=>`${(v/maxTotal*100).toFixed(0)}%`;
+    return `
+    <div class="bv-row">
+      <span class="bv-label">${d.label}</span>
+      <div class="bv-bar-bg">
+        <div class="bv-seg" style="width:${w(d.bias2)};background:#EF4444" title="Sesgo²=${d.bias2.toFixed(2)}"></div>
+        <div class="bv-seg" style="width:${w(d.var)};background:#3B82F6"   title="Varianza=${d.var.toFixed(2)}"></div>
+        <div class="bv-seg" style="width:${w(d.noise)};background:#9CA3AF"  title="Ruido=${d.noise.toFixed(2)}"></div>
+      </div>
+      <span class="bv-total">${total.toFixed(2)}</span>
+    </div>`}).join('')+
+    `<div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--slate)">
+      <span><span style="color:#EF4444">■</span> Sesgo²</span>
+      <span><span style="color:#3B82F6">■</span> Varianza</span>
+      <span><span style="color:#9CA3AF">■</span> Ruido</span>
+    </div>`;
+}
+
+/* ── CV diagram (Slide 3) ── */
+function drawCVDiagram(){
+  const el=document.getElementById('cv-diagram');
+  if(!el||el.children.length>0)return;
+  const nSubj=5, nFolds=5;
+  const colors={train:'#BFDBFE',test:'#EF4444',unused:'#F3F4F6'};
+
+  let html='<div style="font-size:11px;color:var(--slate);margin-bottom:4px"><strong>k-fold (k=5)</strong> — 25 muestras de 5 sujetos mezcladas</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(25,1fr);gap:2px;margin-bottom:10px">';
+  for(let i=0;i<25;i++){
+    const fold=Math.floor(i/5);
+    const isTest=(fold===0);
+    html+=`<div style="height:16px;border-radius:2px;background:${isTest?colors.test:colors.train}" title="${isTest?'Test':'Train'}"></div>`;
+  }
+  html+='</div><div style="font-size:11px;color:var(--slate);margin-bottom:4px"><strong>LOSO</strong> — 5 sujetos, dejar uno fuera por turno</div>';
+  html+='<div style="display:grid;gap:3px;">';
+  for(let s=0;s<nSubj;s++){
+    html+=`<div style="display:flex;align-items:center;gap:4px">
+      <span style="font-size:10px;color:var(--muted);min-width:44px">Sujeto ${s+1}</span>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;flex:1">`;
+    for(let j=0;j<nSubj;j++){
+      const isTest=(j===s);
+      html+=`<div style="height:14px;border-radius:2px;background:${isTest?colors.test:colors.train}"></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  html+='</div>';
+  html+=`<div style="display:flex;gap:12px;margin-top:6px;font-size:11px;color:var(--slate)">
+    <span><span style="color:#3B82F6">■</span> Entrenamiento</span>
+    <span><span style="color:#EF4444">■</span> Prueba</span></div>`;
+  el.innerHTML=html;
+}
+
+/* ── MC Chart (Slide 5) ── */
+function drawMCChart(){
+  const el=document.getElementById('mc-chart');
+  if(!el||el.children.length>0)return;
+  const data=[
+    {label:'Sin corrección',vp:131,fp:468,color:'#EF4444'},
+    {label:'Bonferroni',    vp:60, fp:0,  color:'#3B82F6'},
+    {label:'FDR (B-H)',     vp:120,fp:5,  color:'#10B981'},
+  ];
+  const maxV=500;
+  el.innerHTML='<div style="font-size:11.5px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">10,000 vóxeles — VP y FP detectados</div>'+
+  data.map(d=>`
+    <div style="margin-bottom:6px">
+      <div style="font-size:11.5px;color:var(--slate);margin-bottom:2px">${d.label}</div>
+      <div style="display:flex;gap:4px;align-items:center">
+        <div style="height:14px;border-radius:3px;background:#16A34A;width:${(d.vp/maxV*200).toFixed(0)}px"></div>
+        <span style="font-size:10px;color:#16A34A;min-width:30px">VP=${d.vp}</span>
+        <div style="height:14px;border-radius:3px;background:#DC2626;width:${(d.fp/maxV*200).toFixed(0)}px"></div>
+        <span style="font-size:10px;color:#DC2626">FP=${d.fp}</span>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Perm Chart (Slide 6) ── */
+function drawPermChart(){
+  const el=document.getElementById('perm-chart');
+  if(!el||el.children.length>0)return;
+  // Simulated null distribution
+  const mu=0.50, sd=0.04, obs=0.68;
+  const bins=20, lo=0.38, hi=0.78;
+  const w=(hi-lo)/bins;
+  const counts=Array(bins).fill(0);
+  for(let i=0;i<1000;i++){
+    const v=mu+sd*(Math.random()+Math.random()+Math.random()+Math.random()-2)*1.73;
+    const b=Math.floor((v-lo)/w);
+    if(b>=0&&b<bins)counts[b]++;
+  }
+  const maxC=Math.max(...counts);
+  const H=80, W=240;
+  let svg=`<svg width="${W}" height="${H+30}" style="display:block;margin:0 auto">`;
+  counts.forEach((c,i)=>{
+    const x=i*(W/bins), bw=W/bins-1;
+    const h=(c/maxC)*H;
+    const xm=lo+(i+0.5)*w;
+    const fill=xm>=obs?'rgba(239,68,68,0.6)':'rgba(59,130,246,0.5)';
+    svg+=`<rect x="${x}" y="${H-h}" width="${bw}" height="${h}" fill="${fill}" rx="2"/>`;
+  });
+  // obs line
+  const xobs=(obs-lo)/(hi-lo)*W;
+  svg+=`<line x1="${xobs}" y1="0" x2="${xobs}" y2="${H}" stroke="#EF4444" stroke-width="2" stroke-dasharray="4,2"/>`;
+  svg+=`<text x="${xobs+4}" y="14" font-size="10" fill="#EF4444">T_obs=${obs}</text>`;
+  svg+=`<text x="4" y="${H+20}" font-size="9" fill="#8896A8">Distribución nula (permutaciones)</text>`;
+  svg+=`</svg>`;
+  el.innerHTML='<div style="font-size:11.5px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Distribución nula — prueba de permutaciones</div>'+svg+
+    '<div style="display:flex;gap:10px;font-size:10px;color:var(--muted);margin-top:2px"><span><span style="color:#3B82F6">■</span> Nulo</span><span><span style="color:#EF4444">■</span> Región p&lt;0.05</span></div>';
+}
+
+/* ── Quiz ── */
+const feedbacks={
+  q1:['¡Correcto! Error bajo en train + error alto en validación = varianza alta = sobreajuste. El modelo memoriza los datos de entrenamiento pero no generaliza.',
+      'Incorrecto. Sesgo alto se manifiesta cuando AMBOS errores (train y validación) son altos — el modelo es demasiado simple para capturar el patrón.'],
+  q2:['¡Correcto! LOSO garantiza que cada iteración evalúe la generalización a un sujeto completamente nuevo — el único escenario clínicamente relevante para sistemas BCI.',
+      'Incorrecto. k-fold mezclando ensayos de distintos sujetos mezcla datos del mismo sujeto entre train y test, permitiendo al modelo aprender la firma fisiológica individual en lugar de la tarea.'],
+  q3:['¡Correcto! La selección de características usando correlación con etiquetas sobre todo el dataset introduce fuga — el selector ha "visto" las etiquetas del conjunto de prueba. Debe hacerse dentro de cada fold.',
+      'Incorrecto. La selección de características antes de la CV es una fuente clásica de fuga. Incluso si la correlación es moderada, infla artificialmente el AUROC al usar información del test.'],
+  q4:['¡Correcto! Con α=0.05 y 2016 pruebas, se esperan 2016×0.05 ≈ 101 falsos positivos por azar. La corrección de Bonferroni o FDR es imprescindible.',
+      'Incorrecto. α=0.05 significa que en cada prueba individual hay 5% de probabilidad de FP. Con 2016 pruebas, el número esperado de FP es 2016×0.05 ≈ 101.'],
+  q5:['¡Correcto! El p-valor de permutaciones es la proporción de permutaciones aleatorias que producen un estadístico tan extremo o más que el observado. p=0.03 < 0.05 indica significancia estadística.',
+      'Incorrecto. El p-valor de permutaciones no es la exactitud ni el AUROC. Es la proporción de distribuciones nulas que superan el estadístico observado.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){
+  if(answered[qid])return; answered[qid]=true;
+  const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  if(isCorrect){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}
+  const fb=document.getElementById('fb-'+qid);
+  fb.textContent=feedbacks[qid][isCorrect?0:1];
+  fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');
+  if(Object.keys(answered).length===5)showScore();
+}
+function showScore(){
+  document.getElementById('score-bar').style.display='flex';
+  document.getElementById('score-text').textContent=`${score} / 5`;
+  const msgs=['Revisa el material — especialmente fuga de información y LOSO.',
+              'Buen inicio — repasa comparaciones múltiples y permutaciones.',
+              '¡Bien! Revisa la pregunta que fallaste.',
+              '¡Excelente comprensión!','¡Perfecto!'];
+  document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];
+}
+function resetQuiz(){
+  answered={};score=0;
+  document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});
+  document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});
+  document.getElementById('score-bar').style.display='none';
+}
+</script>
+</body>
+</html>
