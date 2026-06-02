@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 06 — Clasificadores Lineales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;
+  --amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;
+  --white:#FFFFFF;--border:#CBD5E0;--mod-II:#F59E0B;
+  --correct:#059669;--wrong:#DC2626;--radius:10px;
+  --shadow-lg:0 8px 40px rgba(27,58,107,0.16);
+  --font-display:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --slide-w:860px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--mod-II);color:white;font-family:var(--font-mono);font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}
+.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.15) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:36px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:18px 22px;text-align:left;max-width:600px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:var(--teal);font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--teal)}
+h3.section{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}
+ul{padding-left:18px}
+ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F0F7FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--navy);margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}
+.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}
+.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}
+.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.green{background:#F0FDF4;border-left:3px solid var(--correct)}
+.card.navy{background:#1B3A6B}
+.card.navy p,.card.navy li,.card.navy h3{color:rgba(255,255,255,.85)}
+.card.navy .math{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:white}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+pre .kw{color:#7DD3FC}pre .fn{color:#86EFAC}pre .cm{color:#6B7280}pre .nu{color:#FDE68A}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--navy);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}
+.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}
+.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}
+.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}
+.nb-fallback a{color:var(--teal)}
+.quiz-q{margin-bottom:16px}
+.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}
+.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}
+.quiz-opt.correct{border-color:var(--correct);background:#ECFDF5;color:#065F46}
+.quiz-opt.wrong{border-color:var(--wrong);background:#FEF2F2;color:#991B1B}
+.quiz-opt.reveal{border-color:var(--correct);background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.ok{background:#ECFDF5;color:#065F46}
+.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:var(--radius);font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.summary-block{border-radius:var(--radius);padding:14px 16px}
+.summary-block h4{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.next-session{background:var(--amber-lt);border:1px solid #FCD34D;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#78350F}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--mod-II);border-color:var(--mod-II);margin-left:auto;color:#1B3A6B;font-weight:600}
+.nav-btn.primary:hover{background:#D97706}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}
+.dot.active{background:white;transform:scale(1.3)}
+.dot.visited{background:var(--mod-II)}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}
+.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+.cite a{color:var(--teal)}
+/* Dataset banner */
+.dataset-banner{background:linear-gradient(90deg,#1B3A6B,#1A7A8A);border-radius:var(--radius);padding:10px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.dataset-banner .icon{font-size:20px}
+.dataset-banner p{color:white;font-size:12.5px;margin:0;line-height:1.4}
+.dataset-banner strong{color:#FDE68A}
+/* Optimizer anim canvas */
+#opt-canvas{display:block;width:100%;border-radius:8px;background:#F7F9FC;border:1px solid var(--border)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SLIDE 1 — PORTADA -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Modelos Discriminativos</span>
+      <span class="slide-counter">1 / 8</span>
+    </div>
+    <div class="cover-body">
+      <div class="cover-tag">Sesión 06 · Inicio del Módulo II</div>
+      <h1 class="cover-title"><em>Clasificadores</em><br>Lineales</h1>
+      <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+      <div class="cover-objectives">
+        <h3>Objetivos de aprendizaje</h3>
+        <ul>
+          <li>Derivar la entropía cruzada binaria desde el modelo probabilístico</li>
+          <li>Implementar GD, SGD y Adam desde cero y comparar convergencia</li>
+          <li>Visualizar trayectorias L1/L2 y explicar por qué L1 induce dispersión</li>
+          <li>Extender al caso multiclase mediante softmax</li>
+          <li>Diagnosticar sesgo/varianza con curvas de aprendizaje</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — DATASET UCI -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Dataset del Módulo II</span>
+      <span class="slide-counter">2 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Dataset Principal — <span>PhysioNet CinC 2012</span></h2>
+      <div class="dataset-banner">
+        <span class="icon">🏥</span>
+        <p><strong>PhysioNet Challenge 2012 — Mortalidad en UCI</strong><br>
+        Este dataset acompaña todo el Módulo II (Sesiones 06–09). Los estudiantes verán el mismo problema clínico abordado con herramientas progresivamente más poderosas.</p>
+      </div>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Descripción</h3>
+          <p style="font-size:13px">El objetivo es predecir la mortalidad intrahospitalaria a partir de datos de las primeras 48 horas en UCI. Las 8 características clínicas incluyen:</p>
+          <table style="margin-top:8px">
+            <tr><th>Característica</th><th>Unidad</th><th>Relación con mortalidad</th></tr>
+            <tr><td>Edad</td><td>años</td><td>Positiva (débil)</td></tr>
+            <tr><td>APACHE-II</td><td>puntos</td><td>Positiva (fuerte)</td></tr>
+            <tr><td>FC media</td><td>lpm</td><td>Positiva (débil)</td></tr>
+            <tr><td>SpO2 media</td><td>%</td><td>Negativa</td></tr>
+            <tr><td>Creatinina</td><td>mg/dL</td><td>Positiva</td></tr>
+            <tr><td>Bilirrubina</td><td>mg/dL</td><td>Positiva</td></tr>
+            <tr><td>Glasgow</td><td>3–15</td><td>Negativa (fuerte)</td></tr>
+            <tr><td>FiO2</td><td>fracción</td><td>Positiva</td></tr>
+          </table>
+          <div class="cite" style="margin-top:10px">
+            <p><strong>Fuente:</strong> Silva, I. et al. (2012). Predicting in-hospital mortality of ICU patients: the PhysioNet/CinC Challenge 2012. <em>Computing in Cardiology</em>, 39, 245–248. <a href="https://physionet.org/content/challenge-2012/" target="_blank">physionet.org/content/challenge-2012</a></p>
+          </div>
+        </div>
+        <div>
+          <div class="card amber">
+            <h3 class="section">Hilo narrativo del Módulo II</h3>
+            <table>
+              <tr><th>Sesión</th><th>Modelo</th><th>Pregunta</th></tr>
+              <tr><td>06</td><td>Regresión logística</td><td>¿Funciona un modelo lineal?</td></tr>
+              <tr><td>07</td><td>SVM</td><td>¿Ayuda maximizar el margen?</td></tr>
+              <tr><td>08</td><td>Ensambles</td><td>¿Mejoran los árboles?</td></tr>
+              <tr><td>09</td><td>Comparación</td><td>¿Cuál es el mejor para UCI?</td></tr>
+            </table>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Prevalencia y desbalance</h3>
+            <p style="font-size:13px">Mortalidad en UCI: <strong>~18–22%</strong> en la población del Challenge. Este desbalance (≈1:4) es relevante — las métricas de la Sesión 03 se aplicarán directamente aquí.</p>
+          </div>
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Ejercicios: WESAD</h3>
+            <p style="font-size:13px">Los ejercicios de la Sesión 06 usan el dataset WESAD (Schmidt et al., 2018) — detección de estrés fisiológico con pulsera — para practicar con un problema de clasificación binaria diferente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — REGRESIÓN LOGÍSTICA -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Regresión Logística</span>
+      <span class="slide-counter">3 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Regresión Logística — <span>Derivación de la Pérdida</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Modelo probabilístico</h3>
+          <code class="math">P(y=1|x,w) = σ(wᵀx + b) = 1/(1 + e^{-(wᵀx+b)})
+σ(z) ∈ (0,1) para todo z ∈ ℝ</code>
+
+          <h3 class="section" style="margin-top:12px">Pérdida: entropía cruzada binaria</h3>
+          <p style="font-size:13px">Negativo del log de la verosimilitud:</p>
+          <code class="math">ℒ(w) = -(1/N) Σᵢ [yᵢ log p̂ᵢ + (1-yᵢ) log(1-p̂ᵢ)]</code>
+
+          <h3 class="section" style="margin-top:12px">Gradiente</h3>
+          <code class="math">∇_w ℒ = (1/N) Xᵀ(p̂ - y)</code>
+          <p style="font-size:12.5px;margin-top:4px">Elegante: el gradiente es el <em>error de predicción</em> ponderado por las características. La misma forma que la regresión lineal ordinaria.</p>
+
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Interpretación clínica</h3>
+            <p style="font-size:13px">Un coeficiente positivo (p. ej. APACHE-II) significa que aumentar esa variable eleva el logit → eleva la probabilidad de muerte. El coeficiente es el cambio en el log-odds por unidad de la característica.</p>
+          </div>
+        </div>
+        <div>
+          <canvas id="sigmoid-canvas" width="300" height="220" style="display:block;width:100%;border-radius:8px;background:var(--bg);border:1px solid var(--border)"></canvas>
+          <div class="card navy" style="margin-top:10px">
+            <h3 class="section">En Python (desde cero)</h3>
+            <pre><span class="kw">def</span> <span class="fn">sigmoid</span>(z):
+    <span class="kw">return</span> <span class="nu">1</span> / (<span class="nu">1</span> + np.<span class="fn">exp</span>(-z))
+
+<span class="kw">def</span> <span class="fn">gradiente</span>(X, y, w, b):
+    p = <span class="fn">sigmoid</span>(X @ w + b)
+    gw = X.T @ (p - y) / len(y)
+    gb = (p - y).<span class="fn">mean</span>()
+    <span class="kw">return</span> gw, gb</pre>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Conexión con Módulo I</h3>
+            <p style="font-size:13px">La entropía cruzada es exactamente el negativo del log de la verosimilitud binomial. La regresión logística es la <strong>EMV</strong> bajo el modelo de Bernoulli — derivada directamente del Módulo I.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 — OPTIMIZADORES -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Optimizadores: GD, SGD y Adam</span>
+      <span class="slide-counter">4 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">GD, SGD <span>y Adam</span></h2>
+      <div class="two-col">
+        <div>
+          <table>
+            <tr><th>Optimizador</th><th>Actualización</th><th>Característica</th></tr>
+            <tr>
+              <td><strong>GD</strong></td>
+              <td><code style="font-size:11px">w ← w − η∇ℒ</code></td>
+              <td>Todo el dataset por paso. Suave pero lento.</td>
+            </tr>
+            <tr>
+              <td><strong>SGD</strong></td>
+              <td><code style="font-size:11px">w ← w − η∇ℒ_batch</code></td>
+              <td>Mini-lotes. Ruidoso pero escala bien.</td>
+            </tr>
+            <tr>
+              <td><strong>Adam</strong></td>
+              <td><code style="font-size:11px">w ← w − η·m̂/(√v̂+ε)</code></td>
+              <td>Tasa adaptativa por parámetro. Robusto.</td>
+            </tr>
+          </table>
+
+          <div class="card blue" style="margin-top:12px">
+            <h3 class="section">Adam — momentos de primer y segundo orden</h3>
+            <code class="math" style="font-size:11.5px">m_t = β₁·m_{t-1} + (1-β₁)·g_t     ← media móvil del grad.
+v_t = β₂·v_{t-1} + (1-β₂)·g_t²   ← media móvil del grad.²
+m̂_t = m_t/(1-β₁ᵗ)  v̂_t = v_t/(1-β₂ᵗ) ← corrección de sesgo
+w ← w − η·m̂_t/(√v̂_t + ε)</code>
+            <p style="font-size:12px;margin-top:6px">Hiperparámetros por defecto: β₁=0.9, β₂=0.999, ε=10⁻⁸, η=0.001</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Trayectorias de convergencia</h3>
+          <canvas id="opt-canvas" width="300" height="260"></canvas>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Regla práctica</h3>
+            <ul style="font-size:12.5px">
+              <li><strong>Adam</strong> es el punto de partida recomendado para redes neuronales y logística</li>
+              <li><strong>SGD con momentum</strong> puede superar a Adam en algunos casos con buen tuning</li>
+              <li><strong>GD</strong> útil para entender convergencia teórica, poco práctico en datasets grandes</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 — REGULARIZACIÓN -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Regularización L1 y L2</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Regularización <span>L1 vs L2</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Pérdida regularizada</h3>
+          <code class="math">ℒ_reg(w) = ℒ(w) + λ·Ω(w)
+
+L2 (ridge): Ω = ‖w‖₂²   → prior gaussiano
+L1 (lasso): Ω = ‖w‖₁    → prior de Laplace</code>
+
+          <h3 class="section" style="margin-top:12px">¿Por qué L1 produce ceros exactos?</h3>
+          <canvas id="l1l2-canvas" width="340" height="200" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border)"></canvas>
+          <p style="font-size:12px;color:var(--muted);margin-top:4px">Las esquinas de la bola L1 tocan los ejes. La bola L2 es suave — los mínimos raramente tocan los ejes.</p>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">Equivalencia bayesiana</h3>
+            <table>
+              <tr><th>Regularización</th><th>Prior bayesiano</th><th>Efecto</th></tr>
+              <tr><td><strong>L2</strong></td><td>Gaussiano p(w)∝e^{-λ‖w‖²}</td><td>Shrinkage uniforme</td></tr>
+              <tr><td><strong>L1</strong></td><td>Laplace p(w)∝e^{-λ‖w‖₁}</td><td>Selección de características</td></tr>
+            </table>
+            <p style="font-size:12px;margin-top:8px">La regularización L2 es exactamente la estimación MAP con prior gaussiano — derivada directamente del Módulo I.</p>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Selección de λ</h3>
+            <ul style="font-size:12.5px">
+              <li>λ=0: EMV (sin regularización) — puede sobreajustar</li>
+              <li>λ→∞: todos los coeficientes → 0 — subajuste severo</li>
+              <li>λ óptimo: validación cruzada en el rango [10⁻⁴, 10²]</li>
+            </ul>
+          </div>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Contexto UCI</h3>
+            <p style="font-size:13px">Con 8 características clínicas, L1 puede identificar cuáles son realmente predictivas de mortalidad. El APACHE-II y Glasgow típicamente tienen los coeficientes más grandes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — SOFTMAX Y CURVAS DE APRENDIZAJE -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Softmax y Curvas de Aprendizaje</span>
+      <span class="slide-counter">6 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Softmax Multiclase <span>y Diagnóstico</span></h2>
+      <div class="two-col">
+        <div>
+          <h3 class="section">Función softmax</h3>
+          <code class="math">P(y=k|x) = exp(wₖᵀx+bₖ) / Σⱼ exp(wⱼᵀx+bⱼ)</code>
+          <p style="font-size:13px;margin-top:6px">Generaliza la sigmoide al caso K &gt; 2. La suma de probabilidades es 1 por construcción.</p>
+
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Aplicación UCI — 3 niveles de gravedad</h3>
+            <table>
+              <tr><th>Clase</th><th>Descripción</th></tr>
+              <tr><td>0 — Bajo riesgo</td><td>Sobrevive sin complicaciones mayores</td></tr>
+              <tr><td>1 — Riesgo intermedio</td><td>Sobrevive con complicaciones</td></tr>
+              <tr><td>2 — Alto riesgo</td><td>Fallece en UCI</td></tr>
+            </table>
+          </div>
+
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Pérdida categórica</h3>
+            <code class="math" style="font-size:11.5px">ℒ = -(1/N)ΣᵢΣₖ yᵢₖ log p̂ᵢₖ</code>
+            <p style="font-size:12px;margin-top:4px">Gradiente: ∂ℒ/∂W = Xᵀ(P̂ − Y) / N — misma forma elegante que el caso binario.</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Diagnóstico con curvas de aprendizaje</h3>
+          <canvas id="lc-canvas" width="300" height="200" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border)"></canvas>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">Lectura de las curvas</h3>
+            <table>
+              <tr><th>Patrón</th><th>Diagnóstico</th><th>Remedio</th></tr>
+              <tr><td>Ambas curvas altas</td><td>Sesgo alto</td><td>Modelo más complejo</td></tr>
+              <tr><td>Brecha grande</td><td>Varianza alta</td><td>Más datos o regularizar</td></tr>
+              <tr><td>Ambas bajas, convergentes</td><td>Bien ajustado</td><td>—</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — CUADERNO -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Práctica Interactiva</span>
+      <span class="slide-counter">7 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+      <p style="margin-bottom:14px;font-size:13px">El cuaderno implementa regresión logística desde cero sobre el dataset UCI de mortalidad en UCI: derivación de la pérdida, GD/SGD/Adam, trayectorias L1/L2, softmax multiclase y curvas de aprendizaje.</p>
+      <div class="nb-wrap">
+        <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+        <div class="nb-frame">
+          <iframe
+            src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_06_clasificadores_lineales.ipynb"
+            title="Cuaderno Sesión 06"
+            allow="cross-origin-isolated"
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_06_clasificadores_lineales.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — AUTOEVALUACIÓN + RESUMEN -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Autoevaluación y Resumen</span>
+      <span class="slide-counter">8 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+      <div id="quiz">
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 1 de 5</div>
+          <div class="quiz-q-text">La función de pérdida de entropía cruzada binaria se obtiene como:</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,true,'q1')">El negativo del log de la verosimilitud bajo el modelo de Bernoulli — es directamente la EMV</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El error cuadrático medio entre las probabilidades predichas y las etiquetas reales</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">La distancia euclidiana entre los vectores de características de clases distintas</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">Una aproximación lineal a la pérdida 0-1 (clasificación dura)</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 2 de 5</div>
+          <div class="quiz-q-text">Una regularización L1 con λ grande en la regresión logística UCI produce:</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Coeficientes grandes para todas las características</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Shrinkage uniforme — todos los coeficientes se reducen proporcionalmente</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q2')">Varios coeficientes exactamente cero — selección automática de características clínicas relevantes</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Exactamente el mismo resultado que L2 pero más rápido computacionalmente</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 3 de 5</div>
+          <div class="quiz-q-text">El optimizador Adam utiliza momentos de primer y segundo orden. ¿Qué calcula el segundo momento v_t?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La media móvil del gradiente — equivalente al momentum clásico</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q3')">La media móvil del cuadrado del gradiente — estima la varianza del gradiente y permite adaptar la tasa de aprendizaje por parámetro</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">El segundo derivado (Hessiano) de la función de pérdida</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La norma L2 de los pesos en la iteración t</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 4 de 5</div>
+          <div class="quiz-q-text">Las curvas de aprendizaje muestran que tanto el error de entrenamiento como el de validación son altos, y ambos convergen a un valor similar con N grande. El diagnóstico es:</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Varianza alta — el modelo necesita más datos</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q4')">Sesgo alto — el modelo es demasiado simple para capturar el patrón en los datos</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Fuga de información — el preprocesamiento se hizo antes de dividir los datos</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">El modelo está perfectamente ajustado y no necesita cambios</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 5 de 5</div>
+          <div class="quiz-q-text">La función softmax para K=3 clases garantiza que:</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Los logits de cada clase son independientes entre sí</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">La probabilidad de cada clase es mayor que 0.5</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q5')">Las K probabilidades predichas son no negativas y suman exactamente 1 — forman una distribución de probabilidad válida</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">El gradiente de la pérdida es siempre cero cuando las clases están balanceadas</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+
+        <div class="quiz-score-bar" id="score-bar" style="display:none">
+          <span>Resultado:</span>
+          <span class="score-pill" id="score-text">0 / 5</span>
+          <span id="score-msg"></span>
+          <button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+        </div>
+      </div>
+
+      <div class="summary-grid" style="margin-top:14px">
+        <div class="summary-block" style="background:#FEF3C7;border-left:3px solid var(--mod-II)">
+          <h4 style="color:var(--amber)">Conceptos clave</h4>
+          <ul style="font-size:12.5px">
+            <li>Función sigmoide y modelo de Bernoulli</li>
+            <li>Entropía cruzada binaria = negativo log-verosimilitud</li>
+            <li>GD, SGD, Adam — diferencias y cuándo usar cada uno</li>
+            <li>L1 = dispersión, L2 = shrinkage uniforme</li>
+            <li>Softmax = generalización multiclase</li>
+          </ul>
+        </div>
+        <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+          <h4 style="color:var(--teal)">Conexiones con el Módulo I</h4>
+          <ul style="font-size:12.5px">
+            <li>Entropía cruzada = EMV bajo Bernoulli (S01–S02)</li>
+            <li>L2 = MAP con prior gaussiano (S02)</li>
+            <li>L1 = MAP con prior de Laplace (S02)</li>
+            <li>Curvas de aprendizaje = diagnóstico sesgo/varianza (S04)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="next-session">
+        <strong>Próxima sesión:</strong> SVM y Métodos de Kernel — margen máximo, truco del kernel, RBF, y clasificación del deletreador BCI P300.
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="progress-dots" id="dots"></div>
+    <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+const N_SLIDES=8; let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===1?' active':'');
+  d.onclick=()=>goTo(i); dotsEl.appendChild(d);
+}
+function updateDots(){
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');
+  });
+}
+function goTo(n){
+  document.getElementById('slide-'+current).classList.remove('active');
+  current=Math.max(1,Math.min(N_SLIDES,n));
+  const s=document.getElementById('slide-'+current);
+  s.classList.add('active');
+  s.style.animation='none';s.offsetHeight;s.style.animation='';
+  document.getElementById('btn-prev').disabled=current===1;
+  document.getElementById('btn-next').disabled=current===N_SLIDES;
+  updateDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(current===3) drawSigmoid();
+  if(current===4) drawOptimizers();
+  if(current===5) drawL1L2();
+  if(current===6) drawLC();
+}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(-1);
+});
+
+/* ── Sigmoid canvas (Slide 3) ── */
+function drawSigmoid(){
+  const c=document.getElementById('sigmoid-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth, H=220; c.width=W; c.height=H;
+  const pad={l:36,r:10,t:14,b:28};
+  const w=W-pad.l-pad.r, h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='#E2E8F0'; ctx.lineWidth=1;
+  [0.25,0.5,0.75].forEach(t=>{
+    ctx.beginPath();ctx.moveTo(pad.l+t*w,pad.t);ctx.lineTo(pad.l+t*w,pad.t+h);ctx.stroke();
+  });
+  [0.25,0.5,0.75].forEach(t=>{
+    ctx.beginPath();ctx.moveTo(pad.l,pad.t+(1-t)*h);ctx.lineTo(pad.l+w,pad.t+(1-t)*h);ctx.stroke();
+  });
+  // Fill regions
+  const sig=z=>1/(1+Math.exp(-z));
+  const zMin=-6, zMax=6;
+  ctx.fillStyle='rgba(239,68,68,0.1)';
+  ctx.beginPath(); ctx.moveTo(pad.l+w/2,pad.t+h);
+  for(let px=w/2;px<=w;px++){
+    const z=zMin+(px/w)*(zMax-zMin);
+    const y=1-sig(z);
+    ctx.lineTo(pad.l+px,pad.t+y*h);
+  }
+  ctx.lineTo(pad.l+w,pad.t+h); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(59,130,246,0.1)';
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t+h);
+  for(let px=0;px<=w/2;px++){
+    const z=zMin+(px/w)*(zMax-zMin);
+    const y=1-sig(z);
+    ctx.lineTo(pad.l+px,pad.t+y*h);
+  }
+  ctx.lineTo(pad.l+w/2,pad.t+h); ctx.closePath(); ctx.fill();
+  // Sigmoid curve
+  ctx.strokeStyle='#1B3A6B'; ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let px=0;px<=w;px++){
+    const z=zMin+(px/w)*(zMax-zMin);
+    const y=1-sig(z);
+    px===0?ctx.moveTo(pad.l+px,pad.t+y*h):ctx.lineTo(pad.l+px,pad.t+y*h);
+  }
+  ctx.stroke();
+  // Reference lines
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1; ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+0.5*h);ctx.lineTo(pad.l+w,pad.t+0.5*h);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(pad.l+w/2,pad.t);ctx.lineTo(pad.l+w/2,pad.t+h);ctx.stroke();
+  ctx.setLineDash([]);
+  // Labels
+  ctx.fillStyle='#4A5568'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('z = wᵀx + b',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(10,pad.t+h/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('σ(z)',0,0);ctx.restore();
+  ctx.fillText('0.5',pad.l+w/2-20,pad.t+0.5*h-4);
+}
+
+/* ── Optimizer convergence canvas (Slide 4) ── */
+function drawOptimizers(){
+  const c=document.getElementById('opt-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth, H=260; c.width=W; c.height=H;
+  const pad={l:36,r:10,t:14,b:28};
+  const w=W-pad.l-pad.r, h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const N=150;
+  const curves=[
+    {name:'GD',  color:'#3B82F6', fn:i=>0.65*Math.exp(-0.03*i)+0.20},
+    {name:'SGD', color:'#EF4444', fn:i=>0.62*Math.exp(-0.025*i)+0.22+0.04*Math.sin(i*0.8)},
+    {name:'Adam',color:'#10B981', fn:i=>0.63*Math.exp(-0.06*i)+0.19+0.01*Math.sin(i*2)},
+  ];
+  // Axes
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+h);ctx.lineTo(pad.l+w,pad.t+h);ctx.stroke();
+  // Curves
+  curves.forEach(cv=>{
+    ctx.strokeStyle=cv.color; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const x=pad.l+(i/(N-1))*w;
+      const y=pad.t+h-(cv.fn(i)-0.1)/(0.75-0.1)*h;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // Label at end
+    const yEnd=pad.t+h-(cv.fn(N-1)-0.1)/(0.75-0.1)*h;
+    ctx.fillStyle=cv.color; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+    ctx.fillText(cv.name,pad.l+w+2,yEnd+3);
+  });
+  ctx.fillStyle='#8896A8'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Época',pad.l+w/2,H-3);
+  ctx.save();ctx.translate(9,pad.t+h/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('Pérdida',0,0);ctx.restore();
+}
+
+/* ── L1 vs L2 geometry canvas (Slide 5) ── */
+function drawL1L2(){
+  const c=document.getElementById('l1l2-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth, H=200; c.width=W; c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const hw=W/2;
+  // L2 (left panel)
+  ctx.fillStyle='#F7F9FC'; ctx.fillRect(0,0,hw,H);
+  ctx.fillStyle='rgba(59,130,246,0.15)'; ctx.beginPath();
+  ctx.arc(hw/2,H/2,60,0,2*Math.PI); ctx.fill();
+  ctx.strokeStyle='#3B82F6'; ctx.lineWidth=2; ctx.beginPath();
+  ctx.arc(hw/2,H/2,60,0,2*Math.PI); ctx.stroke();
+  // Contour ellipse
+  ctx.strokeStyle='#9CA3AF'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.ellipse(hw/2+30,H/2-20,45,30,Math.PI/6,0,2*Math.PI); ctx.stroke();
+  ctx.setLineDash([]);
+  // Minimum point
+  ctx.fillStyle='#EF4444'; ctx.beginPath(); ctx.arc(hw/2+14,H/2-8,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#1B3A6B'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('L2 (ridge)',hw/2,H-8);
+  ctx.fillStyle='#6B7280'; ctx.font='9px DM Sans,sans-serif';
+  ctx.fillText('mínimo fuera del eje',hw/2,H-20);
+  // L1 (right panel)
+  ctx.fillStyle='#FFFBEB'; ctx.fillRect(hw,0,hw,H);
+  ctx.fillStyle='rgba(245,158,11,0.15)'; ctx.beginPath();
+  ctx.moveTo(hw+hw/2,H/2-60);ctx.lineTo(hw+hw/2+60,H/2);
+  ctx.lineTo(hw+hw/2,H/2+60);ctx.lineTo(hw+hw/2-60,H/2); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#D97706'; ctx.lineWidth=2; ctx.beginPath();
+  ctx.moveTo(hw+hw/2,H/2-60);ctx.lineTo(hw+hw/2+60,H/2);
+  ctx.lineTo(hw+hw/2,H/2+60);ctx.lineTo(hw+hw/2-60,H/2); ctx.closePath(); ctx.stroke();
+  // Contour ellipse
+  ctx.strokeStyle='#9CA3AF'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.ellipse(hw+hw/2+30,H/2-20,45,30,Math.PI/6,0,2*Math.PI); ctx.stroke();
+  ctx.setLineDash([]);
+  // Minimum point — on axis (corner of L1 ball)
+  ctx.fillStyle='#EF4444'; ctx.beginPath(); ctx.arc(hw+hw/2-60,H/2,5,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#1B3A6B'; ctx.font='bold 11px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('L1 (lasso)',hw+hw/2,H-8);
+  ctx.fillStyle='#6B7280'; ctx.font='9px DM Sans,sans-serif';
+  ctx.fillText('mínimo en el eje → cero exacto',hw+hw/2,H-20);
+  // Divider
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(hw,0);ctx.lineTo(hw,H);ctx.stroke();
+}
+
+/* ── Learning curves canvas (Slide 6) ── */
+function drawLC(){
+  const c=document.getElementById('lc-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth, H=200; c.width=W; c.height=H;
+  const pad={l:36,r:10,t:14,b:28};
+  const w=W-pad.l-pad.r, h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const N=30;
+  const trCurve=i=>0.25+0.08*Math.exp(-0.15*i);
+  const teCurve=i=>0.55-0.18*(1-Math.exp(-0.12*i));
+  // Axes
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t);ctx.lineTo(pad.l,pad.t+h);ctx.lineTo(pad.l+w,pad.t+h);ctx.stroke();
+  // Fill gap (variance)
+  ctx.fillStyle='rgba(239,68,68,0.08)';
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t+h-(trCurve(0)-0.1)/(0.55-0.1)*h);
+  for(let i=1;i<N;i++) ctx.lineTo(pad.l+(i/(N-1))*w,pad.t+h-(trCurve(i)-0.1)/(0.55-0.1)*h);
+  for(let i=N-1;i>=0;i--) ctx.lineTo(pad.l+(i/(N-1))*w,pad.t+h-(teCurve(i)-0.1)/(0.55-0.1)*h);
+  ctx.closePath(); ctx.fill();
+  // Curves
+  [{fn:trCurve,color:'#3B82F6',label:'Train'},{fn:teCurve,color:'#EF4444',label:'Test'}].forEach(cv=>{
+    ctx.strokeStyle=cv.color; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const x=pad.l+(i/(N-1))*w;
+      const y=pad.t+h-(cv.fn(i)-0.1)/(0.55-0.1)*h;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle=cv.color; ctx.font='bold 10px DM Sans,sans-serif'; ctx.textAlign='left';
+    const yEnd=pad.t+h-(cv.fn(N-1)-0.1)/(0.55-0.1)*h;
+    ctx.fillText(cv.label,pad.l+w+2,yEnd+3);
+  });
+  ctx.fillStyle='#8896A8'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Tamaño muestral N',pad.l+w/2,H-3);
+  ctx.save();ctx.translate(9,pad.t+h/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('Pérdida',0,0);ctx.restore();
+  // Gap label
+  ctx.fillStyle='#EF4444'; ctx.font='9px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('brecha = varianza',pad.l+w*0.4,pad.t+h*0.4);
+}
+
+/* ── Quiz ── */
+const feedbacks={
+  q1:['¡Correcto! La entropía cruzada binaria es el negativo del log de la verosimilitud bajo el modelo de Bernoulli. Maximizar la verosimilitud es equivalente a minimizar la entropía cruzada.',
+      'Incorrecto. La entropía cruzada no es el error cuadrático medio. El error cuadrático medio para clasificación binaria tiene problemas de gradientes saturados con la sigmoide.'],
+  q2:['¡Correcto! La norma L1 tiene esquinas en los ejes del espacio de parámetros. El mínimo de la pérdida regularizada frecuentemente cae en una esquina → coeficientes exactamente cero → selección automática de características.',
+      'Incorrecto. El shrinkage uniforme es el efecto de L2. L1 produce dispersión (coeficientes exactamente cero) gracias a la geometría de la bola L1.'],
+  q3:['¡Correcto! El segundo momento v_t es la media móvil del cuadrado del gradiente. Estima la magnitud de las actualizaciones recientes — si un parámetro tiene gradientes grandes consistentemente, su tasa de aprendizaje efectiva se reduce.',
+      'Incorrecto. La media móvil del gradiente es el primer momento m_t (equivalente al momentum). El Hessiano sería el segundo derivado, mucho más costoso de calcular.'],
+  q4:['¡Correcto! Cuando ambas curvas convergen a un error alto, el modelo es demasiado simple — tiene sesgo alto. La solución es aumentar la complejidad del modelo (más características, modelo no lineal) no añadir más datos.',
+      'Incorrecto. Varianza alta se manifiesta cuando hay una brecha grande entre train y test. Si ambas curvas son altas y convergentes, el problema es sesgo — el modelo no tiene suficiente capacidad.'],
+  q5:['¡Correcto! La función softmax garantiza que las K salidas estén en (0,1) y sumen 1, formando una distribución de probabilidad válida sobre las K clases.',
+      'Incorrecto. Softmax no garantiza que ninguna probabilidad supere 0.5 — si hay K=3 clases bien separadas, una puede acercarse a 1. La garantía es la suma = 1 y valores positivos.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){
+  if(answered[qid])return;answered[qid]=true;
+  const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  if(isCorrect){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}
+  const fb=document.getElementById('fb-'+qid);
+  fb.textContent=feedbacks[qid][isCorrect?0:1];
+  fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');
+  if(Object.keys(answered).length===5)showScore();
+}
+function showScore(){
+  document.getElementById('score-bar').style.display='flex';
+  document.getElementById('score-text').textContent=`${score} / 5`;
+  const msgs=['Revisa la derivación de la pérdida y los optimizadores.',
+              'Buen progreso — repasa regularización L1/L2.',
+              '¡Bien! Revisa la pregunta que fallaste.',
+              '¡Excelente comprensión!','¡Perfecto! Listo para SVMs.'];
+  document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];
+}
+function resetQuiz(){
+  answered={};score=0;
+  document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});
+  document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});
+  document.getElementById('score-bar').style.display='none';
+}
+</script>
+</body>
+</html>
