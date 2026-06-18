@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesión 07 — SVM y Métodos de Kernel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;
+  --amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;
+  --white:#FFFFFF;--border:#CBD5E0;--mod-II:#F59E0B;
+  --correct:#059669;--wrong:#DC2626;--radius:10px;
+  --shadow-lg:0 8px 40px rgba(27,58,107,0.16);
+  --font-display:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --slide-w:860px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--mod-II);color:#1B3A6B;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}
+.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.15) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:36px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:18px 22px;text-align:left;max-width:600px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:var(--teal);font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--teal)}
+h3.section{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}
+ul{padding-left:18px}
+ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F0F7FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--navy);margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}
+.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}
+.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}
+.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.green{background:#F0FDF4;border-left:3px solid var(--correct)}
+.card.navy{background:#1B3A6B}
+.card.navy p,.card.navy li,.card.navy h3{color:rgba(255,255,255,.85)}
+.card.navy .math{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:white}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+pre .kw{color:#7DD3FC}pre .fn{color:#86EFAC}pre .cm{color:#6B7280}pre .nu{color:#FDE68A}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--navy);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}
+.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}
+.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}
+.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}
+.nb-fallback a{color:var(--teal)}
+.quiz-q{margin-bottom:16px}
+.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}
+.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}
+.quiz-opt.correct{border-color:var(--correct);background:#ECFDF5;color:#065F46}
+.quiz-opt.wrong{border-color:var(--wrong);background:#FEF2F2;color:#991B1B}
+.quiz-opt.reveal{border-color:var(--correct);background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.ok{background:#ECFDF5;color:#065F46}
+.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:var(--radius);font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.summary-block{border-radius:var(--radius);padding:14px 16px}
+.summary-block h4{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.next-session{background:var(--amber-lt);border:1px solid #FCD34D;border-radius:var(--radius);padding:12px 16px;font-size:13px;color:#78350F}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}
+.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--mod-II);border-color:var(--mod-II);margin-left:auto;color:#1B3A6B;font-weight:600}
+.nav-btn.primary:hover{background:#D97706}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}
+.dot.active{background:white;transform:scale(1.3)}
+.dot.visited{background:var(--mod-II)}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}
+.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+.cite a{color:var(--teal)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SLIDE 1 — PORTADA -->
+  <div class="slide active" id="slide-1">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Modelos Discriminativos</span>
+      <span class="slide-counter">1 / 8</span>
+    </div>
+    <div class="cover-body">
+      <div class="cover-tag">Sesión 07 · SVM y Kernels</div>
+      <h1 class="cover-title">SVM y <em>Métodos de Kernel</em></h1>
+      <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+      <div class="cover-objectives">
+        <h3>Objetivos de aprendizaje</h3>
+        <ul>
+          <li>Derivar geométricamente el margen y formular el problema de optimización SVM</li>
+          <li>Extender al margen blando mediante variables de holgura y el parámetro C</li>
+          <li>Aplicar el truco del kernel para fronteras no lineales</li>
+          <li>Comparar kernels lineal, polinomial y RBF en el dataset UCI</li>
+          <li>Seleccionar C y γ con búsqueda en rejilla y validación cruzada</li>
+          <li>Aplicar SVM al deletreador P300 (BCI) y comparar con regresión logística</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 — MARGEN DURO Y BLANDO -->
+  <div class="slide" id="slide-2">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Margen Duro y Blando</span>
+      <span class="slide-counter">2 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">SVM — <span>Margen Máximo</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Formulación: margen duro</h3>
+          <code class="math">min  ½‖w‖²
+s.a. yᵢ(wᵀxᵢ + b) ≥ 1  ∀i
+
+Margen geométrico = 2/‖w‖</code>
+          <p style="font-size:13px;margin-top:6px">El SVM elige el hiperplano de máximo margen entre infinitos separadores posibles. Los puntos más cercanos al hiperplano son los <strong>vectores soporte</strong>.</p>
+
+          <h3 class="section" style="margin-top:12px">Margen blando — variables de holgura</h3>
+          <code class="math">min  ½‖w‖² + C·Σᵢ ξᵢ
+s.a. yᵢ(wᵀxᵢ+b) ≥ 1−ξᵢ,  ξᵢ≥0</code>
+
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">El parámetro C</h3>
+            <table>
+              <tr><th>C grande</th><th>C pequeño</th></tr>
+              <tr><td>Penaliza violaciones</td><td>Tolera violaciones</td></tr>
+              <tr><td>Margen estrecho</td><td>Margen amplio</td></tr>
+              <tr><td>Modelo complejo</td><td>Más regularizado</td></tr>
+              <tr><td>Puede sobreajustar</td><td>Puede subajustar</td></tr>
+            </table>
+          </div>
+        </div>
+        <div>
+          <canvas id="svm-margin-canvas" width="300" height="300" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Vectores soporte</h3>
+            <p style="font-size:13px">Solo los puntos en el margen o dentro de él determinan el hiperplano. Los demás puntos pueden eliminarse sin cambiar la solución — el SVM es una solución <em>dispersa</em> en el espacio dual.</p>
+          </div>
+          <div class="cite">
+            <p><strong>Ref:</strong> Cortes, C. & Vapnik, V. (1995). Support-vector networks. <em>Machine Learning</em>, 20(3), 273–297. <a href="https://doi.org/10.1007/BF00994018" target="_blank">doi:10.1007/BF00994018</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 — TRUCO DEL KERNEL -->
+  <div class="slide" id="slide-3">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">El Truco del Kernel</span>
+      <span class="slide-counter">3 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">El <span>Truco del Kernel</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Idea central</h3>
+          <p style="font-size:13px">El SVM dual depende solo de productos internos ⟨xᵢ, xⱼ⟩. Un kernel calcula el producto interno en un espacio de características de alta dimensión <strong>sin calcular el mapeo explícitamente</strong>:</p>
+          <code class="math">k(xᵢ, xⱼ) = ⟨φ(xᵢ), φ(xⱼ)⟩</code>
+
+          <h3 class="section" style="margin-top:12px">Kernels principales</h3>
+          <table>
+            <tr><th>Kernel</th><th>Fórmula</th><th>Frontera</th></tr>
+            <tr><td><strong>Lineal</strong></td><td>xᵢᵀxⱼ</td><td>Hiperplano</td></tr>
+            <tr><td><strong>Polinomial</strong></td><td>(γxᵢᵀxⱼ+r)ᵈ</td><td>Polinómica grado d</td></tr>
+            <tr><td><strong>RBF</strong></td><td>exp(−γ‖xᵢ−xⱼ‖²)</td><td>Arbitrariamente compleja</td></tr>
+          </table>
+
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">γ en el kernel RBF</h3>
+            <ul style="font-size:12.5px">
+              <li>γ grande → frontera muy irregular → sobreajuste</li>
+              <li>γ pequeño → frontera suave → subajuste</li>
+              <li>γ='scale' → 1/(d·Var(X)) — buen punto de partida</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <canvas id="kernel-canvas" width="300" height="320" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Función de Mercer</h3>
+            <p style="font-size:13px">Un kernel válido debe ser simétrico y semidefinido positivo — equivalente a existir un espacio de Hilbert con reproducción del núcleo (RKHS) donde el kernel calcula el producto interno.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 — KERNELS EN UCI -->
+  <div class="slide" id="slide-4">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Kernels en el Dataset UCI</span>
+      <span class="slide-counter">4 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Comparación de Kernels — <span>UCI CinC 2012</span></h2>
+      <div class="two-col wide">
+        <div>
+          <p style="font-size:13px;margin-bottom:12px">Aplicamos los tres kernels al problema de predicción de mortalidad en UCI usando validación cruzada estratificada de 5 pliegues.</p>
+
+          <h3 class="section">Resultados (AUROC medio ± std)</h3>
+          <div id="uci-results"></div>
+
+          <div class="card teal" style="margin-top:12px">
+            <h3 class="section">Interpretación</h3>
+            <p style="font-size:13px">Con 8 características clínicas bien definidas, la regresión logística y el SVM lineal son frecuentemente competitivos con el SVM-RBF. El kernel RBF puede sobreajustar con pocas características si C y γ no están bien calibrados.</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">Búsqueda en rejilla C × γ</h3>
+          <canvas id="grid-canvas" width="300" height="240" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border)"></canvas>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">⚠ CV anidada obligatoria</h3>
+            <p style="font-size:13px">La selección de C y γ debe realizarse en el <em>inner loop</em> de la CV. Seleccionarlos en todo el dataset introduce fuga de información — el AUROC reportado sería optimista.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 — P300 BCI -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Aplicación BCI — Deletreador P300</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Deletreador P300 — <span>BCI con SVM</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">El problema</h3>
+          <p style="font-size:13px">El usuario observa una matriz de caracteres. Cada fila/columna se ilumina aleatoriamente. El carácter deseado produce un potencial evocado <strong>P300</strong> (~300 ms post-estímulo) en el EEG parietal.</p>
+          <div class="card blue" style="margin-top:10px">
+            <h3 class="section">Características</h3>
+            <ul style="font-size:12.5px">
+              <li>40 características: amplitud media en 5 ventanas × 8 canales</li>
+              <li>Desbalance 1:6 (60 target vs 360 non-target)</li>
+              <li>Variabilidad alta entre ensayos — necesita clasificador robusto</li>
+            </ul>
+          </div>
+          <div class="card amber" style="margin-top:10px">
+            <h3 class="section">¿Por qué SVM en BCI?</h3>
+            <ul style="font-size:12.5px">
+              <li>N pequeño (decenas de ensayos por sesión)</li>
+              <li>d moderado-alto (40–120 características)</li>
+              <li>El margen máximo regulariza implícitamente</li>
+              <li>SVM lineal es el baseline histórico en P300</li>
+            </ul>
+          </div>
+          <div class="cite">
+            <p><strong>Ref:</strong> Blankertz, B. et al. (2011). Single-trial analysis and classification of ERP components. <em>NeuroImage</em>, 56(2), 814–825. <a href="https://doi.org/10.1016/j.neuroimage.2010.06.048" target="_blank">doi:10.1016/j.neuroimage.2010.06.048</a></p>
+          </div>
+        </div>
+        <div>
+          <h3 class="section">ERP promedio — Target vs Non-target</h3>
+          <canvas id="erp-canvas" width="300" height="200" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+          <div class="card teal" style="margin-top:10px">
+            <h3 class="section">Resultados (10-fold CV)</h3>
+            <table>
+              <tr><th>Clasificador</th><th>AUROC</th></tr>
+              <tr><td>LR (L2)</td><td>~0.85–0.92</td></tr>
+              <tr><td>SVM lineal</td><td>~0.87–0.93</td></tr>
+              <tr><td>SVM RBF</td><td>~0.86–0.92</td></tr>
+            </table>
+            <p style="font-size:11.5px;margin-top:6px;color:var(--slate)">Con N=420 ensayos, los tres clasificadores son competitivos. El SVM lineal es preferible por velocidad e interpretabilidad.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — SVM VS LR -->
+  <div class="slide" id="slide-6">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">SVM vs Regresión Logística</span>
+      <span class="slide-counter">6 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">¿Cuándo usar <span>SVM vs Regresión Logística?</span></h2>
+      <table style="margin-bottom:14px">
+        <tr>
+          <th>Criterio</th>
+          <th>Regresión Logística</th>
+          <th>SVM</th>
+        </tr>
+        <tr><td><strong>N grande, d moderado</strong></td><td>✅ Rápida, escala bien</td><td>⚠ Lenta con kernel</td></tr>
+        <tr><td><strong>N pequeño, d grande</strong></td><td>⚠ Puede sobreajustar</td><td>✅ Margen regulariza</td></tr>
+        <tr><td><strong>Probabilidades calibradas</strong></td><td>✅ Directo</td><td>⚠ Requiere Platt scaling</td></tr>
+        <tr><td><strong>Datos no lineales</strong></td><td>⚠ Features manuales</td><td>✅ Kernel RBF</td></tr>
+        <tr><td><strong>Interpretabilidad</strong></td><td>✅ Coeficientes directos</td><td>⚠ Solo con kernel lineal</td></tr>
+        <tr><td><strong>EEG/BCI (N pequeño)</strong></td><td>✅ Con regularización</td><td>✅ Preferido en literatura</td></tr>
+        <tr><td><strong>UCI clínica (N moderado)</strong></td><td>✅ Interpretable, calibrado</td><td>✅ Competitivo con RBF</td></tr>
+      </table>
+      <div class="two-col">
+        <div class="card blue">
+          <h3 class="section">Diferencia matemática fundamental</h3>
+          <p style="font-size:13px">La regresión logística minimiza la pérdida logística sobre <em>todos</em> los puntos. El SVM solo depende de los vectores soporte — los puntos bien clasificados no contribuyen al gradiente una vez fuera del margen.</p>
+          <p style="font-size:13px;margin-top:6px">Esto hace al SVM más <strong>robusto a outliers</strong> en algunos regímenes, pero menos eficiente con N grande.</p>
+        </div>
+        <div class="card amber">
+          <h3 class="section">Regla práctica para señales biomédicas</h3>
+          <ul style="font-size:12.5px">
+            <li>EEG/P300/BCI → SVM lineal o LR como baseline</li>
+            <li>ECG/series temporales → LR sobre características HRV</li>
+            <li>fMRI (d >> N) → SVM lineal con C pequeño</li>
+            <li>Tabular clínico (UCI, diagnóstico) → LR + ensambles (S08)</li>
+            <li>Siempre comparar con permutaciones (S04)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — CUADERNO -->
+  <div class="slide" id="slide-7">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Práctica Interactiva</span>
+      <span class="slide-counter">7 / 8</span>
+    </div>
+    <div class="slide-body" style="padding-bottom:16px">
+      <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+      <p style="margin-bottom:14px;font-size:13px">El cuaderno implementa margen duro y blando visualmente, comparación de kernels en el dataset UCI CinC 2012, búsqueda en rejilla C×γ con mapa de calor, dataset P300 BCI con comparación de clasificadores, y curvas de aprendizaje SVM vs LR.</p>
+      <div class="nb-wrap">
+        <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+        <div class="nb-frame">
+          <iframe
+            src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_07_svm_kernels.ipynb"
+            title="Cuaderno Sesión 07"
+            allow="cross-origin-isolated"
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_07_svm_kernels.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — AUTOEVALUACIÓN + RESUMEN -->
+  <div class="slide" id="slide-8">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo II</span>
+      <span class="slide-label">Autoevaluación y Resumen</span>
+      <span class="slide-counter">8 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+      <div id="quiz">
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 1 de 5</div>
+          <div class="quiz-q-text">En un SVM de margen duro, si aumentamos C de 0.01 a 1000, ¿qué ocurre con el margen y con el número de vectores soporte?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El margen aumenta y hay más vectores soporte</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q1')">El margen se estrecha y hay menos vectores soporte — el modelo penaliza fuertemente las violaciones</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">C no afecta al margen, solo a la velocidad de convergencia</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q1')">El margen se estrecha pero el número de vectores soporte no cambia</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 2 de 5</div>
+          <div class="quiz-q-text">¿Por qué el truco del kernel permite al SVM operar en espacios de dimensión infinita sin coste computacional prohibitivo?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Porque aproxima el mapeo φ con una expansión de Taylor truncada</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q2')">Porque el SVM dual solo necesita los productos internos k(xᵢ,xⱼ), no los vectores φ(xᵢ) explícitamente — la función kernel los calcula directamente en el espacio original</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Porque el kernel RBF proyecta los datos a un espacio de dimensión fija igual a N</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q2')">Porque el gradiente del kernel no depende de la dimensionalidad del espacio de características</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 3 de 5</div>
+          <div class="quiz-q-text">En la búsqueda en rejilla del SVM-RBF, encontramos que el mejor AUROC de CV es 0.84. Al evaluar en el test, obtenemos 0.71. ¿Cuál es la causa más probable?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">El kernel RBF es inapropiado para datos clínicos</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">El dataset de test es demasiado pequeño para una estimación fiable</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q3')">Optimismo por selección de hiperparámetros: se eligieron C y γ con la misma CV usada para reportar el AUROC — se necesita CV anidada</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q3')">La normalización debería aplicarse después de dividir train/test</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 4 de 5</div>
+          <div class="quiz-q-text">Para un sistema BCI de deletreador P300 con solo 60 ensayos target y 360 non-target, ¿cuál es el clasificador más adecuado como punto de partida?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">Red neuronal profunda — tiene mayor capacidad para aprender el patrón P300</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q4')">SVM lineal con class_weight='balanced' — robusto con N pequeño, maneja el desbalance, e interpretable</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">SVM-RBF con γ grande — para capturar la morfología no lineal del P300</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q4')">k-NN con k=1 — memoriza todos los ensayos target</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+        <div class="quiz-q">
+          <div class="quiz-q-num">Pregunta 5 de 5</div>
+          <div class="quiz-q-text">Un SVM con kernel lineal y C=1 en el dataset UCI produce coeficientes para cada característica. ¿Cómo difiere esta interpretación de la de los coeficientes de regresión logística?</div>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Son exactamente equivalentes — ambos modelos maximizan la misma función objetivo</button>
+            <button class="quiz-opt" onclick="answer(this,true,'q5')">Los coeficientes del SVM representan la orientación del hiperplano de máximo margen (determinado solo por los vectores soporte); los de LR representan el cambio en log-odds y son influidos por todos los puntos</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">Los coeficientes del SVM son probabilidades directas de mortalidad para cada característica</button>
+            <button class="quiz-opt" onclick="answer(this,false,'q5')">No hay diferencia práctica — con N grande ambos convergen al mismo vector de pesos</button>
+          </div>
+          <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+        <div class="quiz-score-bar" id="score-bar" style="display:none">
+          <span>Resultado:</span>
+          <span class="score-pill" id="score-text">0 / 5</span>
+          <span id="score-msg"></span>
+          <button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+        </div>
+      </div>
+      <div class="summary-grid" style="margin-top:14px">
+        <div class="summary-block" style="background:#FEF3C7;border-left:3px solid var(--mod-II)">
+          <h4 style="color:var(--amber)">Conceptos clave</h4>
+          <ul style="font-size:12.5px">
+            <li>Margen máximo y vectores soporte</li>
+            <li>Variables de holgura y el parámetro C</li>
+            <li>Truco del kernel — producto interno en RKHS</li>
+            <li>Kernels: lineal, polinomial, RBF</li>
+            <li>Búsqueda en rejilla C × γ con CV anidada</li>
+          </ul>
+        </div>
+        <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+          <h4 style="color:var(--teal)">Reglas de oro</h4>
+          <ul style="font-size:12.5px">
+            <li>C y γ siempre con CV anidada — nunca en el mismo fold</li>
+            <li>SVM-RBF necesita normalización previa obligatoria</li>
+            <li>class_weight='balanced' con clases desbalanceadas</li>
+            <li>Platt scaling si se necesitan probabilidades calibradas</li>
+            <li>SVM lineal = baseline en BCI/EEG con N pequeño</li>
+          </ul>
+        </div>
+      </div>
+      <div class="next-session">
+        <strong>Próxima sesión:</strong> Métodos de Árbol y Ensambles — Random Forest, XGBoost, e interpretabilidad con SHAP sobre el dataset UCI CinC 2012.
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+    <div class="progress-dots" id="dots"></div>
+    <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+  </div>
+</div>
+
+<script>
+const N_SLIDES=8; let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===1?' active':'');
+  d.onclick=()=>goTo(i); dotsEl.appendChild(d);
+}
+function updateDots(){
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');
+  });
+}
+function goTo(n){
+  document.getElementById('slide-'+current).classList.remove('active');
+  current=Math.max(1,Math.min(N_SLIDES,n));
+  const s=document.getElementById('slide-'+current);
+  s.classList.add('active');
+  s.style.animation='none';s.offsetHeight;s.style.animation='';
+  document.getElementById('btn-prev').disabled=current===1;
+  document.getElementById('btn-next').disabled=current===N_SLIDES;
+  updateDots();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(current===2) drawSVMMargin();
+  if(current===3) drawKernel();
+  if(current===4) drawGridSearch();
+  if(current===5) drawERP();
+}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  go(-1);
+});
+
+/* ── SVM Margin canvas (Slide 2) ── */
+function drawSVMMargin(){
+  const c=document.getElementById('svm-margin-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth,H=300; c.width=W; c.height=H;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#F7F9FC'; ctx.fillRect(0,0,W,H);
+
+  // Two clusters
+  const pts=[
+    ...Array.from({length:20},(_,i)=>({x:W*0.65+30*Math.cos(i*0.7),y:H*0.30+25*Math.sin(i*0.5),cls:1})),
+    ...Array.from({length:20},(_,i)=>({x:W*0.30+25*Math.cos(i*0.8),y:H*0.68+22*Math.sin(i*0.6),cls:-1})),
+  ];
+
+  // Decision boundary: diagonal line
+  const m=-0.9, bLine=H*0.5;
+  const xLine=x=>(m*x+bLine);
+
+  // Margin lines (±offset)
+  const off=45;
+  ctx.strokeStyle='#CBD5E0'; ctx.lineWidth=1; ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(0,xLine(0)+off);ctx.lineTo(W,xLine(W)+off);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,xLine(0)-off);ctx.lineTo(W,xLine(W)-off);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Margin fill
+  ctx.fillStyle='rgba(107,114,128,0.07)';
+  ctx.beginPath();
+  ctx.moveTo(0,xLine(0)-off);ctx.lineTo(W,xLine(W)-off);
+  ctx.lineTo(W,xLine(W)+off);ctx.lineTo(0,xLine(0)+off);
+  ctx.closePath();ctx.fill();
+
+  // Margin label
+  ctx.fillStyle='#6B7280'; ctx.font='10px DM Sans,sans-serif'; ctx.textAlign='center';
+  ctx.fillText('← margen 2/‖w‖ →',W*0.7,xLine(W*0.7));
+
+  // Decision boundary
+  ctx.strokeStyle='#1B3A6B'; ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(0,xLine(0));ctx.lineTo(W,xLine(W));ctx.stroke();
+
+  // Points
+  pts.forEach(p=>{
+    const isSV=Math.abs(p.y-xLine(p.x))<off+8;
+    ctx.fillStyle=p.cls===1?'#3B82F6':'#EF4444';
+    ctx.beginPath();ctx.arc(p.x,p.y,isSV?6:4,0,2*Math.PI);ctx.fill();
+    if(isSV){
+      ctx.strokeStyle='#1B3A6B';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(p.x,p.y,9,0,2*Math.PI);ctx.stroke();
+    }
+  });
+
+  ctx.fillStyle='#1B3A6B';ctx.font='bold 10px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Vectores soporte (○)',8,H-8);
+}
+
+/* ── Kernel canvas (Slide 3) ── */
+function drawKernel(){
+  const c=document.getElementById('kernel-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth,H=320; c.width=W; c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const hw=W/2;
+
+  // Left: non-separable in 2D
+  ctx.fillStyle='#F7F9FC'; ctx.fillRect(0,0,hw,H);
+  ctx.fillStyle='#FFFBEB'; ctx.fillRect(hw,0,hw,H);
+  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(hw,0);ctx.lineTo(hw,H);ctx.stroke();
+
+  ctx.fillStyle='#1B3A6B';ctx.font='bold 11px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Espacio original x',hw/2,16);
+  ctx.fillText('Espacio kernel φ(x)',hw+hw/2,16);
+
+  // Circular data
+  for(let i=0;i<60;i++){
+    const a=(i/60)*2*Math.PI;
+    const r=i<30?0.7+0.1*Math.sin(i):1.6+0.1*Math.cos(i);
+    const x=hw/2+r*40*Math.cos(a);
+    const y=H/2+r*35*Math.sin(a);
+    ctx.fillStyle=i<30?'rgba(59,130,246,0.7)':'rgba(239,68,68,0.7)';
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);ctx.fill();
+  }
+  ctx.fillStyle='#6B7280';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('No linealm. separable',hw/2,H-8);
+
+  // In kernel space: separated
+  for(let i=0;i<60;i++){
+    const a=(i/60)*2*Math.PI;
+    const r=i<30?0.7:1.6;
+    const x=hw+hw/2+(r<1?-45:45)+8*Math.cos(a*3);
+    const y=H/2+(r<1?-30:30)+8*Math.sin(a*2);
+    ctx.fillStyle=i<30?'rgba(59,130,246,0.7)':'rgba(239,68,68,0.7)';
+    ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);ctx.fill();
+  }
+  // Separator in kernel space
+  ctx.strokeStyle='#1B3A6B';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(hw+10,H/2);ctx.lineTo(W-10,H/2);ctx.stroke();
+  ctx.fillStyle='#6B7280';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Linealmente separable',hw+hw/2,H-8);
+
+  // Arrow
+  ctx.fillStyle='#D97706';ctx.font='bold 14px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('φ  →',hw/2+30,H/2-50);
+}
+
+/* ── Grid search heatmap (Slide 4) ── */
+function drawGridSearch(){
+  const el=document.getElementById('uci-results');
+  if(el&&el.children.length===0){
+    const data=[
+      {name:'Reg. Logística', auc:0.791, std:0.031, color:'#3B82F6'},
+      {name:'SVM lineal',     auc:0.783, std:0.035, color:'#F59E0B'},
+      {name:'SVM polinomial', auc:0.776, std:0.038, color:'#EF4444'},
+      {name:'SVM RBF',        auc:0.798, std:0.029, color:'#10B981'},
+    ];
+    const maxAUC=0.85;
+    el.innerHTML=data.map(d=>`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--slate);min-width:120px">${d.name}</span>
+        <div style="flex:1;height:18px;background:#E2E8F0;border-radius:4px;overflow:hidden;position:relative">
+          <div style="width:${(d.auc/maxAUC*100).toFixed(0)}%;height:100%;background:${d.color};border-radius:4px;opacity:0.8"></div>
+        </div>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--navy);min-width:80px">${d.auc.toFixed(3)} ±${d.std.toFixed(3)}</span>
+      </div>`).join('');
+  }
+
+  const c=document.getElementById('grid-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth,H=240; c.width=W; c.height=H;
+  const Cs=['0.01','0.1','1','10','100'];
+  const Gs=['0.001','0.01','0.1','1.0'];
+  // Simulated AUROC values
+  const scores=[
+    [0.71,0.74,0.78,0.77,0.73],
+    [0.73,0.77,0.80,0.79,0.75],
+    [0.74,0.78,0.80,0.78,0.74],
+    [0.70,0.73,0.76,0.74,0.71],
+  ];
+  const pad={l:38,r:8,t:24,b:36};
+  const cw=(W-pad.l-pad.r)/Cs.length;
+  const rh=(H-pad.t-pad.b)/Gs.length;
+  const minS=0.70,maxS=0.81;
+
+  scores.forEach((row,i)=>row.forEach((v,j)=>{
+    const t=(v-minS)/(maxS-minS);
+    const r=Math.round(27+t*(16-27)),g=Math.round(58+t*(122-58)),b=Math.round(107+t*(138-107));
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+    ctx.fillRect(pad.l+j*cw,pad.t+i*rh,cw-1,rh-1);
+    ctx.fillStyle=t>0.5?'white':'#1B3A6B';
+    ctx.font='9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(v.toFixed(3),pad.l+j*cw+cw/2,pad.t+i*rh+rh/2+4);
+  }));
+
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  Cs.forEach((c,j)=>ctx.fillText(c,pad.l+j*cw+cw/2,H-4));
+  Gs.forEach((g,i)=>{
+    ctx.textAlign='right';
+    ctx.fillText(g,pad.l-3,pad.t+i*rh+rh/2+4);
+  });
+  ctx.textAlign='center';
+  ctx.fillText('C',pad.l+(W-pad.l-pad.r)/2,H-18);
+  ctx.save();ctx.translate(10,pad.t+(H-pad.t-pad.b)/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('γ',0,0);ctx.restore();
+}
+
+/* ── ERP canvas (Slide 5) ── */
+function drawERP(){
+  const c=document.getElementById('erp-canvas');
+  if(!c||c.dataset.drawn)return; c.dataset.drawn='1';
+  const ctx=c.getContext('2d');
+  const W=c.offsetWidth,H=200; c.width=W; c.height=H;
+  const pad={l:36,r:10,t:14,b:30};
+  const w=W-pad.l-pad.r, h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const tms=[50,150,300,500,700];
+  const targetVals=[0.2,1.8,4.2,1.2,0.1];
+  const nonTargetVals=[0.1,0.3,0.4,0.2,0.1];
+  const maxV=5;
+  // Grid
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.25,0.5,0.75].forEach(t=>{
+    ctx.beginPath();ctx.moveTo(pad.l+t*w,pad.t);ctx.lineTo(pad.l+t*w,pad.t+h);ctx.stroke();
+  });
+  // Baseline
+  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,pad.t+h*0.85);ctx.lineTo(pad.l+w,pad.t+h*0.85);ctx.stroke();
+  ctx.setLineDash([]);
+  // P300 marker
+  ctx.strokeStyle='#8896A8';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  const x300=pad.l+(300/750)*w;
+  ctx.beginPath();ctx.moveTo(x300,pad.t);ctx.lineTo(x300,pad.t+h);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#8896A8';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('P300',x300,pad.t+8);
+
+  // Curves
+  [[targetVals,'#3B82F6','Target (Pz)'],[nonTargetVals,'#EF4444','Non-target']].forEach(([vals,col,lbl])=>{
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;
+    ctx.beginPath();
+    tms.forEach((t,i)=>{
+      const x=pad.l+(t/750)*w;
+      const y=pad.t+h*0.85-vals[i]/maxV*(h*0.75);
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    // Dots
+    tms.forEach((t,i)=>{
+      const x=pad.l+(t/750)*w;
+      const y=pad.t+h*0.85-vals[i]/maxV*(h*0.75);
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);ctx.fill();
+    });
+    ctx.fillStyle=col;ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+    const lastX=pad.l+(tms[tms.length-1]/750)*w;
+    const lastY=pad.t+h*0.85-vals[vals.length-1]/maxV*(h*0.75);
+    ctx.fillText(lbl,lastX+4,lastY+3);
+  });
+
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tiempo post-estímulo (ms)',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(9,pad.t+h/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText('Amplitud (μV)',0,0);ctx.restore();
+}
+
+/* ── Quiz ── */
+const feedbacks={
+  q1:['¡Correcto! Con C grande el modelo penaliza fuertemente las violaciones del margen, lo que fuerza un margen más estrecho con pocos vectores soporte. Es equivalente a menos regularización.',
+      'Incorrecto. C grande produce el efecto contrario: margen estrecho y pocos vectores soporte. C pequeño produce margen amplio con más vectores soporte.'],
+  q2:['¡Correcto! La formulación dual del SVM solo requiere calcular productos internos k(xᵢ,xⱼ) entre pares de puntos de entrenamiento. El kernel los proporciona sin necesidad de calcular φ explícitamente.',
+      'Incorrecto. El truco del kernel no usa aproximaciones de Taylor ni proyecta a dimensión N. Permite calcular exactamente el producto interno en el espacio de características, sin materializarlo.'],
+  q3:['¡Correcto! Cuando se usa la misma CV tanto para seleccionar los hiperparámetros como para estimar el AUROC, el modelo ve implícitamente los datos de validación durante la selección. Se necesita CV anidada: inner loop para C/γ, outer loop para el AUROC.',
+      'Incorrecto. El kernel RBF puede ser perfectamente apropiado. El problema es el protocolo de evaluación: seleccionar hiperparámetros y reportar rendimiento con la misma CV es una forma de data leakage.'],
+  q4:['¡Correcto! Con N pequeño y desbalance 1:6, el SVM lineal con class_weight="balanced" es el punto de partida estándar en la literatura BCI. Es robusto, interpretable y no requiere tuning de γ.',
+      'Incorrecto. Las redes neuronales profundas requieren mucho más datos. El SVM-RBF con γ grande sobreajustaría con solo 420 ensayos. k-NN con k=1 memorizaría el ruido.'],
+  q5:['¡Correcto! Los pesos del SVM lineal minimizan ½‖w‖² sujeto al margen — son determinados solo por los vectores soporte. Los coeficientes de LR minimizan la pérdida logística sobre todos los puntos, lo que los hace más sensibles a puntos lejanos.',
+      'Incorrecto. Los dos modelos minimizan funciones objetivo distintas (pérdida hinge vs pérdida logística), lo que produce coeficientes con interpretaciones diferentes incluso cuando son numéricamente similares.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){
+  if(answered[qid])return;answered[qid]=true;
+  const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  if(isCorrect){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}
+  const fb=document.getElementById('fb-'+qid);
+  fb.textContent=feedbacks[qid][isCorrect?0:1];
+  fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');
+  if(Object.keys(answered).length===5)showScore();
+}
+function showScore(){
+  document.getElementById('score-bar').style.display='flex';
+  document.getElementById('score-text').textContent=`${score} / 5`;
+  const msgs=['Revisa el truco del kernel y la formulación del margen.',
+              'Buen progreso — repasa la búsqueda de hiperparámetros.',
+              '¡Bien! Revisa la pregunta que fallaste.',
+              '¡Excelente comprensión de SVMs!','¡Perfecto! Listo para ensambles.'];
+  document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];
+}
+function resetQuiz(){
+  answered={};score=0;
+  document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});
+  document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});
+  document.getElementById('score-bar').style.display='none';
+}
+</script>
+</body>
+</html>
