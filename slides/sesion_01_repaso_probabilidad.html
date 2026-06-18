@@ -593,69 +593,18 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
   </div>
 
   <!-- ══════════════════════════════════════════════════
-       SLIDE 4 — LEY DE PROBABILIDAD TOTAL Y DOBLE FRONTERA
+       SLIDE 4 — REGLAS DE LA SUMA Y DEL PRODUCTO (BISHOP FIG. 1.11)
   ══════════════════════════════════════════════════ -->
   <div class="slide" id="slide-4">
     <div class="slide-header">
       <span class="slide-badge">Módulo I</span>
-      <span class="slide-label">Probabilidad Total y Clasificación de Bayes</span>
+      <span class="slide-label">Reglas de la Suma y del Producto</span>
       <span class="slide-counter">4 / 8</span>
     </div>
-    <div class="slide-body">
-      <h2 class="slide-title">Ley de Probabilidad Total <span>y Doble Frontera</span></h2>
-      <div class="two-col wide">
-        <div>
-          <h3 class="section">Ley de probabilidad total</h3>
-          <p>Para una mezcla de <em>K</em> clases con probabilidades a priori p(Cₖ):</p>
-          <code class="math">p(x) = Σₖ p(x|Cₖ) · p(Cₖ)</code>
-          <p style="margin-top:8px;font-size:13px"><strong>Ejemplo:</strong> FC ~ 70% sanos (μ=70, σ=8) + 30% IC (μ=85, σ=15)</p>
-
-          <h3 class="section" style="margin-top:14px">Regla de decisión de Bayes (QDA)</h3>
-          <p style="font-size:13px">Con varianzas <em>desiguales</em> las posteriors se cruzan <strong>dos veces</strong>:</p>
-          <table style="margin-top:8px">
-            <tr><th>Región de FC</th><th>Clasificación</th><th>Motivo</th></tr>
-            <tr><td>FC &lt; b₁</td><td>✅ Sano</td><td>P_S domina en FC baja</td></tr>
-            <tr><td>b₁ &lt; FC &lt; b₂</td><td>⚠ IC</td><td>P_IC domina en zona media</td></tr>
-            <tr><td>FC &gt; b₂</td><td>✅ Sano (!)</td><td>P_S recupera en cola derecha</td></tr>
-          </table>
-        </div>
-        <div>
-          <div class="card blue">
-            <h3 class="section">LDA vs QDA</h3>
-            <table>
-              <tr><th>Supuesto</th><th>Fronteras</th><th>Tipo</th></tr>
-              <tr><td>σ iguales</td><td>1</td><td>Lineal (LDA)</td></tr>
-              <tr><td>σ distintas</td><td>2</td><td>Cuadrática (QDA)</td></tr>
-            </table>
-          </div>
-          <div class="card amber" style="margin-top:12px">
-            <h3 class="section">¿Por qué dos fronteras?</h3>
-            <p style="font-size:13px">La gaussiana de IC (σ=15) es más ancha y plana. En FC muy alta, su densidad cae por debajo de la de Sanos <em>más rápido en términos relativos</em>, combinado con el prior mayor de Sanos (70%). Resultado: la posterior de Sanos vuelve a dominar en la cola derecha.</p>
-          </div>
-          <div class="card teal" style="margin-top:12px">
-            <h3 class="section">Anticipo: Sesión 02</h3>
-            <p style="font-size:13px">La probabilidad posterior p(Cₖ|x) = p(x|Cₖ)p(Cₖ)/p(x) es el fundamento de la <strong>inferencia bayesiana</strong>, que estudiaremos a detalle en la próxima sesión.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ══════════════════════════════════════════════════
-       SLIDE 5 — REGLAS DE LA SUMA Y DEL PRODUCTO (BISHOP FIG. 1.11)
-  ══════════════════════════════════════════════════ -->
-  <div class="slide" id="slide-5">
-    <div class="slide-header">
-      <span class="slide-badge">Módulo I</span>
-      <span class="slide-label">Reglas de la Suma y del Producto</span>
-      <span class="slide-counter">5 / 8</span>
-    </div>
     <div class="slide-body" style="padding-bottom:16px">
-      <h2 class="slide-title">Probabilidad Discreta — <span>Estilo Bishop Fig. 1.11</span></h2>
+      <h2 class="slide-title">Reglas de la Suma y del Producto — <span>Estilo Bishop Fig. 1.11</span></h2>
       <p style="font-size:13px;color:var(--slate);margin-bottom:14px">
-        Antes de las densidades continuas, Bishop ancla la intuición en dos variables discretas
-        dentro de una cuadrícula. Las tres reglas fundamentales emergen de esa cuadrícula de forma visual.
+        Empezamos con el caso discreto para anclar la intuición. Bishop usa una cuadrícula de distribución conjunta (Fig. 1.11) para mostrar que la <strong>regla de la suma</strong> y la <strong>regla del producto</strong> son todo lo que se necesita. En la siguiente diapositiva veremos cómo estas reglas producen un resultado sorprendente en el caso continuo.
       </p>
       <div class="two-col wide">
         <div>
@@ -710,6 +659,56 @@ mu, sigma = stats.norm.<span class="fn">fit</span>(datos)</pre>
                  style="color:var(--teal)">ensanut.insp.mx</a>
             </p>
           </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       SLIDE 5 — LEY DE PROBABILIDAD TOTAL Y RESULTADO QDA
+  ══════════════════════════════════════════════════ -->
+  <div class="slide" id="slide-5">
+    <div class="slide-header">
+      <span class="slide-badge">Módulo I</span>
+      <span class="slide-label">Probabilidad Total y Resultado QDA</span>
+      <span class="slide-counter">5 / 8</span>
+    </div>
+    <div class="slide-body">
+      <h2 class="slide-title">Ley de Probabilidad Total <span>y Doble Frontera QDA</span></h2>
+      <div class="two-col wide">
+        <div>
+          <h3 class="section">Ley de probabilidad total</h3>
+          <p>Para una mezcla de <em>K</em> clases con probabilidades a priori p(Cₖ):</p>
+          <code class="math">p(x) = Σₖ p(x|Cₖ) · p(Cₖ)</code>
+          <p style="margin-top:8px;font-size:13px"><strong>Ejemplo:</strong> FC ~ 70% sanos (μ=70, σ=8) + 30% IC (μ=85, σ=15)</p>
+
+          <h3 class="section" style="margin-top:14px">Regla de decisión de Bayes (QDA)</h3>
+          <p style="font-size:13px">Con varianzas <em>desiguales</em> las posteriors se cruzan <strong>dos veces</strong>:</p>
+          <table style="margin-top:8px">
+            <tr><th>Región de FC</th><th>Clasificación</th><th>Motivo</th></tr>
+            <tr><td>FC &lt; b₁</td><td>✅ Sano</td><td>P_S domina en FC baja</td></tr>
+            <tr><td>b₁ &lt; FC &lt; b₂</td><td>⚠ IC</td><td>P_IC domina en zona media</td></tr>
+            <tr><td>FC &gt; b₂</td><td>✅ Sano (!)</td><td>P_S recupera en cola derecha</td></tr>
+          </table>
+        </div>
+        <div>
+          <div class="card blue">
+            <h3 class="section">LDA vs QDA</h3>
+            <table>
+              <tr><th>Supuesto</th><th>Fronteras</th><th>Tipo</th></tr>
+              <tr><td>σ iguales</td><td>1</td><td>Lineal (LDA)</td></tr>
+              <tr><td>σ distintas</td><td>2</td><td>Cuadrática (QDA)</td></tr>
+            </table>
+          </div>
+          <div class="card amber" style="margin-top:12px">
+            <h3 class="section">¿Por qué dos fronteras?</h3>
+            <p style="font-size:13px">La gaussiana de IC (σ=15) es más ancha y plana. En FC muy alta, su densidad cae por debajo de la de Sanos <em>más rápido en términos relativos</em>, combinado con el prior mayor de Sanos (70%). Resultado: la posterior de Sanos vuelve a dominar en la cola derecha.</p>
+          </div>
+          <div class="card teal" style="margin-top:12px">
+            <h3 class="section">Anticipo: Sesión 02</h3>
+            <p style="font-size:13px">La probabilidad posterior p(Cₖ|x) = p(x|Cₖ)p(Cₖ)/p(x) es el fundamento de la <strong>inferencia bayesiana</strong>, que estudiaremos a detalle en la próxima sesión.</p>
           </div>
         </div>
       </div>
