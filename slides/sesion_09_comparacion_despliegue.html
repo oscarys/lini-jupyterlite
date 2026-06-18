@@ -181,51 +181,58 @@ Modelo útil:    NB > max(tratar todos, 0)</code>
   <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Tarjeta de Modelo — FDA SaMD</span><span class="slide-counter">5 / 8</span></div>
   <div class="slide-body">
     <h2 class="slide-title">Tarjeta de Modelo — <span>Despliegue Regulatorio</span></h2>
+    <p style="font-size:13px;margin-bottom:10px">Documento estructurado que describe el modelo de forma transparente para clínicos, reguladores y pacientes. Requerido para la clasificación SaMD de la FDA.</p>
+
+    <!-- Model card box -->
+    <pre style="font-size:10.5px;line-height:1.55;margin-bottom:10px;border-radius:8px;padding:12px 14px;background:#0F172A;color:#E2E8F0;overflow-x:auto">╔══════════════════════════════════════════════════════════════════════════╗
+║      TARJETA DE MODELO — Sistema de Predicción de Mortalidad UCI         ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ MODELO          Random Forest + Platt scaling  ·  v1.0.0               ║
+║ USO PREVISTO    Apoyo a decisión clínica en UCI — NO reemplaza al médico ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ DATOS           PhysioNet CinC 2012 (Silva et al. 2012)                 ║
+║                 N_train=750  ·  Prevalencia mortalidad=22%              ║
+║ CARACTERÍSTICAS Edad, APACHE-II, FC, SpO₂, Creatinina, Bili., GCS, FiO₂ ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ RENDIMIENTO (N_test=250)                                                 ║
+║   AUROC  0.820   AUPRC  0.641   Brier  0.135   ECE  0.018              ║
+║   Umbral Youden: Sens=0.78  Espec=0.74  PPV=0.55  VPN=0.89             ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ LIMITACIONES    Datos simulados · No validado en pediátricos            ║
+║                 Requiere validación prospectiva externa (FDA Clase II)   ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ MANTENIMIENTO   Reentrenamiento cada 12 meses o si AUROC cae &gt;0.05      ║
+╚══════════════════════════════════════════════════════════════════════════╝</pre>
+
     <div class="two-col">
-      <div>
-        <h3 class="section">¿Qué es una model card?</h3>
-        <p style="font-size:13px">Documento estructurado que describe un modelo de ML de forma transparente para todas las partes interesadas: clínicos, reguladores, pacientes y desarrolladores.</p>
-        <div class="card navy" style="margin-top:10px;font-size:12px">
-          <p style="color:#FDE68A;font-weight:600;margin-bottom:6px">SECCIONES OBLIGATORIAS</p>
-          <ul style="font-size:12px">
-            <li style="color:rgba(255,255,255,.8)">Descripción del modelo y versión</li>
-            <li style="color:rgba(255,255,255,.8)">Uso previsto y limitaciones de uso</li>
-            <li style="color:rgba(255,255,255,.8)">Datos de entrenamiento: fuente, N, prevalencia</li>
-            <li style="color:rgba(255,255,255,.8)">Rendimiento: AUROC con IC 95%, Brier, ECE</li>
-            <li style="color:rgba(255,255,255,.8)">Umbral clínico: sensibilidad, especificidad, PPV, VPN</li>
-            <li style="color:rgba(255,255,255,.8)">Limitaciones y posibles sesgos</li>
-            <li style="color:rgba(255,255,255,.8)">Consideraciones éticas y regulatorias</li>
-            <li style="color:rgba(255,255,255,.8)">Plan de mantenimiento y monitoreo</li>
-          </ul>
-        </div>
-        <div class="cite" style="margin-top:8px">
-          <p>Mitchell, M. et al. (2019). Model cards for model reporting. <em>FAccT 2019</em>. <a href="https://doi.org/10.1145/3287560.3287596" target="_blank">doi:10.1145/3287560.3287596</a></p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="card amber">
+          <h3 class="section">Clasificación SaMD (FDA)</h3>
+          <table style="margin:0">
+            <tr><th>Clase</th><th>Riesgo</th><th>Ejemplo</th></tr>
+            <tr><td>I</td><td>Bajo</td><td>Registro de síntomas</td></tr>
+            <tr><td><strong>II ←</strong></td><td><strong>Moderado</strong></td><td><strong>Predicción UCI</strong></td></tr>
+            <tr><td>III</td><td>Alto</td><td>Diagnóstico de cáncer</td></tr>
+          </table>
         </div>
         <div class="cite">
-          <p>FDA (2021). AI/ML-Based Software as a Medical Device (SaMD) Action Plan. <a href="https://www.fda.gov/medical-devices/software-medical-device-samd" target="_blank">fda.gov/medical-devices</a></p>
+          <p>Mitchell, M. et al. (2019). Model cards for model reporting. <em>FAccT 2019</em>. <a href="https://doi.org/10.1145/3287560.3287596" target="_blank">doi:10.1145/3287560.3287596</a></p>
         </div>
       </div>
-      <div>
-        <h3 class="section">Clasificación SaMD (FDA)</h3>
-        <table>
-          <tr><th>Clase</th><th>Riesgo</th><th>Ejemplo</th></tr>
-          <tr><td>I</td><td>Bajo</td><td>Registro de síntomas</td></tr>
-          <tr><td>II</td><td>Moderado</td><td>Predicción UCI</td></tr>
-          <tr><td>III</td><td>Alto</td><td>Diagnóstico de cáncer</td></tr>
-        </table>
-        <div class="card amber" style="margin-top:10px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="card teal">
           <h3 class="section">Ciclo de vida post-despliegue</h3>
           <ul style="font-size:12.5px">
-            <li>Monitoreo continuo: AUROC mensual</li>
-            <li>Detección de drift: test de Kolmogorov-Smirnov en inputs</li>
-            <li>Reentrenamiento: cuando AUROC cae >0.05</li>
+            <li>Monitoreo: AUROC mensual en producción</li>
+            <li>Drift: test KS en distribución de inputs</li>
+            <li>Reentrenamiento si AUROC cae &gt;0.05</li>
             <li>Validación externa en nuevas cohortes</li>
             <li>Auditoría de equidad por subgrupos</li>
           </ul>
         </div>
-        <div class="card red" style="margin-top:8px">
+        <div class="card red">
           <h3 class="section">Error frecuente</h3>
-          <p style="font-size:13px">Reportar el AUROC del conjunto de test interno como validación suficiente. Para SaMD, la FDA requiere <strong>validación prospectiva</strong> en datos de hospitales distintos al de entrenamiento.</p>
+          <p style="font-size:12.5px">Reportar el AUROC del test interno como validación suficiente. Para SaMD Clase II, la FDA exige <strong>validación prospectiva</strong> en datos de hospitales distintos al de entrenamiento.</p>
         </div>
       </div>
     </div>

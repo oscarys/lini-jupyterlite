@@ -363,8 +363,8 @@ function drawEllipse(ctx,cx,cy,rx,ry,color){ctx.strokeStyle=color;ctx.lineWidth=
 function drawGMM(){
   const c=document.getElementById('gmm-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
   const ctx=c.getContext('2d'),W=c.offsetWidth,H=360;c.width=W;c.height=H;
-  const toX=v=>30+(v+0.5)/(4.5)*（W-60);
-  const toY=v=>H-20-(v-(-0.2))/(3.0)*（H-40);
+  const toX=v=>30+(v+0.5)/(4.5)*(W-60);
+  const toY=v=>H-20-(v-(-0.2))/(3.0)*(H-40);
   ctx.clearRect(0,0,W,H);
   // marginal density
   const densX=Array.from({length:60},(_,i)=>-0.5+i/10);

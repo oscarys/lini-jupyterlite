@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 11 — Modelos Ocultos de Markov</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--emerald:#059669;--emerald-lt:#D1FAE5;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--emerald);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#064E3B 0%,#065F46 40%,#047857 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(5,150,105,.3) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(5,150,105,.3);border:1px solid rgba(167,243,208,.5);color:#A7F3D0;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:34px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#A7F3D0;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#A7F3D0;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#6EE7B7;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--emerald)}
+h3.section{font-size:13px;font-weight:600;color:var(--emerald);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#064E3B;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:var(--emerald-lt);border-left:3px solid var(--emerald)}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.dark{background:#064E3B}.card.dark p,.card.dark li,.card.dark h3{color:rgba(255,255,255,.85)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--emerald);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--emerald)}
+.quiz-q{margin-bottom:14px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--emerald);background:var(--emerald-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--emerald);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--emerald)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--emerald);border-color:var(--emerald);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#047857}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--emerald)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Modelos Generativos Clásicos</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 11 · Modelos Ocultos de Markov</div>
+    <h1 class="cover-title">Modelos Ocultos<br>de <em>Markov</em> — HMM</h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Definir los tres componentes del HMM: π (inicial), A (transición), B (emisión)</li>
+        <li>Implementar el algoritmo Forward en log-espacio para calcular P(X|λ)</li>
+        <li>Calcular probabilidades posteriores suavizadas con Forward-Backward</li>
+        <li>Implementar Viterbi para la decodificación de la secuencia óptima</li>
+        <li>Aplicar Baum-Welch (EM para HMM) para estimar parámetros</li>
+        <li>Aplicar HMM a estadificación del sueño (5 estados) y microestados de EEG</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — ESTRUCTURA DEL HMM -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Estructura del HMM</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">El <span>Modelo Oculto de Markov</span> — λ = (π, A, B)</h2>
+    <div class="two-col wide">
+      <div>
+        <table style="margin-bottom:12px">
+          <tr><th>Componente</th><th>Símbolo</th><th>Significado</th></tr>
+          <tr><td>Distribución inicial</td><td><strong>π</strong></td><td>P(z₁ = k)</td></tr>
+          <tr><td>Matriz de transición</td><td><strong>A</strong></td><td>P(zₜ₊₁=j | zₜ=i)</td></tr>
+          <tr><td>Modelo de emisión</td><td><strong>B</strong></td><td>P(xₜ | zₜ=k)</td></tr>
+        </table>
+        <h3 class="section">Los tres problemas canónicos (Rabiner, 1989)</h3>
+        <div class="card green">
+          <p style="font-size:13px"><strong>1. Evaluación:</strong> dado λ y X, calcular P(X|λ)<br>→ Algoritmo Forward</p>
+          <p style="font-size:13px;margin-top:4px"><strong>2. Decodificación:</strong> dado λ y X, encontrar z* = argmax P(z|X, λ)<br>→ Algoritmo de Viterbi</p>
+          <p style="font-size:13px;margin-top:4px"><strong>3. Aprendizaje:</strong> dados X, encontrar λ* = argmax P(X|λ)<br>→ Algoritmo Baum-Welch (EM)</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Supuesto de Markov</h3>
+          <p style="font-size:13px">P(zₜ | z₁,...,zₜ₋₁) = P(zₜ | zₜ₋₁) — el futuro solo depende del estado presente. Para señales fisiológicas esto es una aproximación: el sueño tiene dependencias a largo plazo (ciclos de ~90 min) que el HMM de primer orden no captura directamente.</p>
+        </div>
+        <div class="cite">
+          <p>Rabiner, L.R. (1989). A tutorial on hidden Markov models. <em>Proc. IEEE</em>, 77(2), 257–286.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="hmm-graph" width="300" height="360" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — FORWARD-BACKWARD -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Algoritmo Forward-Backward</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Forward-Backward — <span>Evaluación y Suavizado</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Forward: α filtrado</h3>
+        <code class="math">αₜ(k) = P(x₁,...,xₜ, zₜ=k | λ)
+
+Init:  α₁(k) = πₖ · b_k(x₁)
+Rec:   αₜ₊₁(j) = b_j(xₜ₊₁) · Σₖ αₜ(k)·Aₖⱼ
+Term:  P(X|λ) = Σₖ αT(k)</code>
+        <h3 class="section" style="margin-top:10px">Backward: β suavizador</h3>
+        <code class="math">βₜ(k) = P(xₜ₊₁,...,xT | zₜ=k, λ)
+
+Init:  βT(k) = 1
+Rec:   βₜ(k) = Σⱼ Aₖⱼ · b_j(xₜ₊₁) · βₜ₊₁(j)</code>
+        <h3 class="section" style="margin-top:10px">Posterior suavizado</h3>
+        <code class="math">γₜ(k) = P(zₜ=k | X, λ)
+       = αₜ(k)·βₜ(k) / P(X|λ)</code>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Filtrado vs suavizado</h3>
+          <p style="font-size:13px"><strong>Filtrado</strong> (solo Forward): usa x₁,...,xₜ → causal, puede usarse en tiempo real.<br><strong>Suavizado</strong> (Forward-Backward): usa toda la secuencia → más preciso, requiere la secuencia completa.</p>
+          <p style="font-size:13px;margin-top:4px">Para estadificación del sueño offline, siempre se usa el suavizado.</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Log-espacio — obligatorio</h3>
+          <p style="font-size:13px">Las α decrecen exponencialmente con T. Con T=480 épocas, α₄₈₀ ≈ 10⁻¹⁰⁰⁰ — underflow garantizado en float64. La solución: trabajar en log-espacio y usar <code>logsumexp</code> para las sumas.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="fwbw-canvas" width="300" height="380" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — VITERBI -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Algoritmo de Viterbi</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Viterbi — <span>Decodificación Óptima Global</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Problema de decodificación</h3>
+        <code class="math">ẑ = argmax P(z₁,...,zT | X, λ)
+       ≠ [argmax_k γₜ(k)]ₜ  (⟵ puede violar transiciones)
+
+δₜ(k) = max P(x₁,...,xₜ, zₜ=k, z₁,...,zₜ₋₁ | λ)
+ψₜ(j) = argmax [δₜ₋₁(k) + log Aₖⱼ]</code>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">Viterbi vs posterior argmax</h3>
+          <table>
+            <tr><th></th><th>Argmax γₜ(k)</th><th>Viterbi</th></tr>
+            <tr><td>Optimiza</td><td>Cada t por separado</td><td>Secuencia global</td></tr>
+            <tr><td>Consistencia</td><td>⚠ Puede violar A</td><td>✅ Siempre válida</td></tr>
+            <tr><td>Suavidad</td><td>Más suave</td><td>Más abrupta</td></tr>
+            <tr><td>Caso ideal</td><td>Tiempo real</td><td>Análisis offline</td></tr>
+          </table>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Ejemplo clínico: estadificación del sueño</h3>
+          <p style="font-size:13px">El argmax del posterior puede producir secuencias como "N3 → Wake → N3" (transición fisiológicamente improbable). Viterbi respeta que A[3,0] ≈ 0.01 — para pasar de N3 a Vigilia el modelo prefiere la ruta N3→N2→N1→Vigilia.</p>
+        </div>
+        <div class="cite">
+          <p>Perslev, M. et al. (2021). U-Sleep: resilient high-frequency sleep staging. <em>npj Digital Medicine</em>, 4, 72. <a href="https://doi.org/10.1038/s41746-021-00440-5" target="_blank">doi:10.1038/s41746-021-00440-5</a></p>
+        </div>
+      </div>
+      <div>
+        <canvas id="viterbi-canvas" width="300" height="360" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — BAUM-WELCH -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Baum-Welch — Aprendizaje de Parámetros</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Baum-Welch — <span>EM para HMM</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">EM aplicado al HMM</h3>
+        <code class="math">Paso E: γₜ(k) = P(zₜ=k | X, λ)
+        ξₜ(k,j) = P(zₜ=k, zₜ₊₁=j | X, λ)
+
+Paso M: Â_{kj} = Σₜ ξₜ(k,j) / Σₜ γₜ(k)
+        μ̂_k   = Σₜ γₜ(k)·xₜ / Σₜ γₜ(k)
+        Σ̂_k   = Σₜ γₜ(k)(xₜ-μ̂_k)(xₜ-μ̂_k)ᵀ / Σₜ γₜ(k)</code>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">hmmlearn en Python</h3>
+          <pre style="font-size:11px">from hmmlearn import hmm
+model = hmm.GaussianHMM(
+    n_components=5,
+    covariance_type='diag',
+    n_iter=100
+)
+model.fit(X_todo, lengths)
+z_hat = model.predict(X_test)</pre>
+          <p style="font-size:12px;margin-top:4px">Con múltiples secuencias de longitud variable, pasar <code>lengths</code> como lista al método <code>fit()</code>.</p>
+        </div>
+        <div class="card red" style="margin-top:8px">
+          <h3 class="section">⚠ Permutación de etiquetas</h3>
+          <p style="font-size:13px">Baum-Welch puede converger con los estados reordenados. Es necesario alinear los estados aprendidos con los verdaderos usando la asignación húngara (linear_sum_assignment) antes de calcular exactitud.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bw-canvas" width="300" height="220" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Múltiples inicializaciones</h3>
+          <p style="font-size:13px">Baum-Welch converge a máximos locales. La práctica estándar es ajustar 5–20 modelos con distintas semillas y seleccionar el de mayor log-verosimilitud. Con K=5 estados de sueño, la fracción de convergencia al mismo óptimo es típicamente 60–80%.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — APLICACIÓN SUEÑO + MICROESTADOS -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Aplicaciones Biomédicas</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Aplicaciones — <span>Sueño y Microestados EEG</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">Estadificación del sueño de 5 estados (AASM)</h3>
+        <canvas id="hypno-canvas" width="380" height="100" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Por qué HMM en lugar de clasificador frame-by-frame</h3>
+          <ul style="font-size:12.5px">
+            <li>Captura dependencias temporales entre épocas</li>
+            <li>Evita transiciones fisiológicamente imposibles</li>
+            <li>Produce hipnogramas más suaves y realistas</li>
+            <li>Cuantifica incertidumbre de transición como probabilidades</li>
+          </ul>
+        </div>
+        <h3 class="section" style="margin-top:12px">Microestados EEG — 4 estados, ~80 ms</h3>
+        <p style="font-size:13px">Patrones topográficos casi estacionarios que se suceden a ~12 Hz. La alta auto-transición (A_{kk} ≈ 0.70–0.72) refleja la persistencia de cada microestado. El HMM izquierda-derecha modela correctamente la no reversibilidad en algunas configuraciones.</p>
+        <div class="cite">
+          <p>Berry, R.B. et al. (2015). <em>AASM Scoring Manual</em> v2.2. <a href="https://aasm.org/clinical-resources/scoring-manual/" target="_blank">aasm.org</a></p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section">Matriz de transición del sueño</h3>
+        <canvas id="trans-canvas" width="280" height="240" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Extensiones del HMM</h3>
+          <table>
+            <tr><th>Modelo</th><th>Uso</th></tr>
+            <tr><td>HMM-GMM</td><td>Emisiones multimodales EEG</td></tr>
+            <tr><td>HMM izq-der</td><td>Segmentación PQRST ECG</td></tr>
+            <tr><td>HMM jerárquico</td><td>Ciclos + micro-despertares</td></tr>
+            <tr><td>Deep HMM</td><td>Señales fisiológicas largas</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa desde cero el generador de secuencias HMM, el algoritmo Forward-Backward en log-espacio, el decodificador de Viterbi con retroceso, Baum-Welch via hmmlearn con matrices A verdadera vs aprendida, estadificación del sueño de 5 estados y segmentación de microestados de EEG.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_11_hmm.ipynb" title="Cuaderno Sesión 11" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_11_hmm.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Autoevaluación y Cierre del Módulo III</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>HMM y Cierre del Módulo III</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">¿Cuál es la diferencia fundamental entre el posterior filtrado (solo Forward) y el posterior suavizado (Forward-Backward)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El suavizado es solo una versión más eficiente del filtrado — ambos producen el mismo resultado</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">El filtrado P(zₜ|x₁,...,xₜ) solo usa las observaciones hasta t — puede usarse en tiempo real. El suavizado P(zₜ|x₁,...,xT) usa toda la secuencia, por lo que es más preciso pero requiere esperar a que termine la grabación</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El suavizado usa el algoritmo Viterbi; el filtrado usa Forward-Backward</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El filtrado optimiza la secuencia global de estados; el suavizado optimiza cada estado por separado</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">En el algoritmo de Viterbi, ¿qué almacena la matriz de retroceso ψₜ(j) y para qué se usa?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Las probabilidades de transición normalizadas A_{kj} para cada par (k,j) en el tiempo t</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">El estado predecesor óptimo para llegar al estado j en el tiempo t — es decir, argmax_k [δₜ₋₁(k) + log A_{kj}]. Se usa en la fase de retroceso (backtracking) para reconstruir la secuencia de estados más probable de atrás hacia adelante</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">La probabilidad acumulada del camino óptimo hasta el estado j en el tiempo t (equivalente a δₜ(j))</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">El índice de la observación xₜ más probable dada la emisión del estado j</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">Un HMM de sueño con A[N3,W] = 0.01 hace que Viterbi rara vez produzca transiciones directas N3→Vigilia, aunque la posterior argmax sí las genere. ¿Qué indica esto sobre la utilidad de Viterbi en la práctica clínica?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Viterbi es menos preciso porque suprime información real sobre transiciones abruptas</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Viterbi produce hipnogramas más consistentes con la fisiología del sueño conocida, ya que las transiciones N3→Vigilia son muy raras (~1% según AASM). El clínico puede interpretar las secuencias de Viterbi directamente; las del argmax posterior necesitarían post-procesamiento</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">La posterior argmax es siempre más precisa porque usa más información (toda la secuencia)</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Ambos métodos deberían dar el mismo resultado si los parámetros HMM son correctos</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">Al aplicar Baum-Welch para estadificación del sueño sin etiquetas, el algoritmo converge pero las etiquetas de los estados aprendidos no coinciden con W/N1/N2/N3/REM. ¿Qué significa esto y cómo se resuelve?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">El modelo no convergió correctamente — hay que aumentar el número de iteraciones</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">Es el problema de permutación de etiquetas: Baum-Welch encuentra los parámetros óptimos pero no sabe qué estado corresponde a qué etiqueta fisiológica. Se resuelve con la asignación húngara (maximizar coincidencia con etiquetas de referencia) o inspeccionando las medias de emisión para asignar etiquetas manualmente</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">El modelo necesita más datos de entrenamiento para aprender las etiquetas correctas</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Las etiquetas nunca son necesarias — Baum-Welch siempre asigna los estados en orden cronológico de activación</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">¿Por qué el HMM izquierda-derecha (A_{ij}=0 para j&lt;i) es más apropiado que el HMM estándar para segmentar los complejos PQRST de un ECG?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Porque el ECG es una señal unidireccional — el tiempo solo avanza hacia adelante, al igual que en todos los HMMs</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Porque dentro de un ciclo cardíaco las fases se suceden en orden fijo (P→Q→R→S→T) sin retroalimentación. El HMM izquierda-derecha refleja esta restricción biológica: una vez que el pico R ha ocurrido, el modelo no puede "volver" al segmento PR</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Porque el HMM izquierda-derecha tiene menos parámetros y es más fácil de ajustar con Baum-Welch</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Porque la derivación del ECG se llama "izquierda" o "derecha" dependiendo de si es estándar o unipolar</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:12px">
+      <div class="summary-block" style="background:var(--emerald-lt);border-left:3px solid var(--emerald)">
+        <h4 style="color:var(--emerald);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave — Módulo III</h4>
+        <ul style="font-size:12.5px"><li>GMM: modelo generativo, EM, responsabilidades blandas</li><li>HMM: π, A, B — tres problemas canónicos</li><li>Forward (evaluación), Backward (suavizado), Viterbi (decodificación)</li><li>Baum-Welch: EM para HMM, problema de permutación</li><li>Log-espacio + logsumexp — obligatorio para secuencias largas</li></ul>
+      </div>
+      <div class="summary-block" style="background:#FEF3C7;border-left:3px solid var(--amber)">
+        <h4 style="color:var(--amber);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Módulo IV — Deep Learning</h4>
+        <p style="font-size:13px">El Módulo IV comienza con redes neuronales feedforward y retropropagación derivada desde cero. El acento cambia a <strong>rojo (#EF4444)</strong>. Los datasets principales serán arritmias ECG (MIT-BIH) e imaginería motora EEG (BCI Competition IV).</p>
+      </div>
+    </div>
+    <div style="background:var(--emerald-lt);border:1px solid #6EE7B7;border-radius:10px;padding:12px 16px;font-size:13px;color:#064E3B">
+      <strong>✅ Módulo III completado.</strong> Los Módulos I (fundamentos estadísticos), II (modelos discriminativos) y III (modelos generativos clásicos) están completos. Las 11 sesiones cubren el espectro de ML clásico necesario para acceder a deep learning con bases sólidas.
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawHMMGraph();if(current===3)drawFWBW();if(current===4)drawViterbi();if(current===5)drawBW();if(current===6){drawHypno();drawTrans();};}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+const SC=['#E8D44D','#88C999','#5B9BD5','#2E4FA3','#D45B5B'];
+const SN=['W','N1','N2','N3','REM'];
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+const r=rng(42);
+
+function drawHMMGraph(){
+  const c=document.getElementById('hmm-graph');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=360;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  // State nodes
+  const poses=[{x:W/2,y:40},{x:W/4,y:120},{x:3*W/4,y:120},{x:W/3,y:210},{x:2*W/3,y:210}];
+  // Draw self-loops
+  poses.forEach((p,k)=>{
+    ctx.strokeStyle=SC[k];ctx.lineWidth=2;ctx.globalAlpha=0.5;
+    ctx.beginPath();ctx.arc(p.x,p.y-24,12,Math.PI*1.2,Math.PI*0.8,true);ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+  // Draw transitions (simplified: W→N1, N1→N2, N2→N3, N2→REM, N3→N2)
+  const edges=[[0,1,0.20],[1,2,0.35],[2,3,0.18],[2,4,0.05],[3,2,0.25],[4,1,0.10]];
+  ctx.setLineDash([3,2]);
+  edges.forEach(([i,j,w])=>{
+    ctx.strokeStyle='#CBD5E0';ctx.lineWidth=w*8+0.5;
+    ctx.beginPath();ctx.moveTo(poses[i].x,poses[i].y);ctx.lineTo(poses[j].x,poses[j].y);ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // State circles
+  poses.forEach((p,k)=>{
+    ctx.fillStyle=SC[k];ctx.strokeStyle='white';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(p.x,p.y,22,0,2*Math.PI);ctx.fill();ctx.stroke();
+    ctx.fillStyle='white';ctx.font='bold 11px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(SN[k],p.x,p.y);
+  });
+  // Observation nodes below each state
+  poses.forEach((p,k)=>{
+    const oy=p.y+60;
+    ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(p.x,p.y+22);ctx.lineTo(p.x,oy-14);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#F7F9FC';ctx.strokeStyle=SC[k];ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(p.x-22,oy-14,44,28,4);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('b_k(xₜ)',p.x,oy);
+  });
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('HMM de estadificación del sueño — estados ocultos z y observaciones x',W/2,H-4);
+}
+
+function drawFWBW(){
+  const c=document.getElementById('fwbw-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=380;c.width=W;c.height=H;
+  const T=60,K=5;
+  const r2=rng(7);
+  // Simulate states
+  const A=[[0.7,0.2,0.07,0.01,0.02],[0.1,0.5,0.35,0.04,0.01],[0.02,0.05,0.7,0.18,0.05],[0.01,0.02,0.25,0.68,0.04],[0.08,0.1,0.12,0.01,0.69]];
+  const z=new Array(T);z[0]=0;
+  for(let t=1;t<T;t++){const cum=A[z[t-1]].reduce((a,v,i)=>(a.push((a[a.length-1]||0)+v),a),[]);const rv=r2();z[t]=cum.findIndex(v=>rv<=v);}
+  // Simulate posterior (simple: high prob for true state, noise for others)
+  const gamma=Array.from({length:T},(_,t)=>{
+    const g=Array.from({length:K},(_,k)=>k===z[t]?0.7+r2()*0.2:r2()*0.1);
+    const s=g.reduce((a,b)=>a+b);return g.map(v=>v/s);
+  });
+  // Draw hypnogram
+  const pad={l:6,r:6,t:14,b:8};
+  const barH=22;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Hipnograma verdadero',pad.l,11);
+  for(let t=0;t<T-1;t++){
+    const x0=pad.l+(t/T)*(W-pad.l-pad.r);const x1=pad.l+((t+1)/T)*(W-pad.l-pad.r);
+    ctx.fillStyle=SC[z[t]];ctx.fillRect(x0,16,x1-x0,barH);
+  }
+  // Draw posterior heatmap
+  const hpH=(H-16-barH-20-pad.t-pad.b)/K;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Posterior suavizado P(zₜ=k|X, λ)',pad.l,16+barH+18);
+  for(let k=0;k<K;k++){
+    const y0=16+barH+24+k*hpH;
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='right';
+    ctx.fillText(SN[k],pad.l+18,y0+hpH/2+3);
+    for(let t=0;t<T;t++){
+      const x0=pad.l+20+(t/T)*(W-pad.l-pad.r-20);
+      const x1=pad.l+20+((t+1)/T)*(W-pad.l-pad.r-20);
+      const v=gamma[t][k];
+      const r=Math.round(255-v*255),g=Math.round(255-v*150),b=Math.round(255-v*220);
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.fillRect(x0,y0,x1-x0,hpH-1);
+    }
+  }
+}
+
+function drawViterbi(){
+  const c=document.getElementById('viterbi-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=360;c.width=W;c.height=H;
+  const T=50,K=5;const r2=rng(11);
+  const A=[[0.7,0.2,0.07,0.01,0.02],[0.1,0.5,0.35,0.04,0.01],[0.02,0.05,0.7,0.18,0.05],[0.01,0.02,0.25,0.68,0.04],[0.08,0.1,0.12,0.01,0.69]];
+  const z=new Array(T);z[0]=0;
+  for(let t=1;t<T;t++){const cum=A[z[t-1]].reduce((a,v,i)=>(a.push((a[a.length-1]||0)+v),a),[]);const rv=r2();z[t]=cum.findIndex(v=>rv<=v);}
+  // Simulate viterbi (mostly correct, few errors)
+  const zv=z.map((s,t)=>{const rv=r2();return rv<0.88?s:(s+1)%K;});
+  const barH=24;const gap=4;
+  ['Verdad','Viterbi'].forEach((lbl,row)=>{
+    const zz=row===0?z:zv;
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(lbl,4,row*(barH+gap+20)+14);
+    for(let t=0;t<T-1;t++){
+      const x0=4+(t/T)*(W-8);const x1=4+((t+1)/T)*(W-8);
+      ctx.fillStyle=SC[zz[t]];ctx.fillRect(x0,row*(barH+gap+20)+18,x1-x0,barH);
+    }
+  });
+  // Error bars
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Errores (rojo)',4,2*(barH+gap+20)+14);
+  for(let t=0;t<T;t++){
+    const x0=4+(t/T)*(W-8);const x1=4+((t+1)/T)*(W-8);
+    if(z[t]!==zv[t]){ctx.fillStyle='rgba(220,38,38,0.8)';ctx.fillRect(x0,2*(barH+gap+20)+18,x1-x0,barH);}
+    else{ctx.fillStyle='rgba(5,150,105,0.3)';ctx.fillRect(x0,2*(barH+gap+20)+18,x1-x0,barH);}
+  }
+  // Legend
+  const ly=H-24;
+  SN.forEach((n,k)=>{
+    const lx=4+k*(W-8)/5;
+    ctx.fillStyle=SC[k];ctx.fillRect(lx,ly,12,10);
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(n,lx+14,ly+8);
+  });
+}
+
+function drawBW(){
+  const c=document.getElementById('bw-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=220;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:20,b:28};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const n=50;const ll_c=Array.from({length:n},(_,i)=>-8.5+3.3*(1-Math.exp(-0.15*i))+rng(5)()*0.1);
+  const ll=ll_c.reduce((a,v)=>(a.push(Math.max(a[a.length-1]||v,v)),a),[]);
+  const minL=-8.6,maxL=-5.0;
+  const toX=i=>pad.l+(i/(n-1))*w;const toY=v=>pad.t+h-(v-minL)/(maxL-minL)*h;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [-8,-7,-6,-5].forEach(v=>{const y=toY(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v,pad.l-2,y+3);});
+  ctx.strokeStyle='#059669';ctx.lineWidth=2.5;ctx.beginPath();
+  ll.forEach((v,i)=>{i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));});ctx.stroke();
+  ll.forEach((v,i)=>{if(i%10===0){ctx.fillStyle='#059669';ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,2*Math.PI);ctx.fill();}});
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Iteración Baum-Welch',pad.l+w/2,H-3);
+  ctx.save();ctx.translate(10,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Log-verosimilitud',0,0);ctx.restore();
+  ctx.fillStyle='#059669';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Convergencia — log-lik nunca decrece',pad.l+4,pad.t+10);
+}
+
+function drawHypno(){
+  const c=document.getElementById('hypno-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=100;c.width=W;c.height=H;
+  const T=80;const r2=rng(42);
+  const A=[[0.7,0.2,0.07,0.01,0.02],[0.1,0.5,0.35,0.04,0.01],[0.02,0.05,0.7,0.18,0.05],[0.01,0.02,0.25,0.68,0.04],[0.08,0.1,0.12,0.01,0.69]];
+  const z=new Array(T);z[0]=0;
+  for(let t=1;t<T;t++){const cum=A[z[t-1]].reduce((a,v,i)=>(a.push((a[a.length-1]||0)+v),a),[]);const rv=r2();z[t]=cum.findIndex(v=>rv<=v);}
+  ctx.clearRect(0,0,W,H);
+  for(let t=0;t<T-1;t++){
+    const x0=2+(t/T)*(W-4);const x1=2+((t+1)/T)*(W-4);
+    ctx.fillStyle=SC[z[t]];ctx.fillRect(x0,20,x1-x0,56);
+  }
+  SN.forEach((n,k)=>{ctx.fillStyle=SC[k];ctx.fillRect(4+k*(W-8)/5,80,12,10);ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText(n,18+k*(W-8)/5,89);});
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('Hipnograma simulado — 4 horas (~480 épocas de 30 s)',W/2,14);
+}
+
+function drawTrans(){
+  const c=document.getElementById('trans-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=240;c.width=W;c.height=H;
+  const A=[[0.70,0.20,0.07,0.01,0.02],[0.10,0.50,0.35,0.04,0.01],[0.02,0.05,0.70,0.18,0.05],[0.01,0.02,0.25,0.68,0.04],[0.08,0.10,0.12,0.01,0.69]];
+  const pad=30;const cell=(W-2*pad)/5;
+  ctx.clearRect(0,0,W,H);
+  A.forEach((row,i)=>row.forEach((v,j)=>{
+    const x=pad+j*cell;const y=pad+i*cell;
+    const t=Math.min(1,v/0.75);
+    const r=Math.round(6+t*(5-6)),g=Math.round(78+t*(150-78)),b=Math.round(58+t*(105-58));
+    ctx.fillStyle=`rgb(${r},${g},${b})`;
+    ctx.fillRect(x,y,cell-1,cell-1);
+    ctx.fillStyle=v>0.3?'white':'#1B3A6B';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(v.toFixed(2),x+cell/2,y+cell/2);
+  }));
+  SN.forEach((n,k)=>{
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText(n,pad+k*cell+cell/2,pad-8);
+    ctx.textAlign='right';ctx.fillText(n,pad-4,pad+k*cell+cell/2+3);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('Matriz de transición A — sueño (AASM)',W/2,H-4);
+}
+
+const feedbacks={
+  q1:['¡Correcto! El posterior filtrado (solo Forward) solo usa información hasta el instante t — puede computarse en tiempo real sin esperar el final de la secuencia. El suavizado (Forward-Backward) usa toda la secuencia para mejorar la precisión, pero requiere esperar a que la grabación termine.',
+      'Incorrecto. No son equivalentes. El filtrado es causal (tiempo real), el suavizado usa toda la secuencia. El suavizado siempre es igual o más preciso que el filtrado, especialmente en regiones de transición entre estados.'],
+  q2:['¡Correcto! ψₜ(j) almacena el estado k* = argmax_k [δₜ₋₁(k) + log A_{kj}] — el predecesor óptimo para llegar al estado j en t. Durante el backtracking, se sigue la cadena ψ desde el estado final más probable hacia atrás para reconstruir toda la secuencia.',
+      'Incorrecto. ψₜ(j) no almacena probabilidades de transición ni probabilidades acumuladas. Almacena el índice del estado predecesor óptimo — es el "puntero de retroceso" que permite reconstruir la secuencia completa en la fase de backtracking.'],
+  q3:['¡Correcto! La restricción A[N3,W]=0.01 en la matriz de transición refleja conocimiento fisiológico real (es muy raro despertar directamente desde N3). Viterbi la respeta y produce secuencias más interpretables clínicamente. El argmax posterior puede ignorarla, generando secuencias que el experto rechazaría.',
+      'Incorrecto. Viterbi no es "menos preciso". Es una decisión de diseño: optimizar cada instante independientemente (argmax posterior) puede violar las restricciones de transición. Viterbi garantiza la consistencia global con la dinámica del modelo.'],
+  q4:['¡Correcto! El problema de permutación ocurre porque Baum-Welch maximiza la verosimilitud pero no sabe qué estado corresponde a qué etiqueta fisiológica. La solución es la asignación húngara (linear_sum_assignment) para alinear etiquetas aprendidas con las de referencia, o la asignación manual basada en las medias de emisión.',
+      'Incorrecto. El problema de permutación es inherente al aprendizaje no supervisado, no un síntoma de convergencia incompleta. Más iteraciones no resuelven la permutación. La solución es alinear las etiquetas aprendidas con las de referencia mediante la asignación húngara.'],
+  q5:['¡Correcto! Dentro de un ciclo cardíaco, las fases PQRST ocurren en orden fijo y no reversible. El HMM izquierda-derecha (A_{ij}=0 para j<i) refleja exactamente esta restricción biológica, evitando que el modelo vuelva a segmentos anteriores dentro del mismo ciclo.',
+      'Incorrecto. La unidireccionalidad del tiempo no implica HMM izquierda-derecha — todos los HMMs son causales. La distinción es que el HMM izquierda-derecha prohíbe las transiciones regresivas dentro de la secuencia de estados, lo que es apropiado cuando los estados se suceden siempre en el mismo orden.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa Forward-Backward y Viterbi.','Buen progreso — revisa Baum-Welch.','¡Bien!','¡Excelente dominio de los HMM!','¡Perfecto! Listo para Deep Learning.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>
