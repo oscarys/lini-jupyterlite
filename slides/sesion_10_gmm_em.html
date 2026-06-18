@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 10 — GMM y el Algoritmo EM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--emerald:#059669;--emerald-lt:#D1FAE5;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--emerald);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#064E3B 0%,#065F46 40%,#047857 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(5,150,105,.3) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(5,150,105,.3);border:1px solid rgba(167,243,208,.5);color:#A7F3D0;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:34px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#A7F3D0;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#A7F3D0;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#6EE7B7;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--emerald)}
+h3.section{font-size:13px;font-weight:600;color:var(--emerald);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#ECFDF5;border:1px solid #6EE7B7;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#064E3B;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:var(--emerald-lt);border-left:3px solid var(--emerald)}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.dark{background:#064E3B}.card.dark p,.card.dark li,.card.dark h3{color:rgba(255,255,255,.85)}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--emerald);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--emerald)}
+.quiz-q{margin-bottom:16px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--emerald);background:var(--emerald-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--emerald);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--emerald)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--emerald);border-color:var(--emerald);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#047857}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--emerald)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Modelos Generativos Clásicos</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 10 · GMM y Algoritmo EM</div>
+    <h1 class="cover-title">Modelos Generativos — <em>GMM</em><br>y el Algoritmo EM</h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Derivar el modelo generativo GMM y su función de verosimilitud marginal</li>
+        <li>Implementar el algoritmo EM desde cero con aritmética en log-espacio</li>
+        <li>Contrastar asignaciones blandas (GMM) con las duras (k-means)</li>
+        <li>Seleccionar K con BIC, AIC e índice de silueta</li>
+        <li>Aplicar GMM como estimador de densidad para detección de anomalías en ECG</li>
+        <li>Reconocer Naive Bayes, LDA y QDA como casos especiales del GMM</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — MODELO GENERATIVO -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">El Modelo Generativo GMM</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">El Modelo <span>Generativo GMM</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Discriminativo vs generativo</h3>
+        <table>
+          <tr><th>Enfoque</th><th>Modela</th><th>Ejemplos</th></tr>
+          <tr><td><strong>Discriminativo</strong></td><td>P(y|x)</td><td>LR, SVM, RF, GBM</td></tr>
+          <tr><td><strong>Generativo</strong></td><td>P(x,y) = P(x|y)P(y)</td><td>GMM, HMM, NB</td></tr>
+        </table>
+        <h3 class="section" style="margin-top:12px">Definición del GMM</h3>
+        <code class="math">p(x) = Σₖ πₖ · 𝒩(x | μₖ, Σₖ)
+
+πₖ ≥ 0,  Σ πₖ = 1   (pesos de mezcla)
+μₖ, Σₖ             (media y covarianza)</code>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">Proceso generativo</h3>
+          <p style="font-size:13px">1. Muestrear componente: z ~ Categorical(π)<br>2. Muestrear observación: x|z=k ~ 𝒩(μₖ, Σₖ)</p>
+          <p style="font-size:13px;margin-top:6px">La variable z es <strong>latente</strong> — no la observamos. Esta estructura oculta hace que MLE directa sea intractable → necesitamos el algoritmo EM.</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Aplicación biomédica típica</h3>
+          <p style="font-size:13px">Segmentación de EEG por estado de vigilancia: las componentes del GMM corresponden a patrones espectrales de vigilia, somnolencia y sueño profundo. No se conocen las etiquetas a priori.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="gmm-canvas" width="300" height="360" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+        <div class="cite" style="margin-top:8px">
+          <p>Bishop, C.M. (2006). <em>PRML</em>. §9.1–9.3. Springer.</p>
+          <p>Dempster, A.P. et al. (1977). Maximum likelihood from incomplete data via the EM algorithm. <em>JRSS-B</em>, 39(1), 1–38.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — ALGORITMO EM -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">El Algoritmo EM</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">El Algoritmo <span>EM para GMM</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">¿Por qué no MLE directo?</h3>
+        <p style="font-size:13px">La log-verosimilitud del GMM tiene la forma:</p>
+        <code class="math">ln p(X|π,μ,Σ) = Σᵢ ln [Σₖ πₖ 𝒩(xᵢ|μₖ,Σₖ)]</code>
+        <p style="font-size:13px;margin-top:4px">El logaritmo de una suma no tiene solución analítica. El EM itera entre dos pasos garantizando que la ELBO (cota inferior de la log-verosimilitud) no decrece.</p>
+
+        <h3 class="section" style="margin-top:10px">Paso E — Responsabilidades</h3>
+        <code class="math">rᵢₖ = πₖ·𝒩(xᵢ|μₖ,Σₖ) / Σⱼ πⱼ·𝒩(xᵢ|μⱼ,Σⱼ)
+
+En log-espacio:
+log rᵢₖ = log πₖ + log𝒩(xᵢ|μₖ,Σₖ) − log Σⱼ(···)</code>
+
+        <h3 class="section" style="margin-top:10px">Paso M — Actualización de parámetros</h3>
+        <code class="math">Nₖ = Σᵢ rᵢₖ
+μₖ = (1/Nₖ) Σᵢ rᵢₖ xᵢ
+Σₖ = (1/Nₖ) Σᵢ rᵢₖ (xᵢ−μₖ)(xᵢ−μₖ)ᵀ
+πₖ = Nₖ / N</code>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Garantía de convergencia</h3>
+          <p style="font-size:13px">El EM <strong>nunca decrece</strong> la log-verosimilitud. Converge a un máximo local (no necesariamente global). Se recomienda múltiples inicializaciones con k-means.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="em-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — GMM VS K-MEANS -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">GMM vs k-means</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">GMM vs k-means — <span>Asignaciones Blandas vs Duras</span></h2>
+    <div class="two-col">
+      <div>
+        <table>
+          <tr><th>Característica</th><th>k-means</th><th>GMM</th></tr>
+          <tr><td>Asignación</td><td>Dura (0/1)</td><td>Blanda (prob.)</td></tr>
+          <tr><td>Frontera</td><td>Lineal (Voronoi)</td><td>Elipsoidal</td></tr>
+          <tr><td>Criterio</td><td>Distancia euclidiana</td><td>Verosimilitud</td></tr>
+          <tr><td>Incertidumbre</td><td>No</td><td>Sí (rᵢₖ)</td></tr>
+          <tr><td>Forma del clúster</td><td>Esférica</td><td>Elipsoidal general</td></tr>
+          <tr><td>Equivalencia</td><td>Caso especial GMM</td><td>Generalización</td></tr>
+        </table>
+        <div class="card green" style="margin-top:12px">
+          <h3 class="section">k-means como caso especial</h3>
+          <p style="font-size:13px">k-means es un GMM con covarianzas esféricas iguales (Σₖ = σ²I) y responsabilidades "hard" en el límite σ² → 0. Al asignar 0/1 en vez de probabilidades, pierde la información de incertidumbre.</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">¿Cuándo importa la diferencia?</h3>
+          <p style="font-size:13px">Los puntos en la región de transición entre estados EEG (somnolencia/vigilia) tienen responsabilidades ambiguas. El GMM cuantifica esta incertidumbre explícitamente — útil para señales fisiológicas con transiciones graduales.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="compare-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — SELECCIÓN K + ANOMALÍAS -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Selección de K y Detección de Anomalías</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Selección de K y <span>Detección de Anomalías</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">Criterios de selección de K</h3>
+        <code class="math">BIC = −2 ln L̂ + p·ln N   (penaliza fuerte)
+AIC = −2 ln L̂ + 2p       (penaliza débil)
+
+p = nº de parámetros libres del GMM
+  = K·d + K·d(d+1)/2 + K−1</code>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">BIC vs AIC en la práctica</h3>
+          <p style="font-size:13px">BIC tiende a seleccionar modelos más simples (penaliza más la complejidad con N grande). AIC puede sobreestimar K. El índice de silueta no asume forma y es más lento. En señales biomédicas donde K tiene interpretación fisiológica, siempre validar con dominio experto.</p>
+        </div>
+        <h3 class="section" style="margin-top:12px">GMM para detección de anomalías</h3>
+        <code class="math">Entrenar: ajustar GMM en datos normales
+Umbral:  τ = percentil 5 de log p(xᵢ)
+Test:    anomalía si log p(x) &lt; τ</code>
+        <p style="font-size:13px;margin-top:6px">Un latido anómalo tiene baja densidad bajo el modelo de latidos normales. AUROC típico: 0.88–0.95 en datasets de arritmias con GMM de 2–3 componentes.</p>
+        <div class="cite">
+          <p>Moody, G.B. & Mark, R.G. (2001). The impact of the MIT-BIH arrhythmia database. <em>IEEE Eng. Med. Biol.</em>, 20(3), 45–50. <a href="https://doi.org/10.1109/51.932724" target="_blank">doi:10.1109/51.932724</a></p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bic-canvas" width="300" height="200" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg)"></canvas>
+        <canvas id="anom-canvas" width="300" height="160" style="display:block;width:100%;border-radius:8px;border:1px solid #6EE7B7;background:var(--bg);margin-top:8px"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — CASOS ESPECIALES -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">GMM — Casos Especiales</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Naive Bayes, LDA y QDA como <span>Casos Especiales del GMM</span></h2>
+    <p style="font-size:13px;margin-bottom:14px">Todos los clasificadores gaussianos son GMMs con etiquetas observadas (K fijado = nº de clases). La diferencia está en las restricciones sobre la covarianza.</p>
+    <table style="margin-bottom:14px">
+      <tr><th>Modelo</th><th>Covarianza Σₖ</th><th>Nº parámetros</th><th>Frontera</th></tr>
+      <tr><td><strong>Naive Bayes gaussiano</strong></td><td>Diagonal, libre por clase</td><td>K·d + K·d</td><td>Cuadrática</td></tr>
+      <tr><td><strong>LDA</strong></td><td>Compartida: Σₖ = Σ</td><td>K·d + d(d+1)/2</td><td>Lineal</td></tr>
+      <tr><td><strong>QDA</strong></td><td>Libre por clase (full)</td><td>K·d + K·d(d+1)/2</td><td>Cuadrática</td></tr>
+      <tr><td><strong>GMM supervisado</strong></td><td>Igual que QDA</td><td>K·d + K·d(d+1)/2</td><td>Cuadrática</td></tr>
+    </table>
+    <div class="two-col">
+      <div class="card green">
+        <h3 class="section">¿Cuándo usar cada uno?</h3>
+        <ul style="font-size:12.5px">
+          <li><strong>NB gaussiano:</strong> alta dimensionalidad, características poco correlacionadas (texto, genómica)</li>
+          <li><strong>LDA:</strong> pocas muestras, cuando la frontera lineal es suficiente. También para reducción de dimensionalidad supervisada</li>
+          <li><strong>QDA:</strong> más datos, varianzas claramente distintas entre clases</li>
+          <li><strong>GMM:</strong> mezcla no supervisada o semisupervisada; cuando K > nº de clases</li>
+        </ul>
+      </div>
+      <div class="card amber">
+        <h3 class="section">Supuesto de independencia del Naive Bayes</h3>
+        <p style="font-size:13px">Aunque el supuesto de independencia condicional es casi siempre falso en señales biomédicas (las bandas EEG están correlacionadas), el NB gaussiano es sorprendentemente robusto y funciona bien como baseline rápido. Su descalibración puede corregirse con Platt scaling.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa el GMM generativo, el algoritmo EM desde cero en log-espacio, la comparación GMM vs k-means con puntos inciertos resaltados, selección de K con BIC/AIC/silueta, detección de anomalías ECG, y la comparación de clasificadores gaussianos sobre el dataset EEG.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_10_gmm_em.ipynb" title="Cuaderno Sesión 10" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_10_gmm_em.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo III</span><span class="slide-label">Autoevaluación y Resumen</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>GMM y Algoritmo EM</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">¿Por qué no es posible maximizar directamente la log-verosimilitud del GMM con las derivadas iguales a cero (como en MLE de una sola gaussiana)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque el GMM no tiene función de verosimilitud — al ser no supervisado, solo tiene función de pérdida</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Porque la log-verosimilitud contiene el logaritmo de una suma de gaussianas (ln Σₖ πₖ𝒩), lo que no tiene solución analítica — las responsabilidades rᵢₖ dependen de los parámetros, que a su vez dependen de las responsabilidades</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque el GMM tiene demasiados parámetros y el sistema de ecuaciones está subdeterminado</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque la función de verosimilitud del GMM no es diferenciable</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">En el paso E del algoritmo EM para GMM, ¿qué garantiza que el algoritmo opere en log-espacio (usando logsumexp)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Que el algoritmo converja más rápido al usar menos operaciones aritméticas</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Estabilidad numérica: las densidades gaussianas para puntos lejanos del centro pueden ser numéricamente 0 en punto flotante (underflow). Trabajar con log-densidades y logsumexp evita que las responsabilidades colapsen a NaN o inf</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Que el resultado sea siempre positivo, ya que las responsabilidades deben ser probabilidades</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Que la log-verosimilitud sea convexa en log-espacio, garantizando convergencia al óptimo global</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">Un punto xᵢ en el dataset EEG tiene responsabilidades r(W)=0.48, r(N1/N2)=0.45, r(N3)=0.07. ¿Qué indica esto clínicamente?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">El punto debe clasificarse como N3 porque tiene la probabilidad más baja (el GMM usa asignación inversa)</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Es un punto altamente ambiguo entre vigilia y somnolencia ligera — la baja responsabilidad de N3 sugiere que no está en sueño profundo, pero el clasificador tiene alta incertidumbre sobre si el paciente está despierto o en fase inicial de sueño</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Es un error del algoritmo EM — las responsabilidades deberían converger a 0 o 1</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">El punto pertenece a la clase W porque tiene la responsabilidad más alta, y la diferencia de 0.03 con N1/N2 es suficientemente significativa</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">Al seleccionar K con BIC para un GMM sobre 500 segmentos de EEG (4 bandas), el BIC mínimo ocurre en K=3, pero el AUROC de detección de anomalías mejora con K=5. ¿Cómo procedes?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Siempre usar K=3 porque BIC tiene fundamento teórico y la mejora en AUROC podría ser sobreajuste</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Siempre usar K=5 porque el AUROC en anomalías es la métrica relevante para la aplicación</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">Evaluar K=3 y K=5 con validación cruzada en datos no usados para entrenar el GMM. También consultar si K=5 tiene interpretación fisiológica (e.g., distinguir N1 de N2 dentro de somnolencia). La decisión final combina criterio estadístico y conocimiento de dominio</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Usar el promedio K=4, que es el compromiso entre los dos criterios</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">¿En qué condición el LDA produce la misma frontera de decisión que el QDA?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Cuando el número de muestras N es mayor que el número de características d</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Cuando las matrices de covarianza de todas las clases son iguales: Σ₁ = Σ₂ = ··· = Σₖ. En ese caso, el término cuadrático del QDA se cancela y la frontera se vuelve lineal — igual que el LDA</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Cuando las distribuciones de clase son perfectamente esféricas (Σₖ = σ²I para todo k)</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Cuando los pesos a priori de todas las clases son iguales (πₖ = 1/K)</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:var(--emerald-lt);border-left:3px solid var(--emerald)">
+        <h4 style="color:var(--emerald);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave</h4>
+        <ul style="font-size:12.5px"><li>GMM: verosimilitud marginal con variable latente z</li><li>EM: pasos E (responsabilidades) y M (parámetros)</li><li>Log-espacio para estabilidad numérica (logsumexp)</li><li>BIC/AIC para selección de K</li><li>GMM como estimador de densidad para anomalías</li><li>NB, LDA, QDA como GMMs con etiquetas</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Reglas de oro</h4>
+        <ul style="font-size:12.5px"><li>Siempre inicializar con k-means + múltiples semillas</li><li>Regularizar Σₖ (+εI) para evitar singularidades</li><li>BIC > AIC para selección con N moderado-grande</li><li>Validar K con conocimiento fisiológico</li><li>AUROC de detección de anomalías con umbral en percentil 5</li></ul>
+      </div>
+    </div>
+    <div style="background:var(--emerald-lt);border:1px solid #6EE7B7;border-radius:10px;padding:12px 16px;font-size:13px;color:#064E3B">
+      <strong>Próxima sesión (S11 — Módulo III):</strong> Modelos Ocultos de Markov (HMM) — algoritmos Forward, Backward, Viterbi y Baum-Welch. Aplicación a estadificación del sueño de 5 estados (W/N1/N2/N3/REM).
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawGMM();if(current===3)drawEM();if(current===4)drawCompare();if(current===5){drawBIC();drawAnom();};}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+const EK=['#3B82F6','#F59E0B','#10B981'];
+const EL=['Vigilia (W)','Somnolencia (N1/N2)','Sueño (N3)'];
+const MU=[[0.5,2.0],[1.0,1.2],[3.5,0.4]];
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+const r=rng(42);
+const pts=[];for(let k=0;k<3;k++)for(let i=0;i<40;i++){const x=MU[k][0]+(r()-.5)*1.2;const y=MU[k][1]+(r()-.5)*1.2;pts.push({x,y,k});}
+
+function drawEllipse(ctx,cx,cy,rx,ry,color){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.globalAlpha=0.5;ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,2*Math.PI);ctx.stroke();ctx.globalAlpha=0.1;ctx.fillStyle=color;ctx.fill();ctx.globalAlpha=1;}
+
+function drawGMM(){
+  const c=document.getElementById('gmm-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=360;c.width=W;c.height=H;
+  const toX=v=>30+(v+0.5)/(4.5)*（W-60);
+  const toY=v=>H-20-(v-(-0.2))/(3.0)*（H-40);
+  ctx.clearRect(0,0,W,H);
+  // marginal density
+  const densX=Array.from({length:60},(_,i)=>-0.5+i/10);
+  densX.forEach((x,i)=>{if(i<1)return;const xp=densX[i-1];const sum1=MU.map((m,k)=>0.333*Math.exp(-0.5*(x-m[0])**2/0.36)/Math.sqrt(2*Math.PI*0.36)).reduce((a,b)=>a+b)*30;const sum0=MU.map((m,k)=>0.333*Math.exp(-0.5*(xp-m[0])**2/0.36)/Math.sqrt(2*Math.PI*0.36)).reduce((a,b)=>a+b)*30;ctx.strokeStyle='rgba(5,150,105,0.6)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(toX(xp),H-8-sum0);ctx.lineTo(toX(x),H-8-sum1);ctx.stroke();});
+  // ellipses
+  EK.forEach((col,k)=>{drawEllipse(ctx,toX(MU[k][0]),toY(MU[k][1]),55,40,col);});
+  // points
+  pts.forEach(p=>{ctx.fillStyle=EK[p.k];ctx.beginPath();ctx.arc(toX(p.x),toY(p.y),3.5,0,2*Math.PI);ctx.fill();});
+  // centroids
+  MU.forEach((m,k)=>{ctx.fillStyle=EK[k];ctx.strokeStyle='white';ctx.lineWidth=2;ctx.beginPath();ctx.arc(toX(m[0]),toY(m[1]),7,0,2*Math.PI);ctx.fill();ctx.stroke();});
+  ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+  EL.forEach((l,k)=>{ctx.fillStyle=EK[k];ctx.fillText(l,toX(MU[k][0]),toY(MU[k][1])-12);});
+  ctx.fillStyle='#8896A8';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('EEG: δ vs α — estados de vigilancia',W/2,H-2);
+}
+// Trick for arrow function with non-ASCII: define toX/toY carefully
+const toXf=v=>30+(v+0.5)/5*(280-60);
+const toYf=(v,H)=>H-20-(v-(-0.2))/3.2*(H-40);
+
+function drawEM(){
+  const c=document.getElementById('em-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:20,b:28};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const iters=[1,5,10,20,40,80];const logL=[-3.2,-2.4,-1.85,-1.62,-1.55,-1.53];
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  logL.forEach((v,i)=>{const y=pad.t+(v+3.3)/1.8*h;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(1),pad.l-2,y+3);});
+  const toX=i=>pad.l+(i/(iters.length-1))*w;
+  const toY=v=>pad.t+(v+3.3)/1.8*h;
+  ctx.strokeStyle='#059669';ctx.lineWidth=2.5;ctx.beginPath();
+  logL.forEach((v,i)=>{i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));});
+  ctx.stroke();
+  logL.forEach((v,i)=>{ctx.fillStyle='#059669';ctx.beginPath();ctx.arc(toX(i),toY(v),4,0,2*Math.PI);ctx.fill();ctx.fillStyle='#4A5568';ctx.font='8px DM Mono,monospace';ctx.textAlign='center';ctx.fillText('it'+iters[i],toX(i),toY(v)-8);});
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Iteración EM',pad.l+w/2,H-3);
+  ctx.save();ctx.translate(10,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Log-verosimilitud',0,0);ctx.restore();
+  ctx.fillStyle='#059669';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Convergencia del algoritmo EM',pad.l+4,pad.t+12);
+  ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';
+  ctx.fillText('(nunca decrece — ELBO)',pad.l+4,pad.t+24);
+}
+
+function drawCompare(){
+  const c=document.getElementById('compare-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  const hw=W/2;
+  ctx.clearRect(0,0,W,H);
+  const drawCluster=(x0,y0,ww,hh,title,hard)=>{
+    ctx.fillStyle='#F7F9FC';ctx.fillRect(x0,y0,ww,hh);
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText(title,x0+ww/2,y0+12);
+    const r2=rng(99);
+    for(let k=0;k<3;k++)for(let i=0;i<25;i++){
+      const px=MU[k][0]+(r2()-.5)*1.2;const py=MU[k][1]+(r2()-.5)*1.2;
+      const cx=x0+8+(px+0.5)/5*(ww-16);const cy=y0+20+(py-(-0.2))/3.2*(hh-28);
+      if(hard){ctx.fillStyle=EK[k];ctx.globalAlpha=0.85;}
+      else{const uncert=r2()*0.4;ctx.fillStyle=EK[k];ctx.globalAlpha=Math.max(0.25,1-uncert*2);}
+      ctx.beginPath();ctx.arc(cx,cy,3.5,0,2*Math.PI);ctx.fill();ctx.globalAlpha=1;
+      if(!hard&&r2()<0.15){ctx.strokeStyle='#1B3A6B';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,7,0,2*Math.PI);ctx.stroke();}
+    }
+    ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText(hard?'Asignación dura (0/1)':'Alfa = confianza de asignación',x0+ww/2,y0+hh-4);
+  };
+  drawCluster(2,2,hw-4,H-4,'k-means',true);
+  drawCluster(hw+2,2,hw-4,H-4,'GMM (blandas)',false);
+}
+
+function drawBIC(){
+  const c=document.getElementById('bic-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=200;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:14,b:28};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const Ks=[1,2,3,4,5,6,7,8];
+  const bic=[5200,4100,3820,3910,3980,4050,4110,4180];
+  const aic=[5100,3950,3640,3710,3760,3820,3870,3920];
+  const minB=3820,maxB=5250;
+  const toX=k=>pad.l+(k-1)/(7)*w;const toY=v=>pad.t+h-(v-minB)/(maxB-minB)*h;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#3B82F6';ctx.lineWidth=2;ctx.beginPath();bic.forEach((v,i)=>{i===0?ctx.moveTo(toX(Ks[i]),toY(v)):ctx.lineTo(toX(Ks[i]),toY(v));});ctx.stroke();
+  ctx.strokeStyle='#EF4444';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();aic.forEach((v,i)=>{i===0?ctx.moveTo(toX(Ks[i]),toY(v)):ctx.lineTo(toX(Ks[i]),toY(v));});ctx.stroke();ctx.setLineDash([]);
+  bic.forEach((v,i)=>{ctx.fillStyle='#3B82F6';ctx.beginPath();ctx.arc(toX(Ks[i]),toY(v),3,0,2*Math.PI);ctx.fill();});
+  const kOpt=Ks[bic.indexOf(Math.min(...bic))];
+  ctx.strokeStyle='#059669';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(toX(kOpt),pad.t);ctx.lineTo(toX(kOpt),pad.t+h);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#059669';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('K='+kOpt+' óptimo',toX(kOpt),pad.t+8);
+  ctx.fillStyle='#3B82F6';ctx.font='8px DM Sans,sans-serif';ctx.fillText('BIC',pad.l+w-8,toY(bic[bic.length-1])-4);
+  ctx.fillStyle='#EF4444';ctx.fillText('AIC',pad.l+w-8,toY(aic[aic.length-1])+10);
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('Número de componentes K',pad.l+w/2,H-3);
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.fillText('Selección de K — BIC y AIC (↓ mejor)',pad.l+w/2,pad.t+8);
+}
+
+function drawAnom(){
+  const c=document.getElementById('anom-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=160;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:20,b:24};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const r2=rng(77);
+  const normVals=Array.from({length:80},()=>-1.5+r2()*2.5);
+  const anomVals=Array.from({length:15},()=>-5+r2()*1.5);
+  const thresh=-3.5;
+  const all=[...normVals,...anomVals];const minV=-5.5,maxV=1.5;
+  const toX=v=>pad.l+(v-minV)/(maxV-minV)*w;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(toX(thresh),pad.t);ctx.lineTo(toX(thresh),pad.t+h);ctx.stroke();
+  ctx.fillStyle='rgba(220,38,38,0.08)';ctx.fillRect(pad.l,pad.t,toX(thresh)-pad.l,h);
+  normVals.forEach(v=>{ctx.fillStyle='#3B82F6';ctx.globalAlpha=0.6;ctx.beginPath();ctx.arc(toX(v),pad.t+h/2+(r2()-.5)*h*0.5,3,0,2*Math.PI);ctx.fill();});
+  anomVals.forEach(v=>{ctx.fillStyle='#EF4444';ctx.globalAlpha=0.9;ctx.beginPath();ctx.arc(toX(v),pad.t+h/2+(r2()-.5)*h*0.4,4,0,2*Math.PI);ctx.fill();});
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#DC2626';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('Umbral τ',toX(thresh),pad.t+8);
+  ctx.fillStyle='#3B82F6';ctx.fillText('Normal',toX(-0.5),H-4);
+  ctx.fillStyle='#EF4444';ctx.fillText('Anómalo',toX(-4.5),H-4);
+  ctx.fillStyle='#8896A8';ctx.textAlign='center';ctx.fillText('Detección de anomalías ECG por log-densidad GMM',W/2,pad.t-4);
+}
+
+const feedbacks={
+  q1:['¡Correcto! Las responsabilidades rᵢₖ = P(z=k|xᵢ) dependen de los parámetros (μₖ, Σₖ, πₖ), y los parámetros óptimos dependen de las responsabilidades. Esta dependencia circular hace que las ecuaciones de MLE no tengan solución cerrada — el EM rompe el ciclo iterando entre los dos pasos.',
+      'Incorrecto. El GMM sí tiene función de verosimilitud. El problema es que ln Σₖ πₖ𝒩(xᵢ) no tiene solución analítica para sus derivadas — la variable latente z crea una dependencia circular entre parámetros y responsabilidades.'],
+  q2:['¡Correcto! Las densidades gaussianas en alta dimensión o para puntos lejanos producen valores del orden de 1e-300 o menores — que se redondean a 0 en float64. La aritmética en log-espacio con logsumexp evita este underflow, que causaría 0/0 en el cálculo de responsabilidades.',
+      'Incorrecto. El log-espacio no acelera la convergencia ni garantiza positividad (los logs pueden ser negativos). Su propósito es exclusivamente evitar el underflow numérico al calcular densidades gaussianas muy pequeñas.'],
+  q3:['¡Correcto! Las responsabilidades cercanas al 0.5 indican alta incertidumbre. Este punto no puede asignarse con confianza a ningún estado — es precisamente el tipo de punto donde la asignación blanda del GMM aporta información valiosa que k-means perdería al forzar una etiqueta.',
+      'Incorrecto. Las responsabilidades en el GMM son probabilidades de pertenencia a cada componente. Valores cercanos al 0.5 entre dos clases indican ambigüedad genuina — el algoritmo no ha cometido ningún error, simplemente refleja la incertidumbre real del dato.'],
+  q4:['¡Correcto! BIC y la métrica de aplicación (AUROC de anomalías) pueden apuntar en direcciones distintas. La solución correcta es validar ambas con datos no usados en el ajuste, y también considerar si K=5 tiene interpretación fisiológica real (por ejemplo, distinguir somnolencia de NREM ligero).',
+      'Incorrecto. Ni siempre BIC ni siempre AUROC. Ambos criterios aportan información complementaria. La validación cruzada sobre datos independientes y el juicio de dominio deben guiar la decisión final.'],
+  q5:['¡Correcto! Cuando Σ₁ = Σ₂ = ··· = Σₖ (covarianza homogénea), el término cuadrático (xᵀΣₖ⁻¹x) es el mismo para todas las clases y se cancela en el log-ratio posterior. La frontera resultante es lineal — exactamente el LDA.',
+      'Incorrecto. La igualdad entre LDA y QDA no depende del tamaño muestral, de la forma esférica, ni de los priors. Depende exclusivamente de que todas las matrices de covarianza sean iguales: Σₖ = Σ para todo k.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa el algoritmo EM.','Buen progreso.','¡Bien!','¡Excelente comprensión del GMM!','¡Perfecto! Listo para HMM.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

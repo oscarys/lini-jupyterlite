@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 09 — Comparación, Explicabilidad y Despliegue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--accent:#F59E0B;--accent-lt:#FDE68A;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--accent);color:#1B3A6B;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.15) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:32px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:var(--teal);font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--teal)}
+h3.section{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F0F7FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--navy);margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--navy);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--teal)}
+.quiz-q{margin-bottom:16px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--teal)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--accent);border-color:var(--accent);margin-left:auto;color:#1B3A6B;font-weight:600}.nav-btn.primary:hover{background:#D97706}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--accent)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:26px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Modelos Discriminativos</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 09 · Comparación y Despliegue</div>
+    <h1 class="cover-title">Comparación, <em>Explicabilidad</em><br>y Despliegue Clínico</h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Construir un dashboard de 9 modelos: AUROC, AUPRC, Brier score y tiempo</li>
+        <li>Diagnosticar descalibrado de probabilidades y aplicar Platt scaling</li>
+        <li>Interpretar curvas de beneficio neto (Decision Curve Analysis)</li>
+        <li>Completar una tarjeta de modelo siguiendo el estándar FDA SaMD</li>
+        <li>Completar el punto de control del proyecto de mitad de curso</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — DASHBOARD -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Dashboard de Comparación</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Dashboard de <span>9 Modelos — UCI CinC 2012</span></h2>
+    <p style="font-size:13px;margin-bottom:12px">Comparación sistemática de todos los modelos del Módulo II más algunos baselines. Las métricas son complementarias — ninguna es suficiente por sí sola.</p>
+    <div id="dashboard-bars"></div>
+    <div class="two-col" style="margin-top:12px">
+      <div class="card teal">
+        <h3 class="section">¿Por qué 3 métricas?</h3>
+        <table>
+          <tr><th>Métrica</th><th>Mide</th><th>Debilidad</th></tr>
+          <tr><td><strong>AUROC</strong></td><td>Discriminación</td><td>Oculta calibración</td></tr>
+          <tr><td><strong>AUPRC</strong></td><td>Recall de positivos</td><td>Depende prevalencia</td></tr>
+          <tr><td><strong>Brier</strong></td><td>Disc. + calibración</td><td>Menos intuitivo</td></tr>
+        </table>
+      </div>
+      <div class="card amber">
+        <h3 class="section">Tiempo de cómputo</h3>
+        <p style="font-size:13px">Igual de importante en el despliegue clínico real. Un GBM puede ser 100× más lento que la regresión logística con AUROC similar. Para predicciones en tiempo real en UCI (cada minuto), el tiempo importa tanto como la precisión.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — CALIBRACIÓN -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Calibración de Probabilidades</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Calibración — <span>¿Son Confiables las Probabilidades?</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">¿Qué es la calibración perfecta?</h3>
+        <code class="math">P(y=1 | p̂ = p) = p  ∀p ∈ [0,1]
+
+ECE = Σ_b (|B_b|/n) · |acc(B_b) − conf(B_b)|</code>
+        <div class="card blue" style="margin-top:10px">
+          <h3 class="section">Random Forest — descalibrado típico</h3>
+          <p style="font-size:13px">El RF tiende a <strong>comprimir las probabilidades</strong> hacia 0.5 — rara vez predice valores extremos (&lt;0.1 o &gt;0.9). Esto infla el ECE aunque el AUROC sea alto.</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Naive Bayes — sobreconfianza</h3>
+          <p style="font-size:13px">El NB gaussiano asume independencia condicional. Con características correlacionadas (como en señales biomédicas), las probabilidades predichas son demasiado extremas — ECE alto.</p>
+        </div>
+        <div class="card teal" style="margin-top:8px">
+          <h3 class="section">Platt scaling</h3>
+          <code class="math" style="font-size:11.5px">p_calibrada = σ(A·score + B)
+A, B: ajustados con reg. logística sobre
+      el conjunto de validación</code>
+          <p style="font-size:12.5px;margin-top:4px">Simple, efectivo para muchos modelos. La alternativa isotónica es más flexible pero requiere más datos.</p>
+        </div>
+        <div class="cite">
+          <p>Niculescu-Mizil, A. & Caruana, R. (2005). Predicting good probabilities with supervised learning. <em>ICML 2005</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="cal-canvas" width="300" height="380" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — DCA -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Decision Curve Analysis</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Decision Curve Analysis — <span>Beneficio Neto</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">El problema con AUROC solo</h3>
+        <p style="font-size:13px">Un modelo con AUROC=0.82 puede ser inútil clínicamente si solo es útil a umbrales de tratamiento que nadie usa. La DCA evalúa el <strong>beneficio neto</strong> en el contexto de la decisión real.</p>
+        <code class="math">NB(pₜ) = TP/n − FP/n · pₜ/(1−pₜ)
+
+Tratar todos:   NB = prev − (1−prev)·pₜ/(1−pₜ)
+No tratar:      NB = 0
+Modelo útil:    NB > max(tratar todos, 0)</code>
+        <div class="card blue" style="margin-top:10px">
+          <h3 class="section">Interpretación del umbral pₜ</h3>
+          <p style="font-size:13px">pₜ es el umbral de probabilidad a partir del cual se decide intervenir. Equivale a la relación daño/beneficio del tratamiento:<br>pₜ = 0.10 → acepta 9 FP por cada TP (tratamiento de bajo riesgo)<br>pₜ = 0.30 → acepta 2.3 FP por cada TP (tratamiento costoso)</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Rango clínico típico para UCI</h3>
+          <p style="font-size:13px">Para intervenciones de monitoreo intensivo y traslado a UCI de nivel superior, el rango clínicamente relevante suele ser pₜ ∈ [5%, 20%]. Un modelo útil debe superar "tratar a todos" en ese rango.</p>
+        </div>
+        <div class="cite">
+          <p>Vickers, A.J. & Elkin, E.B. (2006). Decision curve analysis. <em>Medical Decision Making</em>, 26(6), 565–574. <a href="https://doi.org/10.1177/0272989X06295361" target="_blank">doi:10.1177/0272989X06295361</a></p>
+        </div>
+      </div>
+      <div>
+        <canvas id="dca-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — MODEL CARD -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Tarjeta de Modelo — FDA SaMD</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Tarjeta de Modelo — <span>Despliegue Regulatorio</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">¿Qué es una model card?</h3>
+        <p style="font-size:13px">Documento estructurado que describe un modelo de ML de forma transparente para todas las partes interesadas: clínicos, reguladores, pacientes y desarrolladores.</p>
+        <div class="card navy" style="margin-top:10px;font-size:12px">
+          <p style="color:#FDE68A;font-weight:600;margin-bottom:6px">SECCIONES OBLIGATORIAS</p>
+          <ul style="font-size:12px">
+            <li style="color:rgba(255,255,255,.8)">Descripción del modelo y versión</li>
+            <li style="color:rgba(255,255,255,.8)">Uso previsto y limitaciones de uso</li>
+            <li style="color:rgba(255,255,255,.8)">Datos de entrenamiento: fuente, N, prevalencia</li>
+            <li style="color:rgba(255,255,255,.8)">Rendimiento: AUROC con IC 95%, Brier, ECE</li>
+            <li style="color:rgba(255,255,255,.8)">Umbral clínico: sensibilidad, especificidad, PPV, VPN</li>
+            <li style="color:rgba(255,255,255,.8)">Limitaciones y posibles sesgos</li>
+            <li style="color:rgba(255,255,255,.8)">Consideraciones éticas y regulatorias</li>
+            <li style="color:rgba(255,255,255,.8)">Plan de mantenimiento y monitoreo</li>
+          </ul>
+        </div>
+        <div class="cite" style="margin-top:8px">
+          <p>Mitchell, M. et al. (2019). Model cards for model reporting. <em>FAccT 2019</em>. <a href="https://doi.org/10.1145/3287560.3287596" target="_blank">doi:10.1145/3287560.3287596</a></p>
+        </div>
+        <div class="cite">
+          <p>FDA (2021). AI/ML-Based Software as a Medical Device (SaMD) Action Plan. <a href="https://www.fda.gov/medical-devices/software-medical-device-samd" target="_blank">fda.gov/medical-devices</a></p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section">Clasificación SaMD (FDA)</h3>
+        <table>
+          <tr><th>Clase</th><th>Riesgo</th><th>Ejemplo</th></tr>
+          <tr><td>I</td><td>Bajo</td><td>Registro de síntomas</td></tr>
+          <tr><td>II</td><td>Moderado</td><td>Predicción UCI</td></tr>
+          <tr><td>III</td><td>Alto</td><td>Diagnóstico de cáncer</td></tr>
+        </table>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Ciclo de vida post-despliegue</h3>
+          <ul style="font-size:12.5px">
+            <li>Monitoreo continuo: AUROC mensual</li>
+            <li>Detección de drift: test de Kolmogorov-Smirnov en inputs</li>
+            <li>Reentrenamiento: cuando AUROC cae >0.05</li>
+            <li>Validación externa en nuevas cohortes</li>
+            <li>Auditoría de equidad por subgrupos</li>
+          </ul>
+        </div>
+        <div class="card red" style="margin-top:8px">
+          <h3 class="section">Error frecuente</h3>
+          <p style="font-size:13px">Reportar el AUROC del conjunto de test interno como validación suficiente. Para SaMD, la FDA requiere <strong>validación prospectiva</strong> en datos de hospitales distintos al de entrenamiento.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — PUNTO DE CONTROL -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Punto de Control — Proyecto Mitad de Curso</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Punto de Control del <span>Proyecto de Mitad de Curso</span></h2>
+    <p style="font-size:13px;margin-bottom:14px">Este es el primer entregable formal del proyecto final. Demuestra que tienes el pipeline básico funcionando antes de añadir complejidad.</p>
+    <table style="margin-bottom:14px">
+      <tr><th>#</th><th>Entregable</th><th>¿Qué demuestras?</th></tr>
+      <tr><td>1</td><td>Declaración del problema clínico</td><td>Costo asimétrico FP/FN; métrica justificada</td></tr>
+      <tr><td>2</td><td>Descripción del dataset</td><td>N, prevalencia, fuente, inclusión/exclusión</td></tr>
+      <tr><td>3</td><td>Pipeline de preprocesamiento</td><td>División train/test antes de cualquier transformación</td></tr>
+      <tr><td>4</td><td>Baseline (LR o árbol)</td><td>AUROC con IC 95% por bootstrap</td></tr>
+      <tr><td>5</td><td>Comparación preliminar ≥3 modelos</td><td>AUROC, AUPRC, Brier</td></tr>
+      <tr><td>6</td><td>DCA preliminar</td><td>Utilidad clínica en el rango de umbral relevante</td></tr>
+      <tr><td>7</td><td>Plan para la entrega final</td><td>SHAP, calibración, LOSO, equidad, tarjeta de modelo</td></tr>
+    </table>
+    <div class="two-col">
+      <div class="card green">
+        <h3 class="section">Dataset recomendado (si aún no tienes)</h3>
+        <p style="font-size:13px"><strong>PhysioNet CinC 2017</strong> — Detección de fibrilación auricular desde ECG de una derivación.<br>Clifford, G.D. et al. (2017). <em>Computing in Cardiology</em>, 44.<br>https://physionet.org/content/challenge-2017/</p>
+      </div>
+      <div class="card amber">
+        <h3 class="section">Criterio de evaluación (20%)</h3>
+        <ul style="font-size:12.5px">
+          <li>Correcta prevención de data leakage (30%)</li>
+          <li>Métricas reportadas con incertidumbre (25%)</li>
+          <li>DCA con umbral clínico justificado (25%)</li>
+          <li>Plan detallado y realista para entrega final (20%)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa el dashboard de 9 modelos, diagramas de confiabilidad antes/después de Platt scaling, Decision Curve Analysis con curvas de beneficio neto, y la tarjeta de modelo para despliegue regulatorio.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_09_comparacion_despliegue.ipynb" title="Cuaderno Sesión 09" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_09_comparacion_despliegue.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo II · Cierre</span><span class="slide-label">Autoevaluación y Resumen del Módulo II</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Cierre del Módulo II</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">Un Random Forest tiene AUROC=0.83 pero ECE=0.18. Un médico quiere usar la probabilidad predicha para decidir si un paciente de UCI requiere monitoreo intensivo. ¿Qué debe hacerse?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Usar el modelo directamente — el AUROC alto garantiza que las probabilidades son confiables</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Aplicar Platt scaling o calibración isotónica antes del despliegue — el ECE alto indica que las probabilidades predichas no corresponden a la frecuencia real de mortalidad</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Cambiar el modelo por regresión logística, que siempre está mejor calibrada</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Reducir el umbral de clasificación a 0.3 para compensar el ECE alto</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">En la DCA, a un umbral pₜ=0.15 el modelo tiene NB=0.08, "tratar a todos" tiene NB=0.05, y "no tratar" tiene NB=0. ¿Qué significa esto?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">El modelo es clínicamente útil a ese umbral — supera tanto la estrategia de tratar a todos como la de no tratar a nadie. Por cada 100 pacientes, el modelo detecta ~3 muertes adicionales comparado con tratar a todos, sin aumentar los falsos positivos</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">El modelo no es útil porque su NB=0.08 es muy bajo — debería estar por encima de 0.5</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">"Tratar a todos" es la mejor estrategia porque su NB es positivo y más simple</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">El modelo es útil solo si supera NB=0.5 en todo el rango de umbrales</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">Al comparar 9 modelos en el mismo dataset de test, encontramos que GBM tiene el mejor AUROC pero Reg. Logística tiene el mejor Brier score. ¿Qué modelo elegirías para predicción de mortalidad en UCI y por qué?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">GBM siempre — el AUROC es la métrica más importante y el Brier score puede corregirse con calibración posterior</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Regresión logística siempre — la interpretabilidad es más importante que el rendimiento en entornos clínicos</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Depende del uso: si solo se necesita ordenar pacientes por riesgo (triaje), GBM. Si el médico usará la probabilidad numérica para tomar decisiones de tratamiento, LR calibrada. La DCA con el umbral clínico real debería guiar la decisión final</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Ninguno — hay que esperar a tener más datos para que la diferencia sea estadísticamente significativa</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">¿Por qué la FDA clasifica un sistema de predicción de mortalidad en UCI como SaMD Clase II (riesgo moderado) y no Clase I?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque usa datos de más de 1000 pacientes, lo que lo convierte automáticamente en Clase II</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">Porque informa decisiones clínicas que pueden influir directamente en el tratamiento del paciente — no es un simple registro pasivo. Una predicción incorrecta de bajo riesgo puede retrasar intervenciones que salven vidas</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque involucra datos de EHR, que siempre requieren clasificación Clase II o superior</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque el modelo usa Random Forest, que es más complejo que un árbol de decisión simple (Clase I)</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">Un colega reporta AUROC=0.91 en su modelo de predicción de sepsis. Al revisar el código, notas que normalizó las características ANTES de dividir train/test. ¿Cuál es el problema y cómo de grave es?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">No hay problema — la normalización es solo un cambio de escala y no afecta al AUROC</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Es un problema menor — el AUROC real probablemente sea 0.88–0.90, lo que sigue siendo excelente</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Es data leakage: la media y desviación estándar del test contaminan el train. El AUROC real puede ser significativamente menor (0.05–0.15 de diferencia es común), y el modelo puede fallar en producción con datos de nuevas cohortes</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Solo es un problema con StandardScaler — con MinMaxScaler la división del orden no importa</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:#FEF3C7;border-left:3px solid var(--amber)">
+        <h4 style="color:var(--amber);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave S09</h4>
+        <ul style="font-size:12.5px"><li>Dashboard multimodelo: AUROC, AUPRC, Brier</li><li>Diagrama de confiabilidad + ECE</li><li>Platt scaling y calibración isotónica</li><li>Decision Curve Analysis: NB y umbral clínico</li><li>Tarjeta de modelo FDA SaMD</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Módulo III que sigue</h4>
+        <p style="font-size:13px">Pasamos de modelos <em>discriminativos</em> (modelan P(y|x)) a modelos <em>generativos</em> (modelan P(x,y)). El primer método es el <strong>Modelo de Mezcla de Gaussianas (GMM)</strong> con el algoritmo EM — herramienta fundamental para EEG no supervisado, detección de anomalías y estadificación del sueño.</p>
+      </div>
+    </div>
+    <div style="background:var(--emerald-lt,#D1FAE5);border:1px solid #6EE7B7;border-radius:10px;padding:12px 16px;font-size:13px;color:#064E3B">
+      <strong>Módulo III — Sesión 10:</strong> GMM y el algoritmo EM. Acento esmeralda. Dataset: estados de vigilancia EEG (W, N1/N2, N3).
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawDashboard();if(current===3)drawCal();if(current===4)drawDCA();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function drawDashboard(){
+  const el=document.getElementById('dashboard-bars');if(el.children.length>0)return;
+  const data=[
+    {n:'Reg. Logística L2', auroc:0.791,auprc:0.612,brier:0.142,c:'#3B82F6'},
+    {n:'Reg. Logística L1', auroc:0.788,auprc:0.608,brier:0.144,c:'#60A5FA'},
+    {n:'SVM-RBF',           auroc:0.798,auprc:0.621,brier:0.139,c:'#F59E0B'},
+    {n:'Árbol de decisión', auroc:0.741,auprc:0.562,brier:0.168,c:'#EF4444'},
+    {n:'Random Forest',     auroc:0.820,auprc:0.641,brier:0.135,c:'#10B981'},
+    {n:'Extra Trees',       auroc:0.815,auprc:0.635,brier:0.137,c:'#34D399'},
+    {n:'GradBoost',         auroc:0.831,auprc:0.655,brier:0.131,c:'#8B5CF6'},
+    {n:'AdaBoost',          auroc:0.774,auprc:0.591,brier:0.152,c:'#A78BFA'},
+    {n:'Naive Bayes',       auroc:0.762,auprc:0.578,brier:0.161,c:'#6B7280'},
+  ];
+  el.innerHTML=data.map(d=>`
+    <div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="font-size:11px;color:var(--slate)">${d.n}</span>
+      <div style="position:relative;height:14px;background:#E2E8F0;border-radius:3px;overflow:hidden"><div style="width:${((d.auroc-0.7)/0.2*100).toFixed(0)}%;height:100%;background:${d.c};opacity:0.85;border-radius:3px"></div><span style="position:absolute;right:3px;top:0;font-size:10px;line-height:14px;font-family:var(--font-mono);color:#1B3A6B">${d.auroc}</span></div>
+      <div style="position:relative;height:14px;background:#E2E8F0;border-radius:3px;overflow:hidden"><div style="width:${((d.auprc-0.5)/0.2*100).toFixed(0)}%;height:100%;background:${d.c};opacity:0.65;border-radius:3px"></div><span style="position:absolute;right:3px;top:0;font-size:10px;line-height:14px;font-family:var(--font-mono);color:#1B3A6B">${d.auprc}</span></div>
+      <div style="position:relative;height:14px;background:#E2E8F0;border-radius:3px;overflow:hidden"><div style="width:${((0.17-d.brier)/0.05*100).toFixed(0)}%;height:100%;background:${d.c};opacity:0.5;border-radius:3px"></div><span style="position:absolute;right:3px;top:0;font-size:10px;line-height:14px;font-family:var(--font-mono);color:#1B3A6B">${d.brier}</span></div>
+    </div>`).join('');
+  el.insertAdjacentHTML('afterbegin',`<div style="display:grid;grid-template-columns:130px 1fr 1fr 1fr;gap:6px;margin-bottom:6px"><span></span><span style="font-size:10px;font-weight:600;color:var(--teal)">AUROC ↑</span><span style="font-size:10px;font-weight:600;color:var(--teal)">AUPRC ↑</span><span style="font-size:10px;font-weight:600;color:var(--teal)">Brier ↓</span></div>`);
+}
+
+function drawCal(){
+  const c=document.getElementById('cal-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=380;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:14,b:28};const hw=W/2;const hh=H/2;
+  ctx.clearRect(0,0,W,H);
+  const drawReliability=(x0,y0,w,h,pts_pred,pts_obs,title,color,ece)=>{
+    ctx.fillStyle='#F7F9FC';ctx.fillRect(x0,y0,w,h);
+    ctx.strokeStyle='#CBD5E0';ctx.lineWidth=0.5;ctx.strokeRect(x0,y0,w,h);
+    // Perfect line
+    ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(x0,y0+h);ctx.lineTo(x0+w,y0);ctx.stroke();ctx.setLineDash([]);
+    // Calibration curve
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();
+    pts_pred.forEach((px,i)=>{const x=x0+px*w;const y=y0+h-pts_obs[i]*h;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    // Points
+    pts_pred.forEach((px,i)=>{ctx.fillStyle=color;ctx.beginPath();ctx.arc(x0+px*w,y0+h-pts_obs[i]*h,3,0,2*Math.PI);ctx.fill();});
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText(title,x0+w/2,y0-3);
+    ctx.font='8px DM Mono,monospace';ctx.fillStyle=ece>0.08?'#DC2626':'#059669';
+    ctx.fillText(`ECE=${ece.toFixed(3)}`,x0+w/2,y0+h+16);
+  };
+  const m=12;const ww=(W-3*m)/2;const hh2=(H-4*m)/2;
+  // RF uncalibrated
+  drawReliability(m,m,ww,hh2,[0.1,0.2,0.3,0.45,0.55,0.65,0.8,0.9],[0.09,0.18,0.27,0.40,0.50,0.58,0.72,0.81],'RF sin calibrar','#3B82F6',0.072);
+  // RF calibrated
+  drawReliability(m+ww+m,m,ww,hh2,[0.1,0.2,0.3,0.45,0.55,0.65,0.8,0.9],[0.10,0.20,0.30,0.44,0.55,0.64,0.79,0.90],'RF + Platt scaling','#10B981',0.011);
+  // NB uncalibrated
+  drawReliability(m,m+hh2+2*m,ww,hh2,[0.05,0.15,0.3,0.5,0.7,0.85,0.95],[0.06,0.19,0.28,0.46,0.68,0.83,0.94],'Naive Bayes sin cal.','#EF4444',0.121);
+  // NB calibrated
+  drawReliability(m+ww+m,m+hh2+2*m,ww,hh2,[0.05,0.15,0.3,0.5,0.7,0.85,0.95],[0.05,0.15,0.30,0.50,0.70,0.84,0.95],'Naive Bayes + Platt','#10B981',0.008);
+}
+
+function drawDCA(){
+  const c=document.getElementById('dca-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:14,b:36};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const prev=0.22;
+  const pts=80;const maxPt=0.55;
+  const nb=(auroc,pt)=>{const sens=0.5+auroc*0.5*(1-pt*0.8);const spec=auroc-(1-spec);const tp_rate=sens;const fp_rate=Math.max(0,1-auroc*1.1+pt*0.6);return tp_rate*prev - fp_rate*(1-prev)*pt/(1-pt+1e-9);};
+  const nb_todos=pt=>prev-(1-prev)*pt/(1-pt+1e-9);
+  const nb_rf=pt=>nb(0.82,pt)+0.01*Math.sin(pt*5);
+  const nb_lr=pt=>nb(0.79,pt);
+  const nb_gb=pt=>nb(0.83,pt)+0.005*Math.cos(pt*3);
+  ctx.clearRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [-0.01,0,0.02,0.04,0.06,0.08,0.10].forEach(v=>{const y=pad.t+h-((v+0.02)/(0.12))*h;if(y>pad.t&&y<pad.t+h){ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(2),pad.l-2,y+3);}});
+  const minNB=-0.02,maxNB=0.12;
+  const toY=v=>pad.t+h-(v-minNB)/(maxNB-minNB)*h;
+  const toX=pt=>pad.l+(pt/maxPt)*w;
+  // Shaded clinical range
+  ctx.fillStyle='rgba(245,158,11,0.07)';ctx.fillRect(toX(0.05),pad.t,toX(0.20)-toX(0.05),h);
+  ctx.fillStyle='#D97706';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Rango clínico',toX(0.125),pad.t+10);
+  // Zero line
+  ctx.strokeStyle='#1B3A6B';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,toY(0));ctx.lineTo(pad.l+w,toY(0));ctx.stroke();
+  // Curves
+  const curves=[
+    {fn:nb_todos,color:'#6B7280',dash:[5,3],label:'Tratar a todos'},
+    {fn:()=>0,   color:'#1B3A6B',dash:[3,4],label:'No tratar'},
+    {fn:nb_lr,   color:'#3B82F6',dash:[],   label:'Reg. Logística'},
+    {fn:nb_rf,   color:'#10B981',dash:[],   label:'Random Forest'},
+    {fn:nb_gb,   color:'#8B5CF6',dash:[],   label:'GradBoost'},
+  ];
+  curves.forEach(cv=>{
+    ctx.strokeStyle=cv.color;ctx.lineWidth=cv.dash.length?1.5:2.5;ctx.setLineDash(cv.dash);
+    ctx.beginPath();let first=true;
+    for(let i=0;i<pts;i++){const pt=0.01+(i/(pts-1))*(maxPt-0.01);const v=cv.fn(pt);const x=toX(pt);const y=toY(v);if(y<pad.t||y>pad.t+h){first=true;continue;}first?ctx.moveTo(x,y):ctx.lineTo(x,y);first=false;}
+    ctx.stroke();ctx.setLineDash([]);
+    // Label at right
+    const pt_lbl=maxPt*0.9;const v_lbl=cv.fn(pt_lbl);const y_lbl=toY(v_lbl);
+    if(y_lbl>pad.t+4&&y_lbl<pad.t+h-4){ctx.fillStyle=cv.color;ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText(cv.label,toX(pt_lbl)+3,y_lbl+3);}
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Umbral de tratamiento pₜ',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(10,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Beneficio neto',0,0);ctx.restore();
+}
+
+const feedbacks={
+  q1:['¡Correcto! AUROC alto y ECE alto son perfectamente compatibles — AUROC mide si el ranking es correcto, no si los valores absolutos de probabilidad son correctos. Para decisiones clínicas basadas en umbrales, las probabilidades deben estar calibradas.',
+      'Incorrecto. AUROC y calibración miden cosas distintas. Un modelo puede rankear perfectamente (AUROC=0.83) pero sus probabilidades absolutas ser incorrectas (ECE=0.18). Para decisiones de tratamiento, la calibración es crítica.'],
+  q2:['¡Correcto! El beneficio neto cuantifica cuántas muertes adicionales detecta el modelo comparado con la estrategia alternativa, descontando el costo de los falsos positivos. Un NB positivo y superior a las referencias indica utilidad clínica real.',
+      'Incorrecto. El beneficio neto no necesita ser >0.5. Solo necesita superar las estrategias de referencia (tratar a todos, no tratar). Un NB=0.08 siendo mayor que NB_todos=0.05 indica utilidad clínica real a ese umbral.'],
+  q3:['¡Correcto! La elección del modelo depende del tipo de decisión. Para triaje (ordenar pacientes), AUROC. Para decisiones individuales (¿doy este tratamiento?), la calibración es crítica. La DCA con el umbral del equipo clínico real es el árbitro final.',
+      'Incorrecto. Ninguna respuesta absolutista es correcta aquí. Tanto el AUROC como la calibración son importantes según el uso. La decisión final debe basarse en la DCA con el umbral de tratamiento real del equipo clínico.'],
+  q4:['¡Correcto! La clasificación SaMD depende del impacto de la decisión sobre la salud del paciente, no de características técnicas del modelo. Una predicción incorrecta de mortalidad puede influir directamente en el nivel de cuidados asignados.',
+      'Incorrecto. La clasificación SaMD no depende del tamaño del dataset, del tipo de datos ni del tipo de algoritmo. Depende del impacto potencial sobre la salud del paciente y del grado en que la decisión clínica depende del output del sistema.'],
+  q5:['¡Correcto! Normalizar con los estadísticos de todo el dataset (incluyendo test) antes de dividir es data leakage: la media y σ del test "contaminan" el train. El AUROC reportado es optimista. La corrección es ajustar el scaler solo en train y aplicarlo en test.',
+      'Incorrecto. Esto es data leakage grave. La normalización con StandardScaler usa la media y desviación estándar del dataset completo, incluyendo el test. Cualquier escaler debe ajustarse exclusivamente en el conjunto de entrenamiento.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Revisa calibración y DCA.','Buen progreso.','¡Bien!','¡Excelente!','¡Perfecto! Módulo II completado.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

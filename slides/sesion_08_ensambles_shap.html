@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 08 — Métodos de Árbol y Ensambles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--accent:#F59E0B;--accent-lt:#FDE68A;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--accent);color:#1B3A6B;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#1B3A6B 0%,#0F2347 60%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(245,158,11,.15) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:36px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:18px 22px;text-align:left;max-width:600px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.75);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:var(--teal);font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--teal)}
+h3.section{font-size:13px;font-weight:600;color:var(--teal);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F0F7FF;border:1px solid #BFDBFE;border-radius:6px;padding:10px 14px;font-size:12.5px;color:var(--navy);margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+.card.navy{background:#1B3A6B}.card.navy p,.card.navy li,.card.navy h3{color:rgba(255,255,255,.85)}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+pre .kw{color:#7DD3FC}pre .fn{color:#86EFAC}pre .cm{color:#6B7280}pre .nu{color:#FDE68A}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--navy);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--teal)}
+.quiz-q{margin-bottom:16px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--teal);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--teal)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--accent);border-color:var(--accent);margin-left:auto;color:#1B3A6B;font-weight:600}.nav-btn.primary:hover{background:#D97706}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--accent)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Modelos Discriminativos</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 08 · Árboles y Ensambles</div>
+    <h1 class="cover-title">Métodos de <em>Árbol</em><br>y Ensambles</h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Derivar criterios de división (Gini, entropía) y visualizar sobreajuste vs profundidad</li>
+        <li>Explicar bagging + aleatoriedad de características del Random Forest; calcular OOB</li>
+        <li>Implementar Gradient Boosting por etapas y entender XGBoost</li>
+        <li>Calcular e interpretar valores SHAP globales (summary) y locales (waterfall)</li>
+        <li>Comparar importancias MDI, permutación y SHAP</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — ÁRBOLES -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Árboles de Decisión</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Árboles de Decisión — <span>Criterios de División y Sobreajuste</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Criterio de división</h3>
+        <p style="font-size:13px">En cada nodo se elige el corte (j, t) que maximiza la reducción de impureza:</p>
+        <code class="math">ΔI = I(nodo) − (nₗ/n)·I(L) − (nᵣ/n)·I(R)
+
+Gini:     1 − Σ pₖ²
+Entropía: −Σ pₖ log₂ pₖ</code>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Sobreajuste vs profundidad</h3>
+          <p style="font-size:13px">Con profundidad ilimitada, el árbol memoriza el conjunto de entrenamiento (AUROC=1 en train). La curva de validación cruzada muestra el óptimo — típicamente profundidad 4–7 en datos clínicos.</p>
+        </div>
+        <div class="card teal" style="margin-top:10px">
+          <h3 class="section">Interpretabilidad</h3>
+          <p style="font-size:13px">Un árbol de profundidad ≤3 es completamente interpretable: cada rama es una regla clínica explícita. Es el único modelo donde el médico puede seguir exactamente la lógica de la predicción.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="tree-canvas" width="300" height="320" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card blue" style="margin-top:10px">
+          <h3 class="section">Ventajas e inconvenientes</h3>
+          <table>
+            <tr><th>Ventaja</th><th>Inconveniente</th></tr>
+            <tr><td>Interpretable</td><td>Alta varianza</td></tr>
+            <tr><td>Sin normalización</td><td>Inestable</td></tr>
+            <tr><td>Maneja NaN (CART)</td><td>Límites rectos</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — RANDOM FOREST -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Random Forest</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Random Forest — <span>Bagging y OOB</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">Dos fuentes de aleatoriedad</h3>
+        <div class="card blue">
+          <p style="font-size:13px"><strong>1. Bagging (Bootstrap Aggregating):</strong> cada árbol se entrena en una muestra bootstrap (~63% de los datos originales). El ~37% restante son las muestras <strong>out-of-bag (OOB)</strong>.</p>
+        </div>
+        <div class="card teal" style="margin-top:8px">
+          <p style="font-size:13px"><strong>2. Aleatoriedad de características:</strong> en cada nodo se considera solo <code>max_features=√d</code> características al azar. Reduce la correlación entre árboles.</p>
+        </div>
+        <h3 class="section" style="margin-top:12px">Error OOB</h3>
+        <code class="math">error_OOB = 1 − (1/N) Σᵢ I(yᵢ = ŷᵢ^OOB)</code>
+        <p style="font-size:12.5px;margin-top:4px">Estimador prácticamente sin sesgo del error de generalización. No requiere conjunto de validación separado.</p>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Convergencia</h3>
+          <p style="font-size:13px">El error OOB converge típicamente con 100–200 árboles. Más árboles nunca aumentan el error — pero el costo computacional crece linealmente.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section">Importancias de características</h3>
+        <canvas id="rf-canvas" width="300" height="260" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card red" style="margin-top:10px">
+          <h3 class="section">⚠ MDI vs permutación</h3>
+          <p style="font-size:12.5px">La importancia MDI sobreestima características con muchos valores únicos (alta cardinalidad) o correlacionadas. La importancia por permutación es más confiable — pero 3-5× más costosa.</p>
+        </div>
+        <div class="cite">
+          <p><strong>Ref:</strong> Breiman, L. (2001). Random forests. <em>Machine Learning</em>, 45(1), 5–32. <a href="https://doi.org/10.1023/A:1010933404324" target="_blank">doi:10.1023/A:1010933404324</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — BOOSTING -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Gradient Boosting y XGBoost</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Gradient Boosting <span>y XGBoost</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Modelo aditivo por etapas</h3>
+        <code class="math">Fₘ(x) = Fₘ₋₁(x) + ν · hₘ(x)
+
+hₘ: árbol ajustado a los residuos del gradiente
+ν:  tasa de aprendizaje (shrinkage)</code>
+        <p style="font-size:13px;margin-top:6px">Cada árbol nuevo corrige los errores de todos los anteriores. Con pérdida log-binaria, los residuos son las probabilidades predichas menos las etiquetas.</p>
+        <h3 class="section" style="margin-top:12px">XGBoost — mejoras clave</h3>
+        <table>
+          <tr><th>Característica</th><th>Efecto</th></tr>
+          <tr><td>Regularización L1/L2 en hojas</td><td>Reduce sobreajuste</td></tr>
+          <tr><td>Expansión de Taylor 2º orden</td><td>Convergencia más rápida</td></tr>
+          <tr><td>Poda por ganancia</td><td>Árboles más eficientes</td></tr>
+          <tr><td>Datos dispersos nativos</td><td>Maneja NaN directamente</td></tr>
+          <tr><td>Paralelismo</td><td>10–100× más rápido</td></tr>
+        </table>
+        <div class="cite" style="margin-top:8px">
+          <p>Chen, T. & Guestrin, C. (2016). XGBoost. <em>KDD 2016</em>. <a href="https://doi.org/10.1145/2939672.2939785" target="_blank">doi:10.1145/2939672.2939785</a></p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section">AUROC por ronda de boosting</h3>
+        <canvas id="boost-canvas" width="300" height="220" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Early stopping</h3>
+          <p style="font-size:13px">El AUROC en validación alcanza su máximo y luego puede disminuir (sobreajuste de boosting). <strong>Early stopping</strong>: detener cuando el AUROC de validación no mejora en k rondas consecutivas.</p>
+        </div>
+        <div class="card teal" style="margin-top:10px">
+          <h3 class="section">Bagging vs Boosting</h3>
+          <table>
+            <tr><th></th><th>RF (Bagging)</th><th>GBM (Boosting)</th></tr>
+            <tr><td>Árboles</td><td>Paralelos</td><td>Secuenciales</td></tr>
+            <tr><td>Reduce</td><td>Varianza</td><td>Sesgo</td></tr>
+            <tr><td>Sobreajuste</td><td>Difícil</td><td>Posible</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — SHAP -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Explicabilidad SHAP</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">SHAP — <span>Explicabilidad para Ensambles</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Valores de Shapley</h3>
+        <code class="math">f(x) = E[f] + Σⱼ φⱼ(x)
+
+φⱼ: contribución marginal promedio
+    de la característica j a la predicción</code>
+        <p style="font-size:13px;margin-top:6px">Los valores SHAP son la única solución que satisface simultáneamente eficiencia, simetría, nulidad y aditividad — los axiomas de Shapley (1953).</p>
+        <div class="card blue" style="margin-top:10px">
+          <h3 class="section">Summary plot (global)</h3>
+          <p style="font-size:13px">Cada punto es una instancia. El eje x muestra el valor SHAP (impacto). El color muestra el valor de la característica. Permite ver:</p>
+          <ul style="font-size:12.5px">
+            <li>¿Qué características son globalmente más importantes?</li>
+            <li>¿Aumentar la característica eleva o baja la predicción?</li>
+            <li>¿Hay no-linealidades o interacciones?</li>
+          </ul>
+        </div>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Waterfall (local)</h3>
+          <p style="font-size:13px">Para <em>un paciente específico</em>: ¿por qué el modelo predice alta mortalidad? Cada barra muestra la contribución de cada característica a la desviación respecto a la predicción media.</p>
+        </div>
+        <div class="cite">
+          <p>Lundberg, S.M. & Lee, S.I. (2017). A unified approach to interpreting model predictions. <em>NeurIPS 2017</em>. <a href="https://arxiv.org/abs/1705.07874" target="_blank">arxiv:1705.07874</a></p>
+        </div>
+      </div>
+      <div>
+        <canvas id="shap-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — COMPARACIÓN MÓDULO II -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Comparación de Modelos S06–S08</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Panorama del <span>Módulo II</span></h2>
+    <table style="margin-bottom:14px">
+      <tr><th>Modelo</th><th>AUROC UCI</th><th>Interpretable</th><th>Calibrado</th><th>Requiere normalizar</th></tr>
+      <tr><td>Reg. Logística</td><td>~0.78</td><td>✅ Coeficientes</td><td>✅ Sí</td><td>✅ Sí</td></tr>
+      <tr><td>SVM-RBF</td><td>~0.80</td><td>⚠ Solo lineal</td><td>⚠ Platt</td><td>✅ Sí</td></tr>
+      <tr><td>Árbol (óptimo)</td><td>~0.74</td><td>✅ Reglas directas</td><td>⚠ No</td><td>❌ No</td></tr>
+      <tr><td>Random Forest</td><td>~0.82</td><td>⚠ SHAP/MDI</td><td>⚠ Platt</td><td>❌ No</td></tr>
+      <tr><td>GradBoost</td><td>~0.83</td><td>⚠ SHAP</td><td>⚠ Platt</td><td>❌ No</td></tr>
+    </table>
+    <div class="two-col">
+      <div class="card amber">
+        <h3 class="section">¿Cuándo usar cada uno?</h3>
+        <ul style="font-size:12.5px">
+          <li><strong>Árbol:</strong> cuando necesitas reglas explícitas para la clínica</li>
+          <li><strong>Random Forest:</strong> buen punto de partida, robusto, OOB gratis</li>
+          <li><strong>GradBoost/XGBoost:</strong> máximo rendimiento, requiere tuning</li>
+          <li><strong>LR:</strong> cuando la interpretabilidad o la calibración son críticas</li>
+        </ul>
+      </div>
+      <div class="card teal">
+        <h3 class="section">Próxima sesión: dashboard completo</h3>
+        <p style="font-size:13px">La Sesión 09 construirá un dashboard con 9 modelos, añadirá calibración (Platt scaling), Decision Curve Analysis, y la tarjeta de modelo para despliegue regulatorio FDA SaMD.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa árboles con visualización de sobreajuste, Random Forest con OOB e importancias MDI/permutación, Gradient Boosting por etapas, y valores SHAP (summary plot + waterfall) sobre el dataset UCI CinC 2012.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_08_ensambles_shap.ipynb" title="Cuaderno Sesión 08" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_08_ensambles_shap.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo II</span><span class="slide-label">Autoevaluación y Resumen</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Comprueba tu comprensión</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">El error OOB (out-of-bag) del Random Forest es:</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El error de entrenamiento promedio de todos los árboles</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Un estimador del error de generalización calculado sobre las muestras que no se usaron para entrenar cada árbol — sin necesitar un conjunto de validación separado</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El error del árbol con menor profundidad del ensamble</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">La diferencia entre el error de train y el de test del bosque completo</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">En Gradient Boosting, cada árbol nuevo se ajusta a:</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Una muestra bootstrap aleatoria del conjunto original, igual que en Random Forest</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Los residuos negativos del gradiente de la función de pérdida respecto a las predicciones actuales — es decir, los errores que el modelo actual comete</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Los puntos mal clasificados con mayor peso (igual que AdaBoost)</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">La diferencia entre las predicciones del árbol anterior y la predicción óptima del árbol siguiente</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">¿Por qué la importancia MDI puede ser engañosa para características categóricas de alta cardinalidad?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Porque el algoritmo CART no puede manejar variables categóricas con más de 2 categorías</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Porque el MDI mide la reducción de impureza por número de splits, y características con muchos valores únicos tienen más oportunidades de hacer splits — inflando artificialmente su importancia incluso si son irrelevantes</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Porque las características categóricas siempre tienen menor varianza que las numéricas</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Porque el MDI no está definido para variables discretas — solo para continuas</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">Un valor SHAP φⱼ = +0.15 para la característica "APACHE-II" en la predicción de un paciente UCI significa:</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">La probabilidad de mortalidad del paciente es 15%</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">El APACHE-II tiene un coeficiente de +0.15 en el modelo de regresión logística subyacente</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">El valor específico de APACHE-II de ese paciente aumenta la predicción de mortalidad en +0.15 respecto a la predicción media del modelo sobre todo el dataset</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">El APACHE-II es la 15ª característica más importante globalmente en el modelo</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">¿Cuál es la diferencia fundamental entre Random Forest y Gradient Boosting en términos de lo que reducen?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Random Forest reduce la varianza mediante bagging; Gradient Boosting también reduce varianza mediante shrinkage</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Random Forest reduce la varianza promediando árboles no correlacionados; Gradient Boosting reduce el sesgo construyendo árboles secuenciales que corrigen el error residual — son complementarios, no equivalentes</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Ambos reducen el sesgo, pero Gradient Boosting también puede reducir la varianza con learning_rate pequeño</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">No hay diferencia fundamental: ambos son métodos de bagging con árboles como base</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:#FEF3C7;border-left:3px solid var(--amber)">
+        <h4 style="color:var(--amber);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave</h4>
+        <ul style="font-size:12.5px"><li>Gini e impureza de entropía</li><li>Bagging, OOB, aleatoriedad de características</li><li>Modelo aditivo de boosting: residuos del gradiente</li><li>XGBoost: regularización + 2ª derivada</li><li>SHAP: valores de Shapley para ML</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Reglas de oro</h4>
+        <ul style="font-size:12.5px"><li>RF: empieza con 200 árboles y max_features='sqrt'</li><li>GBM: learning_rate pequeño + early stopping siempre</li><li>Importancias: permutación &gt; MDI para diagnóstico real</li><li>SHAP local para casos clínicos individuales</li><li>La selección de características ANTES de CV = data leakage</li></ul>
+      </div>
+    </div>
+    <div style="background:var(--amber-lt);border:1px solid #FCD34D;border-radius:10px;padding:12px 16px;font-size:13px;color:#78350F">
+      <strong>Próxima sesión (S09 — cierre del Módulo II):</strong> Dashboard de 9 modelos, calibración de probabilidades (Platt scaling), Decision Curve Analysis y tarjeta de modelo para regulación FDA SaMD.
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawTree();if(current===3)drawRF();if(current===4)drawBoost();if(current===5)drawSHAP();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function drawTree(){
+  const c=document.getElementById('tree-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=320;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const nodes=[
+    {x:W/2,y:30,w:160,h:36,text:'APACHE-II ≤ 15',fill:'#1B3A6B',tc:'white',kids:[1,2]},
+    {x:W/4,y:110,w:120,h:32,text:'Glasgow ≤ 10',fill:'#3B82F6',tc:'white',kids:[3,4]},
+    {x:3*W/4,y:110,w:120,h:32,text:'FiO2 ≤ 0.4',fill:'#F59E0B',tc:'white',kids:[5,6]},
+    {x:W/8,y:190,w:100,h:28,text:'Bajo riesgo',fill:'#ECFDF5',tc:'#065F46',kids:[]},
+    {x:3*W/8,y:190,w:100,h:28,text:'Riesgo medio',fill:'#FEF3C7',tc:'#78350F',kids:[]},
+    {x:5*W/8,y:190,w:100,h:28,text:'Riesgo medio',fill:'#FEF3C7',tc:'#78350F',kids:[]},
+    {x:7*W/8,y:190,w:100,h:28,text:'Alto riesgo',fill:'#FEF2F2',tc:'#991B1B',kids:[]},
+  ];
+  // Edges
+  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1.5;
+  const centers=nodes.map(n=>({x:n.x,y:n.y+n.h/2}));
+  nodes.forEach((n,i)=>{n.kids.forEach(k=>{ctx.beginPath();ctx.moveTo(centers[i].x,n.y+n.h);ctx.lineTo(centers[k].x,nodes[k].y);ctx.stroke();});});
+  // Nodes
+  nodes.forEach(n=>{
+    ctx.fillStyle=n.fill;ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;
+    const r=6,x=n.x-n.w/2,y=n.y;
+    ctx.beginPath();ctx.roundRect(x,y,n.w,n.h,r);ctx.fill();ctx.stroke();
+    ctx.fillStyle=n.tc;ctx.font=`${n.kids.length?'bold ':''} 10px DM Sans,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(n.text,n.x,n.y+n.h/2);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Árbol de decisión — UCI mortalidad (3 niveles)',W/2,H-6);
+}
+
+function drawRF(){
+  const c=document.getElementById('rf-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=260;c.width=W;c.height=H;
+  const feats=['APACHE-II','Glasgow','Creatinina','FiO2','SpO2','Edad','Bilirrubina','FC'];
+  const mdi=[0.28,0.22,0.14,0.12,0.09,0.07,0.05,0.03];
+  const perm=[0.22,0.19,0.11,0.10,0.07,0.04,0.03,0.02];
+  const pad={l:90,r:20,t:20,b:30};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const barH=h/8*0.7;const gap=h/8*0.3;
+  ctx.clearRect(0,0,W,H);
+  feats.forEach((f,i)=>{
+    const y=pad.t+i*(barH+gap);
+    // MDI
+    const wm=mdi[i]/0.30*w*0.45;
+    ctx.fillStyle='rgba(59,130,246,0.75)';ctx.fillRect(pad.l,y,wm,barH*0.5);
+    // Perm
+    const wp=perm[i]/0.30*w*0.45;
+    ctx.fillStyle='rgba(16,185,129,0.75)';ctx.fillRect(pad.l,y+barH*0.5+2,wp,barH*0.5);
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='right';
+    ctx.fillText(f,pad.l-4,y+barH*0.5+1);
+  });
+  ctx.fillStyle='#3B82F6';ctx.fillRect(pad.l,H-22,10,8);ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('MDI',pad.l+12,H-15);
+  ctx.fillStyle='#10B981';ctx.fillRect(pad.l+50,H-22,10,8);ctx.fillText('Permutación',pad.l+62,H-15);
+}
+
+function drawBoost(){
+  const c=document.getElementById('boost-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=220;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:14,b:28};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const N=200;
+  const gb=i=>0.68+0.14*(1-Math.exp(-i/40))-0.005*(i>150?Math.sqrt(i-150):0)+0.008*Math.sin(i*0.3);
+  const rf_line=0.82;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.7,0.75,0.8,0.85].forEach(v=>{const y=pad.t+h-(v-0.65)/(0.87-0.65)*h;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(2),pad.l-2,y+3);});
+  // RF line
+  const y_rf=pad.t+h-(rf_line-0.65)/(0.87-0.65)*h;
+  ctx.strokeStyle='#10B981';ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(pad.l,y_rf);ctx.lineTo(pad.l+w,y_rf);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#10B981';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText(`RF (${rf_line})`,pad.l+w-40,y_rf-3);
+  // GBM curve
+  ctx.strokeStyle='#3B82F6';ctx.lineWidth=2.5;ctx.beginPath();
+  for(let i=0;i<N;i++){const x=pad.l+(i/(N-1))*w;const y=pad.t+h-(gb(i)-0.65)/(0.87-0.65)*h;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.stroke();
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('Ronda de boosting',pad.l+w/2,H-3);
+  ctx.save();ctx.translate(9,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('AUROC (test)',0,0);ctx.restore();
+}
+
+function drawSHAP(){
+  const c=document.getElementById('shap-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const feats=['APACHE-II','Glasgow','Creatinina','FiO2','SpO2','Edad','Bili.','FC'];
+  const shap_pos=[0.18,0.14,0.09,0.07,0,0,0,0];
+  const shap_neg=[0,-0.02,-0.01,0,-0.06,-0.04,-0.02,-0.01];
+  const pad={l:70,r:10,t:30,b:30};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  const barH=h/8*0.65;const gap=h/8*0.35;
+  const maxV=0.20;
+  ctx.fillStyle='#8896A8';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('SHAP Summary — UCI mortalidad',W/2,16);
+  const x0=pad.l+w/2;
+  ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0,pad.t);ctx.lineTo(x0,pad.t+h);ctx.stroke();
+  feats.forEach((f,i)=>{
+    const y=pad.t+i*(barH+gap);
+    const pts=8+Math.floor(Math.random()*5);
+    for(let j=0;j<pts;j++){
+      const v=shap_pos[i]*(0.7+Math.random()*0.6)+shap_neg[i]*(0.7+Math.random()*0.6);
+      const x=x0+v/maxV*(w/2*0.9)+(Math.random()-0.5)*4;
+      const t=0.2+Math.random()*0.8;
+      const r=Math.round(239+t*(59-239)),g=Math.round(68+t*(130-68)),b=Math.round(68+t*(246-68));
+      ctx.fillStyle=`rgb(${r},${g},${b})`;ctx.beginPath();ctx.arc(x,y+barH/2+(Math.random()-0.5)*6,3,0,2*Math.PI);ctx.fill();
+    }
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='right';ctx.fillText(f,pad.l-4,y+barH/2+3);
+  });
+  ctx.fillStyle='#EF4444';ctx.fillRect(pad.l,H-18,12,8);ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('Val. alto',pad.l+14,H-11);
+  ctx.fillStyle='#3B82F6';ctx.fillRect(pad.l+60,H-18,12,8);ctx.fillText('Val. bajo',pad.l+74,H-11);
+  ctx.fillStyle='#6B7280';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.fillText('← reduce mortalidad  |  aumenta mortalidad →',x0,H-3);
+}
+
+const feedbacks={
+  q1:['¡Correcto! El OOB usa el ~37% de datos que no entraron en cada bootstrap como validación natural. Es un estimador casi insesgado del error de generalización sin necesitar un conjunto de validación separado.',
+      'Incorrecto. El OOB no es el error de training. Es el error calculado sobre las muestras que NO se incluyeron en el bootstrap de cada árbol — por eso es un buen estimador de generalización.'],
+  q2:['¡Correcto! En cada ronda de GBM, el árbol nuevo se ajusta a los residuos negativos del gradiente de la pérdida — es decir, apunta a corregir los errores que comete el ensemble actual.',
+      'Incorrecto. El boosting no usa muestras bootstrap independientes. Cada árbol nuevo se ajusta a los errores (residuos del gradiente) del ensemble acumulado hasta ese momento.'],
+  q3:['¡Correcto! Las variables con alta cardinalidad tienen más puntos de corte posibles, por lo que tienden a hacer más splits y acumular más reducción de impureza. El MDI no controla esto — la importancia por permutación sí.',
+      'Incorrecto. El MDI puede manejar cualquier tipo de variable. El problema es que favorece artificialmente las de alta cardinalidad. La importancia por permutación es más confiable.'],
+  q4:['¡Correcto! Los valores SHAP son contribuciones marginales respecto a la predicción media E[f]. Un φⱼ=+0.15 significa que el valor de APACHE-II de ese paciente empuja la predicción 0.15 por encima de la media.',
+      'Incorrecto. El valor SHAP no es una probabilidad ni un coeficiente de regresión. Es la contribución marginal específica de esa característica para esa instancia, respecto a la predicción promedio del modelo.'],
+  q5:['¡Correcto! Random Forest reduce la varianza promediando árboles decorrelacionados (gracias al bagging y la aleatoriedad de características). GBM reduce el sesgo construyendo árboles secuenciales que corrigen errores residuales.',
+      'Incorrecto. Son mecanismos complementarios. RF reduce varianza (los árboles en paralelo se promedian). GBM reduce sesgo (cada árbol secuencial aprende del error del anterior).'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Revisa árboles y ensambles.','Buen progreso.','¡Bien!','¡Excelente!','¡Perfecto! Listo para S09.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>
