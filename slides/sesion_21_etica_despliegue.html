@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 21 — Ética, Equidad, Privacidad y Despliegue Clínico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--amber);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#78350F 0%,#451A03 60%,#1B3A6B 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,6,.3) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(217,119,6,.25);border:1px solid rgba(253,230,138,.5);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:30px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#FCD34D;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--amber)}
+h3.section{font-size:13px;font-weight:600;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#FFFBEB;border:1px solid #FCD34D;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#78350F;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:10.5px;line-height:1.6;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--amber);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--amber)}
+.quiz-q{margin-bottom:14px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--amber);background:var(--amber-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--amber);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--amber)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--amber);border-color:var(--amber);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#B45309}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--amber)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:24px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Integración, Ética y Cierre</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 21 · Ética y Despliegue</div>
+    <h1 class="cover-title">Ética, Equidad, Privacidad<br>y <em>Despliegue Clínico</em></h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Cuantificar el sesgo algorítmico y rastrear su origen en los datos</li>
+        <li>Comprender la deriva de dataset y medir su impacto en la práctica</li>
+        <li>Implementar aprendizaje federado (FedAvg) y sus garantías de privacidad</li>
+        <li>Aplicar privacidad diferencial y cuantificar el compromiso privacidad-utilidad</li>
+        <li>Navegar el panorama regulatorio: FDA SaMD, IEC 62304, monitoreo</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — SESGO ALGORÍTMICO -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Sesgo Algorítmico — Proxies Engañosos</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Cuando los <span>Proxies Engañan</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">El caso Obermeyer et al. (2019)</h3>
+        <p style="font-size:13px">Un algoritmo clínico ampliamente desplegado usaba el <strong>costo de atención</strong> como proxy de <strong>necesidad</strong> de atención — subestimando sistemáticamente la severidad en pacientes afroamericanos, quienes históricamente recibían menos atención al mismo nivel de costo.</p>
+        <div class="card red" style="margin-top:8px">
+          <h3 class="section">Por qué el proxy falla</h3>
+          <p style="font-size:13px">Visitas previas a especialista correlaciona con necesidad real, PERO también con acceso histórico. El Grupo B tiene mayor tasa real de readmisión pero menos visitas — el modelo aprende a subestimar su riesgo.</p>
+        </div>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Mitigación</h3>
+          <p style="font-size:13px">Auditar cada característica candidata: ¿mide la variable lo que pretende medir, o un proxy contaminado por desigualdad histórica de acceso?</p>
+        </div>
+        <div class="cite">
+          <p>Obermeyer, Z. et al. (2019). Dissecting racial bias. <em>Science</em>, 366(6464).</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bias-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — DERIVA DE DATASET -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Deriva de Dataset</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Deriva de Dataset — <span>Cuando el Mundo Cambia</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Tres tipos de deriva</h3>
+        <table>
+          <tr><th>Tipo</th><th>Qué cambia</th><th>Ejemplo</th></tr>
+          <tr><td>Covariable</td><td>P(X)</td><td>Hospital B: pacientes más viejos</td></tr>
+          <tr><td>Etiqueta</td><td>P(Y)</td><td>Prevalencia distinta entre sitios</td></tr>
+          <tr><td>Concepto</td><td>P(Y\|X)</td><td>Mismo síntoma, distinto diagnóstico</td></tr>
+        </table>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">El resultado observado</h3>
+          <p style="font-size:13px">Un modelo entrenado en Hospital A mantiene buen AUROC en Hospital C (similar) pero se degrada significativamente en Hospital B (con deriva de covariables) — aunque nunca vio datos de ningún sitio externo.</p>
+        </div>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Detección práctica</h3>
+          <p style="font-size:13px">Visualizar PCA de las distribuciones de entrada entre sitios es una primera línea de defensa simple y efectiva para detectar deriva de covariables antes del despliegue.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="shift-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — FEDAVG -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Aprendizaje Federado (FedAvg)</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">FedAvg — <span>Entrenar sin Centralizar Datos</span></h2>
+    <div class="two-col wide">
+      <div>
+        <pre style="font-size:10px">Por ronda de comunicación:
+  Para cada hospital (cliente):
+    copiar pesos del modelo global
+    entrenar localmente (datos nunca salen)
+    enviar solo los PESOS actualizados
+
+Servidor:
+  promediar pesos ponderado por tamaño
+  w_global = Σ (nᵢ/N)·wᵢ</pre>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">¿Qué garantiza la privacidad?</h3>
+          <p style="font-size:13px">Solo se comparten <strong>parámetros del modelo</strong>, nunca datos crudos de pacientes. Cada hospital mantiene control total y cumplimiento normativo de sus propios registros.</p>
+        </div>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Costo de la privacidad</h3>
+          <p style="font-size:13px">El AUROC federado converge cerca, pero típicamente por debajo, de la cota superior centralizada — la diferencia es el "costo de privacidad" cuantificable de no concentrar los datos.</p>
+        </div>
+        <div class="cite">
+          <p>McMahan, B. et al. (2017). FedAvg. <em>AISTATS</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="fedavg-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — PRIVACIDAD DIFERENCIAL -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Privacidad Diferencial (DP-SGD)</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">DP-SGD — <span>El Compromiso Privacidad-Utilidad</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Mecanismo</h3>
+        <pre style="font-size:10px">Por cada muestra:
+  calcular gradiente individual
+  recortar norma (≤ max_grad_norm)
+
+Por batch:
+  sumar gradientes recortados
+  añadir ruido gaussiano ~ σ·max_grad_norm
+  aplicar actualización promediada</pre>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">σ controla la garantía formal de privacidad</h3>
+          <p style="font-size:13px">σ=0 → sin privacidad (DP-SGD se reduce a SGD normal). σ creciente → garantía de privacidad (ε,δ) más fuerte, pero el ruido degrada gradualmente el AUROC del modelo final.</p>
+        </div>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">¿Por qué gradientes por muestra?</h3>
+          <p style="font-size:13px">El recorte por muestra (no por batch) es lo que da la garantía matemática de DP — limita cuánto puede influir cualquier paciente individual en la actualización del modelo.</p>
+        </div>
+        <div class="cite">
+          <p>Abadi, M. et al. (2016). Deep learning with differential privacy. <em>ACM CCS</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="dp-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — CHECKLIST REGULATORIO -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Lista de Verificación Regulatoria</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Preparación Regulatoria — <span>3 Dimensiones</span></h2>
+    <div class="two-col" style="margin-bottom:10px">
+      <div class="card blue">
+        <h3 class="section">Clínico y científico</h3>
+        <ul style="font-size:12px">
+          <li>✅ Población de uso previsto</li>
+          <li>✅ Desenlace clínicamente significativo</li>
+          <li>❌ Validación externa</li>
+          <li>✅ Rendimiento por subgrupo</li>
+        </ul>
+      </div>
+      <div class="card green">
+        <h3 class="section">Técnico</h3>
+        <ul style="font-size:12px">
+          <li>✅ Pipeline reproducible</li>
+          <li>✅ Auditoría de fuga de datos</li>
+          <li>❌ Robustez adversarial</li>
+          <li>❌ Cuantificación de incertidumbre</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card amber">
+      <h3 class="section">Regulatorio y ético</h3>
+      <ul style="font-size:12.5px">
+        <li>✅ Clase de riesgo SaMD FDA determinada · ❌ IEC 62304 documentado</li>
+        <li>✅ Auditoría de sesgo demográfico · ✅ Gobernanza de datos/comité de ética</li>
+        <li>✅ Desidentificación PHI verificada · ❌ Plan de monitoreo post-mercado</li>
+      </ul>
+    </div>
+    <p style="font-size:13px;margin-top:10px;text-align:center;color:var(--slate)"><strong>13/18 (72%) completo</strong> — ningún sistema clínico real está jamás "100% listo"; siempre quedan elementos pendientes que requieren juicio profesional.</p>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa la simulación completa de sesgo algorítmico con dos grupos de pacientes y comparación con/sin proxy sesgado; deriva de dataset entre 3 hospitales con visualización PCA; FedAvg completo con 3 hospitales comparado contra la cota centralizada; DP-SGD con recorte de gradiente por muestra y barrido de niveles de ruido; y la lista de verificación regulatoria visualizada en 3 categorías.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_21_etica_despliegue.ipynb" title="Cuaderno Sesión 21" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_21_etica_despliegue.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Autoevaluación y Resumen</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Comprueba tu Comprensión</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">En el caso de readmisión simulado, el Grupo B tiene mayor tasa real de readmisión (28% vs 20%) pero el modelo con la característica proxy (visitas previas) le asigna AUROC más bajo. ¿Por qué ocurre esto?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque el Grupo B tiene inherentemente más ruido biológico en sus datos clínicos, lo que reduce cualquier AUROC posible</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Porque las visitas previas, aunque correlacionan con la necesidad clínica real, también reflejan el acceso histórico a especialistas — el Grupo B tiene menos visitas debido a barreras de acceso, no porque tenga menos necesidad real. El modelo aprende a usar esta señal contaminada, subestimando sistemáticamente el riesgo real del Grupo B</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque el tamaño de muestra del Grupo B (400) es matemáticamente insuficiente para calcular cualquier AUROC de forma fiable</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">No hay ninguna explicación válida — es simplemente ruido aleatorio sin ningún patrón sistemático</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">Un modelo entrenado en el Hospital A mantiene buen rendimiento en el Hospital C (similar demográficamente) pero se degrada significativamente en el Hospital B (pacientes más viejos y enfermos), a pesar de nunca haber sido entrenado en datos externos a A. ¿Qué tipo de deriva explica mejor este patrón?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Deriva de etiqueta exclusivamente — el modelo nunca puede degradarse por cambios en la distribución de las características de entrada</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Deriva de covariables — la distribución de las características de entrada (edad, comorbilidad) en el Hospital B es sistemáticamente distinta a la distribución vista durante el entrenamiento en el Hospital A, haciendo que el modelo extrapole a una región del espacio de características donde nunca aprendió patrones fiables</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Es imposible diagnosticar el tipo de deriva sin acceso directo al código fuente del modelo entrenado</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Deriva de concepto exclusivamente — la relación entre síntomas y diagnóstico cambió completamente entre hospitales</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">En FedAvg, ¿qué información específica se transmite entre los hospitales (clientes) y el servidor central, y qué información NUNCA se transmite?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Se transmiten los datos de pacientes anonimizados; nunca se transmiten los pesos del modelo por razones de seguridad informática</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Se transmiten únicamente los parámetros (pesos) del modelo entrenado localmente en cada ronda de comunicación; los datos de pacientes individuales (valores de edad, comorbilidad, diagnóstico, etc.) nunca salen de las instalaciones de cada hospital, permaneciendo bajo su control y cumplimiento normativo local</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Se transmiten tanto los datos de pacientes como los pesos del modelo, ya que ambos son necesarios para el promediado FedAvg</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Solo se transmite el valor final del AUROC de cada hospital, sin ningún otro tipo de información</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">En DP-SGD, ¿por qué el recorte de gradiente debe realizarse POR MUESTRA INDIVIDUAL, en lugar de recortar el gradiente promedio de todo el batch?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Por una limitación de eficiencia computacional de PyTorch que no permite recortar gradientes agregados de ningún batch</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">Porque la garantía formal de privacidad diferencial depende de limitar la influencia máxima que puede tener cualquier paciente INDIVIDUAL sobre la actualización del modelo. Si se recortara solo el gradiente promedio del batch, un solo paciente con un gradiente extremo podría dominar la actualización antes del promediado, violando la garantía de privacidad por muestra que DP-SGD busca proporcionar</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Porque recortar por muestra siempre produce un modelo final con mayor exactitud que recortar el batch completo</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">No hay ninguna diferencia real entre ambos enfoques — ambos proporcionan exactamente la misma garantía matemática de privacidad</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">La lista de verificación regulatoria muestra que un sistema está "72% completo" antes del despliegue, con elementos pendientes como validación externa y monitoreo post-mercado. ¿Cuál es la interpretación profesional correcta de este resultado?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">El sistema puede desplegarse inmediatamente sin restricciones porque 72% es una mayoría aceptable según cualquier estándar regulatorio</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Los elementos pendientes (especialmente validación externa y monitoreo post-mercado) representan riesgos identificados que requieren un plan explícito de mitigación o cierre antes o durante un despliegue cuidadosamente vigilado. Un checklist incompleto no significa que el sistema sea inutilizable, pero sí exige transparencia sobre las limitaciones y un compromiso de completar los elementos críticos restantes</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">El sistema nunca podrá desplegarse hasta alcanzar el 100% de la lista, sin ninguna excepción posible bajo ninguna circunstancia clínica</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">El porcentaje de la lista de verificación es solo un ejercicio académico sin ninguna relevancia práctica para el despliegue real</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:var(--amber-lt);border-left:3px solid var(--amber)">
+        <h4 style="color:var(--amber);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave</h4>
+        <ul style="font-size:12.5px"><li>Sesgo algorítmico: proxies contaminados por desigualdad histórica</li><li>Deriva de covariables/etiqueta/concepto</li><li>FedAvg: comparte pesos, nunca datos crudos</li><li>DP-SGD: recorte por muestra + ruido gaussiano</li><li>Checklist regulatorio: nunca 100%, requiere juicio profesional</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Próxima sesión</h4>
+        <p style="font-size:13px"><strong>Sesión 22 — Cierre: Presentaciones de Proyecto y Retrospectiva del Curso.</strong> Última sesión del programa completo: rúbrica de evaluación final, plantilla de crítica entre pares, problemas abiertos en ML biomédico, y el mapa retrospectivo de las 22 sesiones.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawBias();if(current===3)drawShift();if(current===4)drawFedAvg();if(current===5)drawDP();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+
+function drawBias(){
+  const c=document.getElementById('bias-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const pad={l:36,r:10,t:30,b:34};const w=W-pad.l-pad.r,h=(H-pad.t-pad.b)/2-10;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Tasa de readmisión REAL',pad.l+w/2,pad.t-8);
+  const data1=[{n:'Grupo A',v:0.20,c:'#3B82F6'},{n:'Grupo B',v:0.28,c:'#EF4444'}];
+  data1.forEach((d,i)=>{
+    const x0=pad.l+i*(w/2)+w/4-30;
+    const bh=(d.v/0.35)*h;
+    ctx.fillStyle=d.c;ctx.fillRect(x0,pad.t+h-bh,60,bh);
+    ctx.fillStyle='#1B3A6B';ctx.font='bold 10px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText((d.v*100).toFixed(0)+'%',x0+30,pad.t+h-bh-6);
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';
+    ctx.fillText(d.n,x0+30,pad.t+h+14);
+  });
+  const y0=pad.t+h+34;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('AUROC con característica proxy',pad.l+w/2,y0-8);
+  const data2=[{n:'Grupo A',v:0.80,c:'#3B82F6'},{n:'Grupo B',v:0.68,c:'#EF4444'}];
+  data2.forEach((d,i)=>{
+    const x0=pad.l+i*(w/2)+w/4-30;
+    const bh=(d.v/1.0)*h;
+    ctx.fillStyle=d.c;ctx.fillRect(x0,y0+h-bh,60,bh);
+    ctx.fillStyle='#1B3A6B';ctx.font='bold 10px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(d.v.toFixed(2),x0+30,y0+h-bh-6);
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';
+    ctx.fillText(d.n,x0+30,y0+h+14);
+  });
+  ctx.fillStyle='#DC2626';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Mayor necesidad → menor AUROC: el sesgo invierte la prioridad',pad.l+w/2,H-2);
+}
+
+function drawShift(){
+  const c=document.getElementById('shift-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const r=rng(5);
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Deriva de covariables (PCA)',W/2,14);
+  const cx1=W*0.35,cy1=H*0.4,cx2=W*0.65,cy2=H*0.55;
+  for(let i=0;i<60;i++){const x=cx1+(r()-0.5)*90;const y=cy1+(r()-0.5)*70;ctx.fillStyle='rgba(59,130,246,0.45)';ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fill();}
+  for(let i=0;i<40;i++){const x=cx2+(r()-0.5)*80;const y=cy2+(r()-0.5)*60;ctx.fillStyle='rgba(239,68,68,0.5)';ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fill();}
+  ctx.fillStyle='#3B82F6';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Hospital A (entrenamiento)',cx1,cy1-60);
+  ctx.fillStyle='#EF4444';ctx.fillText('Hospital B (despliegue)',cx2,cy2+70);
+
+  const y0=H*0.78;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('AUROC por sitio',W/2,y0-10);
+  const sites=[{n:'A',v:0.82,c:'#3B82F6'},{n:'B',v:0.66,c:'#EF4444'},{n:'C',v:0.80,c:'#10B981'}];
+  sites.forEach((s,i)=>{
+    const x0=W*0.3+i*70;
+    const bh=(s.v/1.0)*50;
+    ctx.fillStyle=s.c;ctx.fillRect(x0,y0+50-bh,40,bh);
+    ctx.fillStyle='#1B3A6B';ctx.font='bold 9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(s.v.toFixed(2),x0+20,y0+50-bh-4);
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';
+    ctx.fillText('Hosp. '+s.n,x0+20,y0+64);
+  });
+}
+
+function drawFedAvg(){
+  const c=document.getElementById('fedavg-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:24,b:34};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const n=30;const r=rng(4);
+  const aurocFed=Array.from({length:n},(_,i)=>0.65+0.13*(1-Math.exp(-i/8))+(r()-0.5)*0.015);
+  const aurocCentral=0.81;
+  const toX=i=>pad.l+(i/(n-1))*w;
+  const toY=v=>pad.t+h-(v-0.6)/(0.86-0.6)*h;
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.65,0.7,0.75,0.8].forEach(v=>{const y=toY(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(2),pad.l-3,y+3);});
+  ctx.strokeStyle='#EF4444';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,toY(aurocCentral));ctx.lineTo(pad.l+w,toY(aurocCentral));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#EF4444';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Centralizado ('+aurocCentral.toFixed(2)+')',pad.l+4,toY(aurocCentral)-4);
+  ctx.strokeStyle='#3B82F6';ctx.lineWidth=2.5;ctx.beginPath();
+  aurocFed.forEach((v,i)=>{const x=toX(i),y=toY(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Ronda de comunicación',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('AUROC',0,0);ctx.restore();
+}
+
+function drawDP(){
+  const c=document.getElementById('dp-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:36,r:10,t:24,b:40};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const sigmas=[0.0,0.5,1.0,2.0,4.0];
+  const aurocs=[0.81,0.79,0.75,0.68,0.58];
+  const toX=s=>pad.l+(s/4)*w;
+  const toY=v=>pad.t+h-(v-0.5)/(0.85-0.5)*h;
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.55,0.65,0.75,0.85].forEach(v=>{const y=toY(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(2),pad.l-3,y+3);});
+  ctx.strokeStyle='#D97706';ctx.lineWidth=2.5;ctx.beginPath();
+  sigmas.forEach((s,i)=>{const x=toX(s),y=toY(aurocs[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+  sigmas.forEach((s,i)=>{ctx.fillStyle='#D97706';ctx.beginPath();ctx.arc(toX(s),toY(aurocs[i]),5,0,2*Math.PI);ctx.fill();});
+  ctx.fillStyle='#059669';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('Sin privacidad',toX(0)+4,toY(aurocs[0])-8);
+  ctx.fillStyle='#DC2626';ctx.textAlign='right';ctx.fillText('Privacidad fuerte',toX(4)-4,toY(aurocs[4])-8);
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Multiplicador de ruido σ',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('AUROC',0,0);ctx.restore();
+}
+
+const feedbacks={
+  q1:['¡Correcto! La característica proxy (visitas previas) mezcla dos señales distintas: necesidad clínica real y acceso histórico al sistema de salud. El Grupo B sufre de menor acceso, no de menor necesidad, pero el modelo no puede distinguir estas dos causas — termina subestimando sistemáticamente el riesgo real de ese grupo.',
+      'Incorrecto. No es una limitación de ruido biológico inherente ni de tamaño de muestra (400 es suficiente para estimar AUROC razonablemente), y definitivamente no es ruido aleatorio sin patrón — es un sesgo sistemático con una causa identificable y bien documentada en la literatura.'],
+  q2:['¡Correcto! La deriva de covariables ocurre cuando P(X) cambia entre el entorno de entrenamiento y el de despliegue. El modelo aprendió patrones válidos para el rango de edad/comorbilidad visto en el Hospital A, pero esos patrones no necesariamente generalizan a la población más enferma y mayor del Hospital B.',
+      'Incorrecto. El modelo SÍ puede degradarse específicamente por cambios en las características de entrada (eso es precisamente la deriva de covariables), no es imposible diagnosticar sin el código fuente (se puede detectar empíricamente comparando distribuciones), y no hay evidencia de que la relación síntoma-diagnóstico haya cambiado (eso sería deriva de concepto, un fenómeno distinto).'],
+  q3:['¡Correcto! Esta es la garantía de privacidad fundamental de FedAvg: únicamente los pesos del modelo (parámetros numéricos) se transmiten entre clientes y servidor. Los datos clínicos individuales permanecen completamente dentro de cada institución, preservando su cumplimiento normativo y control sobre la información sensible.',
+      'Incorrecto. Es exactamente lo opuesto: nunca se transmiten datos de pacientes (esa es la razón de ser del aprendizaje federado), y sí se transmiten los pesos del modelo en cada ronda — eso es precisamente lo que permite el entrenamiento colaborativo sin centralización de datos.'],
+  q4:['¡Correcto! La garantía formal de DP depende de acotar la sensibilidad — cuánto puede cambiar el resultado del algoritmo si se modifica un solo registro individual. Recortar solo el gradiente del batch promedio no proporciona esta garantía por registro individual, ya que un paciente con gradiente extremo podría dominar antes del promediado, comprometiendo la protección de privacidad individual que DP-SGD busca garantizar.',
+      'Incorrecto. No es una limitación de PyTorch (se puede implementar de cualquier forma, como se ve en el código), no garantiza mayor exactitud (de hecho generalmente reduce algo la exactitud comparado con SGD sin DP), y definitivamente SÍ hay una diferencia matemática real entre ambos enfoques en términos de la garantía de privacidad proporcionada.'],
+  q5:['¡Correcto! Un checklist regulatorio incompleto no es un veredicto binario de "listo" o "no listo" — es una herramienta de gestión de riesgo que identifica explícitamente qué falta y guía decisiones sobre cómo proceder de forma responsable, ya sea completando los elementos críticos antes del despliegue o estableciendo un monitoreo cuidadoso durante un despliegue limitado mientras se completan.',
+      'Incorrecto. Ni el despliegue sin restricciones es apropiado con elementos pendientes críticos, ni se requiere literalmente el 100% en todos los casos (eso raramente es realista en sistemas complejos del mundo real), y el porcentaje sí tiene relevancia práctica directa — informa decisiones reales sobre el nivel de riesgo aceptado.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa sesgo y privacidad.','Buen progreso.','¡Bien!','¡Excelente comprensión!','¡Perfecto! Listo para el cierre.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

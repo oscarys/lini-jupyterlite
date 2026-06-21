@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 12 — Redes Feedforward y Retropropagación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--red:#EF4444;--red-lt:#FEE2E2;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--red);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#7F1D1D 0%,#450A0A 60%,#1B3A6B 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,.25) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(239,68,68,.25);border:1px solid rgba(252,165,165,.5);color:#FECACA;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:34px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FECACA;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FECACA;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#FCA5A5;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--red)}
+h3.section{font-size:13px;font-weight:600;color:var(--red);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#7F1D1D;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.red{background:var(--red-lt);border-left:3px solid var(--red)}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11.5px;line-height:1.7;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--red);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--red)}
+.quiz-q{margin-bottom:14px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--red);background:var(--red-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--red);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--red)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--red);border-color:var(--red);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#DC2626}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--red)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:28px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Fundamentos de Deep Learning</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 12 · MLP y Retropropagación</div>
+    <h1 class="cover-title">Redes Feedforward<br>y <em>Retropropagación</em></h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Comparar funciones de activación y diagnosticar el gradiente que se desvanece</li>
+        <li>Implementar forward pass y retropropagación de un MLP desde cero en NumPy</li>
+        <li>Verificar backprop mediante gradient checking numérico</li>
+        <li>Implementar Adam desde cero y compararlo con SGD</li>
+        <li>Replicar la red en PyTorch y verificar consistencia con autograd</li>
+        <li>Demostrar la aproximación universal variando el ancho de la capa oculta</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — ACTIVACIONES -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Funciones de Activación</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Activaciones y el <span>Gradiente que se Desvanece</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">¿Por qué importa la activación?</h3>
+        <p style="font-size:13px">Sin no-linealidad, una red de cualquier profundidad colapsa a una transformación lineal. Pero la elección de la no-linealidad determina cuánta señal de gradiente sobrevive al propagarse hacia atrás.</p>
+        <table>
+          <tr><th>Activación</th><th>Rango derivada</th><th>Problema</th></tr>
+          <tr><td>Sigmoide</td><td>(0, 0.25]</td><td>Saturación severa</td></tr>
+          <tr><td>Tanh</td><td>(0, 1]</td><td>Saturación moderada</td></tr>
+          <tr><td>ReLU</td><td>{0, 1}</td><td>Neuronas "muertas"</td></tr>
+          <tr><td>Leaky ReLU</td><td>{0.01, 1}</td><td>Mitiga neuronas muertas</td></tr>
+          <tr><td>GELU</td><td>suave, ≈(−0.1,1.1)</td><td>Mejor en transformers</td></tr>
+        </table>
+        <div class="card red" style="margin-top:10px">
+          <h3 class="section">Gradiente que se desvanece — demostración numérica</h3>
+          <code class="math">σ'(0) = 0.25
+
+20 capas sigmoide:  0.25²⁰ ≈ 9×10⁻¹³
+
+El gradiente que llega a la capa 1 es
+~10 órdenes de magnitud menor que en
+la capa 20 — la red efectivamente no
+aprende en las primeras capas.</code>
+        </div>
+      </div>
+      <div>
+        <canvas id="activ-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:10px">
+          <h3 class="section">Por qué ReLU domina</h3>
+          <p style="font-size:13px">ReLU tiene gradiente constante =1 para z&gt;0 — no hay saturación en la región activa. El costo: neuronas con z&lt;0 siempre tienen gradiente=0 ("neuronas muertas"). Leaky ReLU y GELU mitigan esto con una pendiente pequeña pero no nula.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — FORWARD/BACKWARD -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Forward Pass y Retropropagación</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Forward Pass y <span>Retropropagación desde Cero</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Forward pass</h3>
+        <code class="math">z⁽ˡ⁾ = W⁽ˡ⁾a⁽ˡ⁻¹⁾ + b⁽ˡ⁾
+a⁽ˡ⁾ = g⁽ˡ⁾(z⁽ˡ⁾),  a⁽⁰⁾ = x</code>
+        <h3 class="section" style="margin-top:10px">Retropropagación (regla de la cadena)</h3>
+        <code class="math">Capa de salida (entropía cruzada+sigmoide):
+  δ_out = (p − y) / N
+
+Capas ocultas:
+  δ⁽ˡ⁾ = (δ⁽ˡ⁺¹⁾ Wᵃˡ⁺¹ᵃᵗ) ⊙ g'(z⁽ˡ⁾)
+
+Gradientes:
+  ∂L/∂W⁽ˡ⁾ = a⁽ˡ⁻¹⁾ᵗ δ⁽ˡ⁾
+  ∂L/∂b⁽ˡ⁾ = Σ δ⁽ˡ⁾</code>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Inicialización He</h3>
+          <p style="font-size:13px">Para capas ReLU: W ~ 𝒩(0, 2/fan_in). Mantiene la varianza de las activaciones estable a través de las capas, evitando que las señales se desvanezcan o exploten desde el inicio del entrenamiento.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="net-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card blue" style="margin-top:10px">
+          <h3 class="section">Dataset: EEG banda alfa</h3>
+          <p style="font-size:13px">10 características (potencia en 5 bandas × 2 hemisferios), reposo vs imaginería motora. Arquitectura: [10 → 32 → 16 → 1] con ReLU en capas ocultas y sigmoide en la salida.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — GRADIENT CHECKING -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Verificación de Gradientes</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Gradient Checking — <span>Verificación Numérica</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">¿Por qué verificar?</h3>
+        <p style="font-size:13px">Un error sutil en la derivación de backprop puede producir un entrenamiento que "parece funcionar" (la pérdida baja) pero converge a una solución subóptima. El gradient checking detecta estos errores antes de invertir tiempo de cómputo.</p>
+        <code class="math">∂L/∂w ≈ [L(w+ε) − L(w−ε)] / (2ε)
+
+ε = 1e-5  (compromiso precisión/estabilidad)
+
+error_relativo = |g_anal − g_num|
+                 ─────────────────────
+                 |g_anal| + |g_num| + 10⁻¹⁵</code>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">Criterio de aceptación</h3>
+          <table>
+            <tr><th>Error relativo</th><th>Interpretación</th></tr>
+            <tr><td>&lt;1e-7</td><td>Excelente</td></tr>
+            <tr><td>&lt;1e-4</td><td>✅ Aceptable (precisión float64)</td></tr>
+            <tr><td>&gt;1e-2</td><td>❌ Probable error de implementación</td></tr>
+          </table>
+        </div>
+      </div>
+      <div>
+        <canvas id="gradcheck-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card red" style="margin-top:10px">
+          <h3 class="section">⚠ Errores comunes en backprop</h3>
+          <ul style="font-size:12.5px">
+            <li>Olvidar dividir por N en la pérdida promedio</li>
+            <li>Transponer mal las matrices en la regla de la cadena</li>
+            <li>Usar la derivada de la activación equivocada por capa</li>
+            <li>No considerar el broadcasting del bias correctamente</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — ADAM -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Optimizador Adam</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Adam — <span>Tasas de Aprendizaje Adaptativas</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Momento de primer y segundo orden</h3>
+        <code class="math">mₜ = β₁mₜ₋₁ + (1−β₁)gₜ      (momento)
+vₜ = β₂vₜ₋₁ + (1−β₂)gₜ²    (escala)
+
+m̂ₜ = mₜ/(1−β₁ᵗ)   v̂ₜ = vₜ/(1−β₂ᵗ)
+                          (corrección de sesgo)
+
+wₜ = wₜ₋₁ − η·m̂ₜ / (√v̂ₜ + ε)</code>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Intuición</h3>
+          <p style="font-size:13px">m acumula la dirección promedio del gradiente (momento, como una bola rodando). v acumula la magnitud al cuadrado — parámetros con gradientes históricamente grandes reciben pasos más pequeños (adaptación por parámetro).</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Valores por defecto recomendados</h3>
+          <p style="font-size:13px">β₁=0.9, β₂=0.999, ε=1e-8, η=1e-3. Funcionan bien en la mayoría de problemas sin tuning adicional — una de las razones de la popularidad de Adam.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="adam-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="cite" style="margin-top:8px">
+          <p>Kingma, D.P. & Ba, J. (2015). Adam: A method for stochastic optimization. <em>ICLR 2015</em>. <a href="https://arxiv.org/abs/1412.6980" target="_blank">arxiv:1412.6980</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — PYTORCH Y APROX UNIVERSAL -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">PyTorch y Aproximación Universal</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">PyTorch + <span>Aproximación Universal</span></h2>
+    <div class="two-col">
+      <div>
+        <h3 class="section">De NumPy a PyTorch</h3>
+        <pre style="font-size:10.5px">net = nn.Sequential(
+    nn.Linear(10, 32), nn.ReLU(),
+    nn.Linear(32, 16), nn.ReLU(),
+    nn.Linear(16, 1),  nn.Sigmoid()
+)
+opt = optim.Adam(net.parameters(), lr=1e-3)
+loss_fn = nn.BCELoss()
+
+opt.zero_grad()
+loss_fn(net(X), y).backward()  # autograd
+opt.step()</pre>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Autograd ≈ backprop manual</h3>
+          <p style="font-size:13px">PyTorch construye un grafo computacional dinámico y aplica la regla de la cadena automáticamente. Nuestra implementación NumPy y PyTorch deben converger a AUROC casi idénticos — es la misma matemática.</p>
+        </div>
+      </div>
+      <div>
+        <h3 class="section">Teorema de aproximación universal</h3>
+        <canvas id="universal-canvas" width="300" height="200" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Ancho vs profundidad</h3>
+          <p style="font-size:13px">Una sola capa oculta con suficientes neuronas puede aproximar cualquier función continua (Hornik et al., 1989). En la práctica, redes <strong>profundas</strong> generalizan mejor con menos parámetros totales que redes anchas y poco profundas.</p>
+        </div>
+        <div class="cite">
+          <p>Hornik, K. et al. (1989). Multilayer feedforward networks are universal approximators. <em>Neural Networks</em>, 2(5), 359–366.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa funciones de activación con demostración del gradiente que se desvanece, un MLP completo desde cero con forward/backward, gradient checking numérico, el optimizador Adam comparado con SGD, replicación en PyTorch con autograd, y la demostración de aproximación universal variando el ancho de la red.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_12_mlp_backprop.ipynb" title="Cuaderno Sesión 12" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_12_mlp_backprop.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo IV</span><span class="slide-label">Autoevaluación y Resumen</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Comprueba tu Comprensión</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">¿Por qué ReLU mitiga el problema del gradiente que se desvanece mejor que sigmoide en redes profundas?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque ReLU siempre produce salidas positivas, lo que evita la cancelación de gradientes</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Porque la derivada de ReLU es exactamente 1 para todo z&gt;0 (sin saturación), mientras que la derivada de sigmoide es como máximo 0.25 y decae a casi 0 para |z| grande — multiplicar muchas derivadas pequeñas (sigmoide) hace que el gradiente se desvanezca exponencialmente con la profundidad</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque ReLU tiene menos parámetros que sigmoide, reduciendo la complejidad del gradiente</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Porque ReLU se calcula más rápido, lo que permite más iteraciones de entrenamiento</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">Al ejecutar gradient checking, la capa 2 de tu MLP reporta un error relativo de 3.2e-2 mientras las demás capas están en el orden de 1e-7. ¿Qué es lo más probable?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Es normal — distintas capas siempre tienen distintos órdenes de magnitud de error</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Hay un error de implementación específico en el cálculo del gradiente de la capa 2 — posiblemente una transposición incorrecta, una derivada de activación equivocada, o un error de índices en esa capa particular. Un error relativo &gt;1e-2 nunca debe ignorarse</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">El valor de ε=1e-5 es demasiado pequeño para esa capa — hay que aumentarlo</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Es producto de la inicialización aleatoria — basta con cambiar la semilla</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">¿Qué papel juega la corrección de sesgo (bias correction) en Adam — la división por (1−β₁ᵗ) y (1−β₂ᵗ)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Corrige el sesgo (bias) de la red neuronal, evitando que las predicciones estén sistemáticamente desplazadas</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Como m y v se inicializan en cero, en las primeras iteraciones están sesgados hacia cero (especialmente con β cercano a 1). La corrección de sesgo escala m̂ y v̂ para compensar esta inicialización, evitando pasos de actualización artificialmente pequeños al inicio del entrenamiento</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Previene el sobreajuste limitando la magnitud máxima del paso de actualización</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Es un mecanismo de regularización equivalente a weight decay</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">Entrenas el mismo MLP en NumPy (implementación manual) y en PyTorch (autograd) con los mismos datos, misma inicialización y mismo optimizador. Las curvas de pérdida son casi idénticas durante 400 épocas. ¿Qué demuestra esto?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Que PyTorch internamente usa NumPy para sus cálculos de gradiente</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">Que la implementación manual de backprop es matemáticamente correcta — el autograd de PyTorch aplica exactamente la misma regla de la cadena, solo que de forma automática y genérica en lugar de codificada a mano para esta arquitectura específica</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Que ambas implementaciones tienen el mismo error de gradient checking</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">Que el dataset es demasiado simple para diferenciar entre implementaciones</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">El teorema de aproximación universal garantiza que una red de una sola capa oculta con suficientes neuronas puede aproximar cualquier función continua. ¿Por qué entonces se prefieren redes profundas en la práctica?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">El teorema es incorrecto para funciones de más de una dimensión</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">El teorema garantiza la existencia de una aproximación, no su facilidad de aprendizaje ni su eficiencia en parámetros. En la práctica, redes profundas representan funciones complejas con exponencialmente menos parámetros que una red ancha de una sola capa, y suelen generalizar mejor</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Las redes profundas siempre entrenan más rápido que las anchas de una capa</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">El teorema solo aplica a redes con activación sigmoide, no a ReLU</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:var(--red-lt);border-left:3px solid var(--red)">
+        <h4 style="color:var(--red);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave</h4>
+        <ul style="font-size:12.5px"><li>Funciones de activación y gradiente que se desvanece</li><li>Forward pass y backprop derivados a mano</li><li>Gradient checking — verificación numérica obligatoria</li><li>Adam: momento + escala adaptativa + corrección de sesgo</li><li>PyTorch autograd ≡ backprop manual (verificado)</li><li>Aproximación universal: existencia ≠ facilidad de aprendizaje</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Próxima sesión</h4>
+        <p style="font-size:13px"><strong>Sesión 13 — Redes Convolucionales (CNN):</strong> convolución 1D para señales biomédicas (ECG, EEG), pooling, campos receptivos, y arquitecturas para clasificación de arritmias.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawActiv();if(current===3)drawNet();if(current===4)drawGradCheck();if(current===5)drawAdam();if(current===6)drawUniversal();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+
+function drawActiv(){
+  const c=document.getElementById('activ-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const fns=[
+    {n:'Sigmoide',f:x=>1/(1+Math.exp(-x)),d:x=>{const s=1/(1+Math.exp(-x));return s*(1-s);},c:'#3B82F6'},
+    {n:'Tanh',f:x=>Math.tanh(x),d:x=>1-Math.tanh(x)**2,c:'#F59E0B'},
+    {n:'ReLU',f:x=>Math.max(0,x),d:x=>x>0?1:0,c:'#10B981'},
+  ];
+  const ph=H/2-10;
+  fns.forEach((fn,row)=>{});
+  // top: functions, bottom: derivatives
+  const pad={l:30,r:10,t:24,b:10};const w=W-pad.l-pad.r;
+  const toX=x=>pad.l+(x+5)/10*w;
+  ['Funciones de activación','Derivadas (flujo de gradiente)'].forEach((title,row)=>{
+    const y0=row*(ph+10)+pad.t;
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(title,pad.l,y0-6);
+    ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y0+ph/2);ctx.lineTo(pad.l+w,y0+ph/2);ctx.stroke();
+    fns.forEach(fn=>{
+      ctx.strokeStyle=fn.c;ctx.lineWidth=2;ctx.beginPath();
+      for(let i=0;i<=100;i++){
+        const x=-5+i/10;
+        const val=row===0?fn.f(x):fn.d(x);
+        const yy=row===0? y0+ph/2-val*ph/3 : y0+ph-val*ph*0.85;
+        const xx=toX(x);
+        i===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy);
+      }
+      ctx.stroke();
+    });
+  });
+  // Legend
+  fns.forEach((fn,i)=>{
+    ctx.fillStyle=fn.c;ctx.fillRect(pad.l+i*70,H-14,10,8);
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(fn.n,pad.l+i*70+12,H-7);
+  });
+}
+
+function drawNet(){
+  const c=document.getElementById('net-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const layers=[4,6,4,1];const labels=['x (10)','h₁ (32)','h₂ (16)','ŷ (1)'];
+  const xs=layers.map((_,i)=>40+i*(W-80)/(layers.length-1));
+  const positions=layers.map((n,li)=>{
+    const arr=[];for(let i=0;i<n;i++){arr.push(30+(i+0.5)*(H-90)/n);}return arr;
+  });
+  // Edges
+  for(let li=0;li<layers.length-1;li++){
+    positions[li].forEach(y1=>{
+      positions[li+1].forEach(y2=>{
+        ctx.strokeStyle='rgba(203,213,224,0.5)';ctx.lineWidth=0.6;
+        ctx.beginPath();ctx.moveTo(xs[li],y1);ctx.lineTo(xs[li+1],y2);ctx.stroke();
+      });
+    });
+  }
+  // Nodes
+  const colors=['#3B82F6','#10B981','#10B981','#EF4444'];
+  layers.forEach((n,li)=>{
+    positions[li].forEach(y=>{
+      ctx.fillStyle=colors[li];ctx.strokeStyle='white';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(xs[li],y,9,0,2*Math.PI);ctx.fill();ctx.stroke();
+    });
+    ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText(labels[li],xs[li],H-12);
+  });
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Arquitectura [10→32→16→1] — ReLU oculta, sigmoide salida',W/2,16);
+}
+
+function drawGradCheck(){
+  const c=document.getElementById('gradcheck-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:40,r:10,t:20,b:60};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const r=rng(3);
+  const n=20;const grad_anal=Array.from({length:n},()=>(r()-0.5)*2);
+  const grad_num=grad_anal.map(v=>v+(r()-0.5)*0.001);
+  const minV=-1.2,maxV=1.2;
+  const toX=i=>pad.l+(i/(n-1))*w;const toY=v=>pad.t+h-(v-minV)/(maxV-minV)*h;
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,toY(0));ctx.lineTo(pad.l+w,toY(0));ctx.stroke();
+  ctx.strokeStyle='#3B82F6';ctx.lineWidth=2;ctx.beginPath();
+  grad_anal.forEach((v,i)=>{i===0?ctx.moveTo(toX(i),toY(v)):ctx.lineTo(toX(i),toY(v));});ctx.stroke();
+  grad_num.forEach((v,i)=>{ctx.fillStyle='#EF4444';ctx.beginPath();ctx.arc(toX(i),toY(v),3,0,2*Math.PI);ctx.fill();});
+  ctx.fillStyle='#3B82F6';ctx.fillRect(pad.l,H-46,12,3);ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Analítico (backprop)',pad.l+16,H-42);
+  ctx.fillStyle='#EF4444';ctx.beginPath();ctx.arc(pad.l+6,H-30,3,0,2*Math.PI);ctx.fill();
+  ctx.fillText('Numérico (diferencias finitas)',pad.l+16,H-27);
+  ctx.fillStyle='#059669';ctx.font='bold 9px DM Sans,sans-serif';
+  ctx.fillText('Coincidencia casi perfecta → backprop correcto',pad.l,H-12);
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Índice de parámetro (muestra de 20 pesos)',pad.l+w/2,pad.t-6);
+}
+
+function drawAdam(){
+  const c=document.getElementById('adam-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  const pad={l:40,r:10,t:20,b:30};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const n=300;
+  const curves=[
+    {n:'SGD lr=0.05', c:'#3B82F6', f:i=>0.69*Math.exp(-i/180)+0.02},
+    {n:'SGD lr=0.001',c:'#60A5FA', f:i=>0.69*Math.exp(-i/900)+0.05},
+    {n:'Adam lr=1e-3',c:'#EF4444', f:i=>0.69*Math.exp(-i/40)+0.005},
+    {n:'Adam lr=1e-2',c:'#F87171', f:i=>0.69*Math.exp(-i/15)+0.015+0.01*Math.sin(i/8)*Math.exp(-i/60)},
+  ];
+  const minL=Math.log(0.003),maxL=Math.log(0.75);
+  const toX=i=>pad.l+(i/(n-1))*w;const toY=v=>pad.t+h-(Math.log(Math.max(v,0.003))-minL)/(maxL-minL)*h;
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.01,0.1,0.5].forEach(v=>{const y=toY(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v,pad.l-3,y+3);});
+  curves.forEach(cv=>{
+    ctx.strokeStyle=cv.c;ctx.lineWidth=2;ctx.beginPath();
+    for(let i=0;i<n;i++){const v=cv.f(i);const x=toX(i),y=toY(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+  });
+  curves.forEach((cv,i)=>{
+    ctx.fillStyle=cv.c;ctx.fillRect(pad.l+(i%2)*140,H-26+Math.floor(i/2)*12,10,3);
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(cv.n,pad.l+(i%2)*140+13,H-23+Math.floor(i/2)*12);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Época',pad.l+w/2,pad.t-6);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Pérdida (escala log)',0,0);ctx.restore();
+}
+
+function drawUniversal(){
+  const c=document.getElementById('universal-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=200;c.width=W;c.height=H;
+  const pad={l:30,r:10,t:14,b:24};const w=(W-pad.l-pad.r)/4-6;const h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const widths=[2,8,32,128];
+  const r=rng(11);
+  widths.forEach((wid,i)=>{
+    const x0=pad.l+i*(w+8);
+    ctx.fillStyle='#F7F9FC';ctx.fillRect(x0,pad.t,w,h);
+    // true function
+    ctx.strokeStyle='#1B3A6B';ctx.lineWidth=1.5;ctx.setLineDash([3,2]);ctx.beginPath();
+    for(let px=0;px<=w;px++){
+      const xx=-3+px/w*6;const yy=Math.sin(2*Math.PI*xx)*Math.exp(-0.5*xx*xx)+0.5*Math.cos(5*xx);
+      const cy=pad.t+h/2-yy*h*0.3;
+      px===0?ctx.moveTo(x0+px,cy):ctx.lineTo(x0+px,cy);
+    }
+    ctx.stroke();ctx.setLineDash([]);
+    // approx (worse for small width)
+    const noise=Math.max(0,(4-i))*0.15;
+    ctx.strokeStyle='#EF4444';ctx.lineWidth=2;ctx.beginPath();
+    for(let px=0;px<=w;px++){
+      const xx=-3+px/w*6;let yy=Math.sin(2*Math.PI*xx)*Math.exp(-0.5*xx*xx)+0.5*Math.cos(5*xx);
+      if(i===0)yy=Math.sin(xx)*0.6;
+      else if(i===1)yy=yy*0.7+0.15*Math.sin(xx*2);
+      else yy=yy+(r()-0.5)*noise*0.3;
+      const cy=pad.t+h/2-yy*h*0.3;
+      px===0?ctx.moveTo(x0+px,cy):ctx.lineTo(x0+px,cy);
+    }
+    ctx.stroke();
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+    ctx.fillText('w='+wid,x0+w/2,H-6);
+  });
+}
+
+const feedbacks={
+  q1:['¡Correcto! La derivada constante de ReLU (=1, sin saturar) evita el colapso multiplicativo que ocurre con sigmoide, donde cada capa multiplica por un factor ≤0.25, haciendo que el gradiente decaiga exponencialmente con la profundidad.',
+      'Incorrecto. La razón no tiene que ver con el signo de las salidas, el número de parámetros o la velocidad de cómputo. Es específicamente sobre la magnitud de la derivada y cómo se multiplica capa por capa durante backprop.'],
+  q2:['¡Correcto! Un error relativo de 3.2e-2 está muy por encima del umbral aceptable (1e-4). Esto indica un bug específico en esa capa — nunca se debe entrenar un modelo con un gradient check fallido, ya que el entrenamiento puede parecer funcionar pero converger incorrectamente.',
+      'Incorrecto. No es normal tener tan distintos órdenes de magnitud entre capas — indica un problema real de implementación específico de esa capa que debe corregirse antes de continuar.'],
+  q3:['¡Correcto! Sin la corrección de sesgo, m y v estarían sesgados hacia 0 en las primeras iteraciones (ya que se inicializan en 0 y se actualizan con un promedio exponencial). Dividir por (1−βᵗ) compensa este sesgo inicial, permitiendo pasos efectivos desde la primera iteración.',
+      'Incorrecto. La corrección de sesgo en Adam no tiene relación con el bias de la red neuronal, ni con prevenir sobreajuste, ni es equivalente a weight decay. Es puramente una corrección estadística de la inicialización en cero de los acumuladores de momento.'],
+  q4:['¡Correcto! La coincidencia de las curvas de pérdida confirma que ambas implementaciones calculan exactamente el mismo gradiente — el autograd de PyTorch no es una aproximación, es la aplicación automática y exacta de la misma regla de la cadena que se derivó manualmente.',
+      'Incorrecto. PyTorch no usa NumPy internamente para sus cálculos de gradiente (usa su propio motor de tensores, a menudo con aceleración GPU). La coincidencia demuestra correctitud matemática, no una relación de implementación entre las dos bibliotecas.'],
+  q5:['¡Correcto! El teorema de aproximación universal es un resultado de existencia, no de eficiencia ni de capacidad de aprendizaje práctica. Las redes profundas representan funciones jerárquicas/compuestas con muchos menos parámetros, y el gradiente desciende más fácilmente hacia buenas soluciones.',
+      'Incorrecto. El teorema es válido para funciones multidimensionales y para diversas activaciones, incluyendo ReLU. La razón de preferir profundidad es la eficiencia de parámetros y las propiedades de optimización, no una limitación del teorema mismo.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa backprop y gradient checking.','Buen progreso.','¡Bien!','¡Excelente comprensión!','¡Perfecto! Listo para CNNs.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

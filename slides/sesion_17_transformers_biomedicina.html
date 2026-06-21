@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 17 — Transformers en Biomedicina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--violet:#8B5CF6;--violet-lt:#EDE9FE;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--violet);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#3B0764 0%,#1E1B4B 60%,#1B3A6B 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.3) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(139,92,246,.25);border:1px solid rgba(196,181,253,.5);color:#DDD6FE;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:32px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#DDD6FE;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#DDD6FE;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#C4B5FD;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--violet)}
+h3.section{font-size:13px;font-weight:600;color:var(--violet);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#F5F3FF;border:1px solid #C4B5FD;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#3B0764;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.violet{background:var(--violet-lt);border-left:3px solid var(--violet)}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:10.5px;line-height:1.6;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--violet);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--violet)}
+.quiz-q{margin-bottom:14px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--violet);background:var(--violet-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--violet);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--violet)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--violet);border-color:var(--violet);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#7C3AED}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--violet)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:26px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Arquitecturas Avanzadas y AI Generativa</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 17 · Transformers en Biomedicina</div>
+    <h1 class="cover-title">Transformers en<br><em>Biomedicina</em></h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Comprender el preentrenamiento BERT (MLM + NSP) y su adaptación a texto clínico</li>
+        <li>Ajustar finamente BERT clínico para predicción de código ICD</li>
+        <li>Comprender BioBERT, ClinicalBERT, PubMedBERT y modelos relacionados</li>
+        <li>Aplicar ViT a imágenes médicas y entender el tamaño de parche</li>
+        <li>Revisar arquitecturas Transformer específicas de EEG (BENDR, LaBraM)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — BERT PRETRAINING -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Preentrenamiento BERT</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">BERT — <span>Modelado de Lenguaje Enmascarado</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Dos objetivos de preentrenamiento</h3>
+        <div class="card violet">
+          <p style="font-size:13px"><strong>1. MLM (Masked Language Modeling):</strong> 15% de tokens enmascarados → el modelo los predice usando contexto bidireccional completo.</p>
+        </div>
+        <div class="card blue" style="margin-top:6px">
+          <p style="font-size:13px"><strong>2. NSP (Next Sentence Prediction):</strong> dadas 2 oraciones, predecir si la segunda sigue naturalmente a la primera.</p>
+        </div>
+        <h3 class="section" style="margin-top:10px">Estrategia de enmascaramiento (80/10/10)</h3>
+        <code class="math">15% de tokens seleccionados:
+  80% → [MASK]
+  10% → token aleatorio
+  10% → sin cambio (token original)</code>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">¿Por qué no enmascarar siempre con [MASK]?</h3>
+          <p style="font-size:13px">Si solo se usara [MASK], el modelo nunca vería [MASK] durante la inferencia (fine-tuning), creando un desajuste train/test. La variación 80/10/10 fuerza al modelo a construir representaciones contextuales robustas para <em>todos</em> los tokens, no solo los enmascarados.</p>
+        </div>
+        <div class="cite">
+          <p>Devlin, J. et al. (2019). BERT. <em>NAACL</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="mlm-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — CLINICAL BERT FINE-TUNING -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Ajuste Fino de BERT Clínico</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">ClinicalBERT — <span>Predicción de Código ICD</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Tarea: predecir ICD-10 I21 (IAM)</h3>
+        <p style="font-size:13px">Clasificación binaria a partir de resúmenes de alta — dado el texto clínico, ¿se asignó el código de infarto agudo de miocardio?</p>
+        <pre>MODEL_NAME = 'emilyalsentzer/Bio_ClinicalBERT'
+
+# Congelar todo excepto últimas 2 capas
+for name, param in model.named_parameters():
+    if 'classifier' not in name and \
+       'layer.11' not in name and 'layer.10' not in name:
+        param.requires_grad = False
+
+# ~7.4M entrenables de ~108M totales (~7%)</pre>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Ajuste fino parcial (partial fine-tuning)</h3>
+          <p style="font-size:13px">Congelar las capas inferiores (que codifican sintaxis general) y solo ajustar las capas superiores + clasificador. Reduce el riesgo de sobreajuste y el costo computacional, especialmente con datasets clínicos pequeños.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bert-arch-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Línea base sin GPU/transformers</h3>
+          <p style="font-size:13px">TF-IDF + Regresión Logística sigue siendo una línea base sólida y rápida cuando HuggingFace no está disponible — buena práctica reportar ambos resultados.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — MODEL LANDSCAPE -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Panorama de Modelos Biomédicos</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Panorama de <span>Modelos de Lenguaje Biomédicos</span></h2>
+    <table style="margin-bottom:12px">
+      <tr><th>Modelo</th><th>Corpus</th><th>Fortaleza</th></tr>
+      <tr><td><strong>BioBERT</strong></td><td>PubMed + PMC</td><td>NER biomédico, relaciones</td></tr>
+      <tr><td><strong>ClinicalBERT</strong></td><td>Notas MIMIC-III</td><td>Texto clínico, altas</td></tr>
+      <tr><td><strong>PubMedBERT</strong></td><td>Solo PubMed</td><td>Vocabulario de dominio fuerte</td></tr>
+      <tr><td><strong>GatorTron</strong></td><td>90B palabras clínicas</td><td>QA clínico a gran escala</td></tr>
+      <tr><td><strong>Med-PaLM 2</strong></td><td>QA médico + RLHF</td><td>Razonamiento clínico experto</td></tr>
+      <tr><td><strong>LLaMA-Med</strong></td><td>LLaMA + instrucción médica</td><td>Razonamiento abierto</td></tr>
+    </table>
+    <div class="two-col">
+      <div>
+        <canvas id="embed-canvas" width="300" height="240" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+      <div class="card red">
+        <h3 class="section">⚠ Consideraciones críticas</h3>
+        <ul style="font-size:12.5px">
+          <li>Desidentificación obligatoria antes de entrenar (PHI/HIPAA)</li>
+          <li>Desplazamiento temporal: el lenguaje clínico evoluciona</li>
+          <li>Riesgo de alucinación en LLM — siempre verificar</li>
+          <li>Anclaje a ontologías: SNOMED-CT, ICD, RxNorm</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — BENDR -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Modelos Fundacionales de EEG — BENDR</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">BENDR — <span>"BERT para EEG"</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Pipeline de preentrenamiento autosupervisado</h3>
+        <pre style="font-size:10px">1. EEG crudo → Encoder convolucional
+   (dilataciones 1,2,4 — campo receptivo amplio)
+2. Cuantizar latentes → codebook discreto
+3. Enmascarar tramos de latentes (~6.5%)
+4. Transformer de contexto predice
+   los tramos enmascarados</pre>
+        <div class="card violet" style="margin-top:8px">
+          <h3 class="section">Sin etiquetas necesarias</h3>
+          <p style="font-size:13px">El preentrenamiento usa solo EEG crudo sin anotar — exactamente como BERT con texto sin etiquetar. Las representaciones aprendidas luego se ajustan finamente en tareas específicas (crisis, sueño) con pocas etiquetas.</p>
+        </div>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Inspiración: wav2vec 2.0</h3>
+          <p style="font-size:13px">BENDR adapta la arquitectura de wav2vec 2.0 (originalmente para habla) al dominio de EEG — otro ejemplo de transferencia de arquitecturas entre dominios de señales temporales.</p>
+        </div>
+        <div class="cite">
+          <p>Kostas, D. et al. (2022). BENDR: EEG foundation model using contrastive self-supervised learning.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bendr-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — EFICIENCIA DE DATOS -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Eficiencia de Datos con Preentrenamiento</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Por Qué Importan los <span>Modelos Fundacionales</span></h2>
+    <div class="two-col wide">
+      <div>
+        <canvas id="dataeff-canvas" width="380" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+      <div>
+        <h3 class="section">El problema central en biomedicina</h3>
+        <p style="font-size:13px">Anotar datos clínicos requiere tiempo de expertos (cardiólogos, neurólogos) — extremadamente costoso. Un modelo entrenado desde cero necesita cientos o miles de ejemplos para alcanzar utilidad clínica.</p>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">La ventaja del preentrenamiento</h3>
+          <p style="font-size:13px">Un modelo preentrenado (ClinicalBERT, BENDR) ya "sabe" estructura general del lenguaje clínico o de la señal EEG. El ajuste fino solo necesita aprender el mapeo específico a la tarea — 5-10× menos etiquetas para el mismo rendimiento.</p>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Régimen de pocos datos</h3>
+          <p style="font-size:13px">La ventaja es más dramática con &lt;100 ejemplos etiquetados — exactamente el escenario típico en investigación clínica de un solo centro.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa la demostración de enmascaramiento MLM sobre texto clínico en español, el ajuste fino de ClinicalBERT (con línea base TF-IDF como alternativa) para predicción de código ICD, visualización de embeddings clínicos vs generales por PCA, la arquitectura BENDR completa con encoder convolucional dilatado y enmascarador de tramos, y la curva de eficiencia de datos preentrenado vs desde cero.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_17_transformers_biomedicina.ipynb" title="Cuaderno Sesión 17" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_17_transformers_biomedicina.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo V</span><span class="slide-label">Autoevaluación y Resumen</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Comprueba tu Comprensión</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">¿Por qué BERT no reemplaza el 100% de los tokens seleccionados para enmascarar con el token [MASK], sino que usa la estrategia 80/10/10?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Para reducir el costo computacional del entrenamiento, ya que predecir [MASK] siempre es más barato</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">Porque durante el ajuste fino (uso real del modelo) nunca aparece el token [MASK] en las entradas. Si el modelo solo viera [MASK] durante el preentrenamiento, aprendería representaciones específicas para ese token artificial en lugar de representaciones contextuales robustas para palabras reales — la estrategia 80/10/10 reduce este desajuste entre preentrenamiento y uso real</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Para aumentar artificialmente el tamaño del vocabulario del modelo</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">Es un requisito técnico de la arquitectura Transformer, no una decisión de diseño del preentrenamiento</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">Al ajustar finamente ClinicalBERT congelando todas las capas excepto las últimas 2 más el clasificador, ¿qué razón justifica esta estrategia en lugar de ajustar todo el modelo?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Las capas congeladas no contribuyen en absoluto a la representación final, por lo que ajustarlas sería inútil</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Las capas inferiores de un modelo preentrenado típicamente codifican patrones lingüísticos generales (sintaxis, morfología) que ya son útiles y estables; ajustarlas con un dataset clínico pequeño arriesga "olvidar" ese conocimiento general (catastrophic forgetting) y sobreajustar. Las capas superiores capturan representaciones más específicas de tarea, por lo que ajustarlas es más seguro y eficiente con pocos datos</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Es un requisito técnico de PyTorch — no se puede ajustar finamente más de 2 capas simultáneamente</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Congelar capas siempre produce el mismo AUROC que ajustar el modelo completo, así que es preferible por simplicidad</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">En la visualización PCA de embeddings, ClinicalBERT agrupa términos médicos (troponina, miocárdico, arritmia) más cercanamente entre sí que BERT general. ¿Qué implica esto sobre las representaciones internas del modelo?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Que ClinicalBERT tiene un vocabulario más pequeño que BERT general, lo que fuerza artificialmente la cercanía de términos</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">Que el preentrenamiento en texto clínico (notas MIMIC-III) hace que ClinicalBERT capture relaciones semánticas específicas del dominio médico que BERT general — entrenado en texto genérico de Wikipedia/libros — no aprendió tan finamente. Esto sugiere que las representaciones de ClinicalBERT son más útiles para tareas posteriores específicamente clínicas</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Que BERT general es estrictamente inferior y nunca debería usarse para ninguna tarea relacionada con texto médico</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">Que la técnica de PCA distorsiona artificialmente las distancias entre embeddings médicos específicamente</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">¿Cuál es la diferencia fundamental entre cómo BENDR aprende representaciones de EEG y cómo lo hace un clasificador CNN supervisado tradicional (como el de la Sesión 13)?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">BENDR usa exclusivamente capas LSTM, mientras que el clasificador CNN usa solo capas convolucionales</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">BENDR se preentrena de forma completamente autosupervisada (sin ninguna etiqueta) prediciendo tramos de EEG enmascarados a partir del contexto — aprendiendo representaciones generales útiles. El clasificador CNN tradicional requiere etiquetas (ej. tipo de arritmia) desde el inicio del entrenamiento para aprender directamente la tarea de clasificación específica</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">BENDR solo puede procesar EEG de un único canal, mientras que las CNN procesan múltiples canales simultáneamente</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">No hay ninguna diferencia real — ambos métodos requieren la misma cantidad de datos etiquetados para entrenar</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">La curva de eficiencia de datos muestra que con solo 25 ejemplos etiquetados, el modelo preentrenado alcanza AUROC≈0.85 mientras que el modelo desde cero alcanza AUROC≈0.55. ¿Qué decisión práctica debería tomar un equipo de investigación con un dataset clínico pequeño (n=30 pacientes etiquetados) basándose en este hallazgo?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Recolectar al menos 500 pacientes etiquetados antes de intentar cualquier modelo, ya que ambos enfoques requieren grandes cantidades de datos</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Priorizar el uso de un modelo preentrenado relevante para el dominio (ClinicalBERT para texto, BENDR para EEG) y ajustarlo finamente con los 30 pacientes disponibles, en lugar de intentar entrenar una arquitectura desde cero, que con ese tamaño de muestra probablemente no superaría el rendimiento aleatorio de forma confiable</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Usar siempre un modelo entrenado desde cero porque es más interpretable y específico para los datos del estudio</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">La elección entre preentrenado y desde cero no importa con datasets tan pequeños — el resultado será similar en ambos casos</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:var(--violet-lt);border-left:3px solid var(--violet)">
+        <h4 style="color:var(--violet);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave</h4>
+        <ul style="font-size:12.5px"><li>MLM: enmascaramiento 80/10/10 evita desajuste train/test</li><li>Ajuste fino parcial: congelar capas inferiores, ajustar superiores</li><li>BioBERT/ClinicalBERT/PubMedBERT: especialización por corpus</li><li>BENDR: BERT autosupervisado para EEG crudo</li><li>Eficiencia de datos: preentrenado necesita 5-10× menos etiquetas</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--teal-lt);border-left:3px solid var(--teal)">
+        <h4 style="color:var(--teal);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Próxima sesión</h4>
+        <p style="font-size:13px"><strong>Sesión 18 — VAE y GAN:</strong> los dos modelos generativos profundos clásicos. Autoencoders variacionales, espacio latente, GAN y entrenamiento adversarial — aplicados a generación y aumentación de señales biomédicas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawMLM();if(current===3)drawBertArch();if(current===4)drawEmbed();if(current===5)drawBendr();if(current===6)drawDataEff();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+
+function drawMLM(){
+  const c=document.getElementById('mlm-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const tokens=['El','paciente','presentó','dolor','torácico','agudo','irradiado','al','brazo','izquierdo'];
+  const masked=[false,false,true,false,false,true,false,false,false,true];
+  const tw=(W-16)/tokens.length;
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Texto clínico de entrada',W/2,16);
+  tokens.forEach((tok,i)=>{
+    const x=8+i*tw+tw/2;
+    ctx.fillStyle=masked[i]?'#EF4444':'#3B82F6';ctx.globalAlpha=0.85;
+    ctx.beginPath();ctx.roundRect(8+i*tw+2,30,tw-4,28,4);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='white';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(masked[i]?'[MASK]':tok,x,44);
+  });
+  // arrow down
+  ctx.strokeStyle='#8896A8';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(W/2,66);ctx.lineTo(W/2,90);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2-5,82);ctx.lineTo(W/2,90);ctx.lineTo(W/2+5,82);ctx.stroke();
+  // Transformer box
+  ctx.fillStyle='#8B5CF6';ctx.fillRect(W/2-90,98,180,40);
+  ctx.fillStyle='white';ctx.font='bold 10px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Encoder Transformer (BERT)',W/2,118);
+  // arrow down
+  ctx.strokeStyle='#8896A8';ctx.beginPath();ctx.moveTo(W/2,138);ctx.lineTo(W/2,162);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2-5,154);ctx.lineTo(W/2,162);ctx.lineTo(W/2+5,154);ctx.stroke();
+  // predictions
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Predicciones para posiciones enmascaradas',W/2,176);
+  const maskedWords=['presentó','agudo','izquierdo'];
+  maskedWords.forEach((w,i)=>{
+    const x=W/2-100+i*100;
+    ctx.fillStyle='#ECFDF5';ctx.strokeStyle='#059669';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(x-40,186,80,28,4);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#065F46';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(w,x,200);
+  });
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('Rojo = enmascarado · Azul = visible · El modelo predice usando contexto bidireccional',W/2,H-30);
+  ctx.fillText('Probabilidad de enmascaramiento: 15% de todos los tokens',W/2,H-14);
+}
+
+function drawBertArch(){
+  const c=document.getElementById('bert-arch-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const layers=12;
+  const lh=(H-50)/layers;
+  for(let i=0;i<layers;i++){
+    const y=10+i*lh;
+    const frozen=i<10;
+    ctx.fillStyle=frozen?'#CBD5E0':'#8B5CF6';
+    ctx.fillRect(W/2-80,y,160,lh-3);
+    ctx.fillStyle=frozen?'#4A5568':'white';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(`Capa ${i} ${frozen?'(congelada ❄)':'(entrenable 🔥)'}`,W/2,y+lh/2-1.5);
+  }
+  ctx.fillStyle='#EF4444';ctx.fillRect(W/2-80,10+layers*lh+4,160,24);
+  ctx.fillStyle='white';ctx.font='bold 9px DM Sans,sans-serif';
+  ctx.fillText('Clasificador (entrenable)',W/2,10+layers*lh+16);
+}
+
+function drawEmbed(){
+  const c=document.getElementById('embed-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=240;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const r=rng(9);
+  ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('PCA de embeddings — ClinicalBERT',W/2,14);
+  // medical cluster (tight)
+  const medCx=W*0.32,medCy=H*0.55;
+  for(let i=0;i<15;i++){
+    const x=medCx+(r()-0.5)*40;const y=medCy+(r()-0.5)*40;
+    ctx.fillStyle='#EF4444';ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);ctx.fill();
+  }
+  // general cluster (loose)
+  const genCx=W*0.68,genCy=H*0.45;
+  for(let i=0;i<15;i++){
+    const x=genCx+(r()-0.5)*90;const y=genCy+(r()-0.5)*70;
+    ctx.fillStyle='#3B82F6';ctx.beginPath();ctx.arc(x,y,4,0,2*Math.PI);ctx.fill();
+  }
+  ctx.fillStyle='#EF4444';ctx.fillRect(20,H-24,10,8);ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+  ctx.fillText('Términos médicos (agrupados)',34,H-17);
+  ctx.fillStyle='#3B82F6';ctx.fillRect(20,H-12,10,8);
+  ctx.fillText('Términos generales (dispersos)',34,H-5);
+}
+
+function drawBendr(){
+  const c=document.getElementById('bendr-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const steps=[
+    {n:'EEG crudo\n(20 canales)',c:'#8896A8',y:14},
+    {n:'Encoder Conv1D\n(dilatación 1,2,4)',c:'#3B82F6',y:70},
+    {n:'Latentes (T\', 256)',c:'#10B981',y:126},
+    {n:'Enmascarar tramos\n(~6.5%)',c:'#F59E0B',y:182},
+    {n:'Transformer de\ncontexto',c:'#8B5CF6',y:238},
+    {n:'Predecir tramos\nenmascarados',c:'#EF4444',y:294},
+  ];
+  steps.forEach((s,i)=>{
+    ctx.fillStyle=s.c;ctx.globalAlpha=0.85;
+    ctx.fillRect(W/2-90,s.y,180,42);ctx.globalAlpha=1;
+    ctx.fillStyle='white';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    s.n.split('\n').forEach((line,li)=>ctx.fillText(line,W/2,s.y+21+(li-((s.n.split('\n').length-1)/2))*11));
+    if(i<steps.length-1){
+      ctx.strokeStyle='#CBD5E0';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(W/2,s.y+42);ctx.lineTo(W/2,steps[i+1].y);ctx.stroke();
+    }
+  });
+}
+
+function drawDataEff(){
+  const c=document.getElementById('dataeff-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:40,r:10,t:16,b:34};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const sizes=[10,25,50,100,200,350,500];
+  const aurocPre=[0.71,0.85,0.89,0.91,0.92,0.92,0.92];
+  const aurocScr=[0.52,0.55,0.61,0.69,0.78,0.84,0.87];
+  const minX=Math.log10(10),maxX=Math.log10(500);
+  const toX=n=>pad.l+(Math.log10(n)-minX)/(maxX-minX)*w;
+  const toY=v=>pad.t+h-(v-0.45)/(0.98-0.45)*h;
+  ctx.strokeStyle='#E2E8F0';ctx.lineWidth=1;
+  [0.5,0.6,0.7,0.8,0.85,0.9].forEach(v=>{const y=toY(v);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+w,y);ctx.stroke();ctx.fillStyle='#CBD5E0';ctx.font='8px DM Mono,monospace';ctx.textAlign='right';ctx.fillText(v.toFixed(2),pad.l-2,y+3);});
+  ctx.strokeStyle='#8896A8';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+  ctx.beginPath();ctx.moveTo(pad.l,toY(0.85));ctx.lineTo(pad.l+w,toY(0.85));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('umbral clínico',pad.l+4,toY(0.85)-3);
+  ctx.fillStyle='rgba(16,185,129,0.06)';ctx.fillRect(toX(10),pad.t,toX(100)-toX(10),h);
+  ctx.strokeStyle='#3B82F6';ctx.lineWidth=2.5;ctx.beginPath();
+  sizes.forEach((n,i)=>{const x=toX(n),y=toY(aurocPre[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+  sizes.forEach((n,i)=>{ctx.fillStyle='#3B82F6';ctx.beginPath();ctx.arc(toX(n),toY(aurocPre[i]),4,0,2*Math.PI);ctx.fill();});
+  ctx.strokeStyle='#EF4444';ctx.lineWidth=2.5;ctx.beginPath();
+  sizes.forEach((n,i)=>{const x=toX(n),y=toY(aurocScr[i]);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+  sizes.forEach((n,i)=>{ctx.fillStyle='#EF4444';ctx.beginPath();ctx.arc(toX(n),toY(aurocScr[i]),4,0,2*Math.PI);ctx.fill();});
+  ctx.fillStyle='#3B82F6';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('Preentrenado',pad.l+w-95,toY(aurocPre[6])-8);
+  ctx.fillStyle='#EF4444';ctx.fillText('Desde cero',pad.l+w-80,toY(aurocScr[6])+14);
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Ejemplos etiquetados (escala log)',pad.l+w/2,H-4);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('AUROC',0,0);ctx.restore();
+}
+
+const feedbacks={
+  q1:['¡Correcto! Si el modelo solo viera [MASK] durante el preentrenamiento, durante el fine-tuning (donde nunca aparece [MASK]) tendría representaciones contextuales pobres para las palabras reales. La estrategia 80/10/10 fuerza al modelo a aprender representaciones robustas para todos los tokens, no solo el artefacto de enmascaramiento.',
+      'Incorrecto. No es una cuestión de costo computacional ni de tamaño de vocabulario, ni un requisito técnico de la arquitectura. Es específicamente una decisión de diseño para reducir el desajuste entre el comportamiento durante preentrenamiento y durante el uso real (fine-tuning/inferencia).'],
+  q2:['¡Correcto! Las capas inferiores capturan patrones lingüísticos generales y estables que son útiles independientemente del dominio; ajustarlas con pocos datos clínicos arriesga corromper ese conocimiento general. Las capas superiores son más específicas de tarea y se benefician de adaptación dirigida al problema clínico concreto.',
+      'Incorrecto. Las capas congeladas sí contribuyen significativamente al forward pass (producen las representaciones que alimentan las capas superiores). No es un requisito técnico de PyTorch, y ajustar todo el modelo no siempre produce el mismo resultado — de hecho, con pocos datos puede producir peor generalización por sobreajuste.'],
+  q3:['¡Correcto! El preentrenamiento en corpus específico de dominio (notas clínicas) permite que ClinicalBERT capture relaciones semánticas finas entre términos médicos que BERT general, entrenado en texto genérico, no puede aprender con la misma profundidad. Esto se traduce en mejores representaciones para tareas posteriores clínicas.',
+      'Incorrecto. No es un artefacto del tamaño del vocabulario ni una distorsión de PCA específica para términos médicos. BERT general no es "inútil" para texto médico — simplemente sus representaciones son menos especializadas en ese dominio específico.'],
+  q4:['¡Correcto! Esta es la diferencia fundamental entre aprendizaje autosupervisado (BENDR, sin etiquetas, prediciendo contenido enmascarado) y aprendizaje supervisado tradicional (CNN clasificador, que requiere etiquetas de la tarea objetivo desde el primer momento del entrenamiento).',
+      'Incorrecto. No es una diferencia de tipo de capa (BENDR también usa convoluciones en su encoder) ni de número de canales soportados. La diferencia central está en el paradigma de aprendizaje: autosupervisado vs supervisado, y en la necesidad —o no— de etiquetas desde el inicio.'],
+  q5:['¡Correcto! Con un dataset tan pequeño, entrenar desde cero es extremadamente improbable que funcione bien — la evidencia de la curva de eficiencia de datos sugiere fuertemente usar transferencia de aprendizaje desde un modelo preentrenado relevante al dominio, ajustándolo con los datos disponibles en lugar de intentar el entrenamiento completo desde cero.',
+      'Incorrecto. Recolectar 500 pacientes no siempre es factible ni necesario si se usa transferencia de aprendizaje. Un modelo desde cero no es automáticamente más interpretable, y la elección entre preentrenado y desde cero SÍ importa dramáticamente con datasets pequeños, como muestra la curva.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa BERT y modelos biomédicos.','Buen progreso.','¡Bien!','¡Excelente comprensión!','¡Perfecto! Listo para VAE y GAN.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

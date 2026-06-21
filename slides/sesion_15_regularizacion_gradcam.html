@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 15 — Regularización, Práctica de Entrenamiento e Interpretabilidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--red:#EF4444;--red-lt:#FEE2E2;--amber:#D97706;--amber-lt:#FEF3C7;--violet:#8B5CF6;--violet-lt:#EDE9FE;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--red);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#7F1D1D 0%,#450A0A 60%,#1B3A6B 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,.25) 0%,transparent 70%);top:-100px;right:-100px}
+.cover-tag{background:rgba(239,68,68,.25);border:1px solid rgba(252,165,165,.5);color:#FECACA;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:32px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FECACA;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FECACA;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#FCA5A5;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--red)}
+h3.section{font-size:13px;font-weight:600;color:var(--red);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.math{font-family:var(--font-mono);background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;padding:10px 14px;font-size:12.5px;color:#7F1D1D;margin:8px 0;display:block;line-height:1.7}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.red{background:var(--red-lt);border-left:3px solid var(--red)}.card.violet{background:var(--violet-lt);border-left:3px solid var(--violet)}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:11px;line-height:1.65;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--red);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--red)}
+.quiz-q{margin-bottom:14px}.quiz-q-text{font-size:14px;font-weight:500;color:var(--navy);margin-bottom:8px;line-height:1.5}.quiz-q-num{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin-bottom:4px}
+.quiz-options{display:flex;flex-direction:column;gap:6px}
+.quiz-opt{padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:white;cursor:pointer;font-size:13px;color:var(--slate);transition:all .18s ease;text-align:left}
+.quiz-opt:hover:not(.answered){border-color:var(--red);background:var(--red-lt)}.quiz-opt.correct{border-color:#059669;background:#ECFDF5;color:#065F46}.quiz-opt.wrong{border-color:#DC2626;background:#FEF2F2;color:#991B1B}.quiz-opt.reveal{border-color:#059669;background:#ECFDF5;color:#065F46;opacity:.7}
+.quiz-feedback{margin-top:6px;padding:8px 12px;border-radius:6px;font-size:12.5px;display:none}.quiz-feedback.show{display:block}.quiz-feedback.ok{background:#ECFDF5;color:#065F46}.quiz-feedback.bad{background:#FEF2F2;color:#991B1B}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:10px;font-size:13px;color:var(--slate)}
+.score-pill{font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--navy);background:white;border:1.5px solid var(--border);padding:3px 12px;border-radius:20px}
+.quiz-reset{margin-left:auto;font-size:12px;color:var(--red);cursor:pointer;text-decoration:underline;background:none;border:none}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--red)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--red);border-color:var(--red);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#DC2626}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--red)}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:26px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Fundamentos de Deep Learning</span><span class="slide-counter">1 / 8</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 15 · Regularización e Interpretabilidad</div>
+    <h1 class="cover-title">Regularización, Práctica de<br>Entrenamiento e <em>Interpretabilidad</em></h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Objetivos de aprendizaje</h3>
+      <ul>
+        <li>Comprender dropout, batch normalization y layer normalization</li>
+        <li>Aplicar aumentación de datos específica para señales fisiológicas</li>
+        <li>Implementar calentamiento y recocido coseno de tasa de aprendizaje</li>
+        <li>Implementar Grad-CAM desde cero para ECG y fMRI</li>
+        <li>Comprender cuándo los mapas de saliencia son confiables</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — DROPOUT Y BATCHNORM -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Dropout y Batch Normalization</span><span class="slide-counter">2 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Dropout y <span>Batch Normalization</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">Batch normalization</h3>
+        <code class="math">ẑ = (z - μ_B) / √(σ_B² + ε) · γ + β
+
+Normaliza dentro de cada mini-batch
+γ, β: parámetros aprendibles</code>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Dropout</h3>
+          <p style="font-size:13px">Pone a cero activaciones con probabilidad p durante entrenamiento. Equivale a un ensamble implícito de 2ⁿ subredes que comparten pesos. <strong>Siempre desactivar en evaluación</strong> (model.eval()).</p>
+        </div>
+        <div class="card red" style="margin-top:8px">
+          <h3 class="section">⚠ BatchNorm con batch=1</h3>
+          <p style="font-size:13px">BatchNorm calcula estadísticas sobre el batch — con batch_size=1 estas estadísticas son degeneradas. Para RNN o batches pequeños, usar <strong>Layer Norm</strong> en su lugar (normaliza por característica, no por batch).</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="bn-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Por qué BN ayuda al gradiente</h3>
+          <p style="font-size:13px">Sin BN, una red de 15 capas con tanh sufre vanishing gradient severo. BN mantiene las activaciones en un rango estable capa a capa, evitando que el gradiente colapse exponencialmente.</p>
+        </div>
+        <div class="cite">
+          <p>Ioffe, S. & Szegedy, C. (2015). Batch normalization. <em>ICML</em>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — AUMENTACIÓN -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Aumentación de Datos</span><span class="slide-counter">3 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Aumentación de Datos para <span>Señales Fisiológicas</span></h2>
+    <div class="two-col wide">
+      <div>
+        <canvas id="aug-canvas" width="380" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+      <div>
+        <h3 class="section">Estrategias específicas para ECG/EEG</h3>
+        <table>
+          <tr><th>Técnica</th><th>Simula</th></tr>
+          <tr><td>Escalado amplitud</td><td>Variación electrodo/paciente</td></tr>
+          <tr><td>Desplaz. temporal</td><td>Imprecisión de etiquetado</td></tr>
+          <tr><td>Ruido gaussiano</td><td>Ruido del sensor</td></tr>
+          <tr><td>Deriva de línea base</td><td>Movimiento del paciente</td></tr>
+          <tr><td>Cutout</td><td>Artefactos/pérdida de señal</td></tr>
+          <tr><td>Enmasc. frecuencia</td><td>Filtrado de banda variable</td></tr>
+        </table>
+        <div class="card green" style="margin-top:10px">
+          <h3 class="section">Principio de diseño</h3>
+          <p style="font-size:13px">Cada aumentación debe simular una fuente de variabilidad <strong>realista</strong> en la adquisición clínica — nunca generar artefactos imposibles fisiológicamente que confundan al modelo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — LR SCHEDULES -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Programación de Tasa de Aprendizaje</span><span class="slide-counter">4 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Programación de la <span>Tasa de Aprendizaje</span></h2>
+    <div class="two-col wide">
+      <div>
+        <canvas id="lr-canvas" width="380" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+      <div>
+        <h3 class="section">Recocido coseno</h3>
+        <code class="math">η_t = η_min + ½(η_max-η_min)(1+cos(πt/T))</code>
+        <div class="card green" style="margin-top:6px">
+          <h3 class="section">Calentamiento (warmup)</h3>
+          <p style="font-size:13px">Las primeras iteraciones usan tasas muy pequeñas que crecen linealmente — evita que los pesos iniciales aleatorios produzcan gradientes inestables grandes.</p>
+        </div>
+        <div class="card amber" style="margin-top:6px">
+          <h3 class="section">SGDR — reinicios cálidos</h3>
+          <p style="font-size:13px">Reiniciar la tasa de aprendizaje periódicamente ayuda a escapar de mínimos locales pobres en paisajes de pérdida complejos.</p>
+        </div>
+        <div class="cite">
+          <p>Loshchilov, I. & Hutter, F. (2017). SGDR. <em>ICLR</em>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5 — GRAD-CAM -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Grad-CAM desde Cero</span><span class="slide-counter">5 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Grad-CAM — <span>Mapas de Activación de Clase</span></h2>
+    <div class="two-col wide">
+      <div>
+        <code class="math">αₖᶜ = (1/Z)Σᵢⱼ ∂yᶜ/∂Aᵏᵢⱼ
+
+L_GradCAM = ReLU(Σₖ αₖᶜ · Aᵏ)
+
+Aᵏ: mapas de la capa conv objetivo
+yᶜ: puntuación de la clase c</code>
+        <h3 class="section" style="margin-top:10px">Implementación con hooks</h3>
+        <pre style="font-size:9.5px">forward_hook  → guarda activaciones Aᵏ
+backward_hook → guarda gradientes ∂y/∂Aᵏ
+
+weights = gradients.mean(dim=tiempo)
+cam = ReLU(Σ weights·activations)</pre>
+        <div class="card green" style="margin-top:8px">
+          <h3 class="section">Interpretación en ECG</h3>
+          <p style="font-size:13px">El mapa de calor debe resaltar el complejo QRS para latidos normales, y la región más ancha del QRS para latidos ventriculares (V) — consistente con el conocimiento clínico.</p>
+        </div>
+        <div class="cite">
+          <p>Selvaraju, R.R. et al. (2017). Grad-CAM. <em>ICCV</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="gradcam-canvas" width="300" height="340" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6 — SANITY CHECKS -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Verificaciones de Confiabilidad</span><span class="slide-counter">6 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">¿Cuándo es Confiable un <span>Mapa de Saliencia?</span></h2>
+    <div class="two-col wide">
+      <div>
+        <h3 class="section">El hallazgo de Adebayo et al. (2018)</h3>
+        <p style="font-size:13px">Muchos métodos de saliencia producen mapas <strong>visualmente plausibles incluso para redes con pesos completamente aleatorios</strong> — el mapa parece razonable pero no refleja ningún aprendizaje real.</p>
+        <div class="card red" style="margin-top:8px">
+          <h3 class="section">Prueba de aleatorización del modelo</h3>
+          <p style="font-size:13px">Comparar el Grad-CAM de la red entrenada contra el de una red idéntica con pesos aleatorios (sin entrenar) sobre la misma entrada.</p>
+          <ul style="font-size:12.5px;margin-top:4px">
+            <li><strong>Correlación baja</strong> → el método es sensible a lo aprendido ✅</li>
+            <li><strong>Correlación alta</strong> → el mapa puede ser solo un artefacto de la arquitectura, no del aprendizaje ❌</li>
+          </ul>
+        </div>
+        <div class="card amber" style="margin-top:8px">
+          <h3 class="section">Otras verificaciones recomendadas</h3>
+          <ul style="font-size:12.5px">
+            <li>Aleatorización de etiquetas (label randomization test)</li>
+            <li>Independencia del modelo (model parameter randomization)</li>
+            <li>Sensibilidad a perturbaciones irrelevantes</li>
+          </ul>
+        </div>
+        <div class="cite">
+          <p>Adebayo, J. et al. (2018). Sanity checks for saliency maps. <em>NeurIPS</em>.</p>
+        </div>
+      </div>
+      <div>
+        <canvas id="sanity-canvas" width="300" height="280" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7 — CUADERNO -->
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Práctica Interactiva</span><span class="slide-counter">7 / 8</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Práctica Interactiva</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa la demostración del flujo de gradiente con/sin BatchNorm en una red de 15 capas, 8 estrategias de aumentación para ECG visualizadas, 5 programaciones de tasa de aprendizaje comparadas, Grad-CAM completo desde cero con hooks de PyTorch aplicado a las 5 clases de arritmias, y la verificación de cordura comparando red entrenada vs aleatoria.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_15_regularizacion_gradcam.ipynb" title="Cuaderno Sesión 15" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_15_regularizacion_gradcam.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — AUTOEVALUACIÓN + CIERRE MÓDULO IV -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo IV · Cierre</span><span class="slide-label">Autoevaluación y Cierre del Módulo IV</span><span class="slide-counter">8 / 8</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Autoevaluación — <span>Cierre del Módulo IV</span></h2>
+    <div id="quiz">
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 1 de 5</div>
+        <div class="quiz-q-text">¿Por qué Batch Normalization no funciona bien con tamaño de batch=1, y qué alternativa se recomienda en ese caso?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">BatchNorm sí funciona perfectamente con batch=1; el problema solo ocurre con batches muy grandes</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q1')">BatchNorm calcula media y varianza a través de las muestras del batch; con batch=1 estas estadísticas son degeneradas (varianza=0, indefinida). Layer Normalization es la alternativa recomendada, ya que normaliza a través de las características de una sola muestra, no a través del batch</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">El problema es que BatchNorm requiere GPU y no puede ejecutarse con batch=1 en CPU</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q1')">BatchNorm con batch=1 produce un error de sintaxis en PyTorch, por lo que simplemente no compila</button>
+        </div><div class="quiz-feedback" id="fb-q1"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 2 de 5</div>
+        <div class="quiz-q-text">Al diseñar aumentación de datos para ECG, ¿por qué la elección de transformaciones debe basarse en la física/fisiología de la señal, en lugar de aplicar transformaciones genéricas de visión por computadora?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Porque las transformaciones genéricas de imágenes son computacionalmente más costosas que las de señales 1D</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q2')">Porque cada aumentación debe simular una fuente realista de variabilidad en la adquisición clínica (ruido de electrodo, deriva de línea base, variación de paciente a paciente). Aplicar transformaciones arbitrarias (como rotación de imagen, que no tiene sentido para ECG) puede generar patrones que nunca ocurrirían clínicamente, confundiendo al modelo en lugar de mejorarlo</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">Porque las transformaciones de visión por computadora solo funcionan en GPUs con CUDA</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q2')">No hay ninguna diferencia real entre ambos enfoques — cualquier aumentación mejora el rendimiento por igual</button>
+        </div><div class="quiz-feedback" id="fb-q2"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 3 de 5</div>
+        <div class="quiz-q-text">¿Cuál es la ventaja principal de usar calentamiento (warmup) seguido de recocido coseno, en comparación con usar una tasa de aprendizaje constante durante todo el entrenamiento?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">El calentamiento no aporta ningún beneficio real — es solo una convención sin justificación matemática</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q3')">El calentamiento evita que los pesos aleatorios iniciales (sin ajustar) reciban actualizaciones grandes e inestables al principio del entrenamiento. El recocido coseno posterior reduce gradualmente la tasa de aprendizaje, permitiendo que el modelo converja a un mínimo más preciso en las últimas épocas, en lugar de oscilar con pasos grandes constantes</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">El calentamiento solo es necesario cuando se usa SGD, nunca con Adam</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q3')">La tasa de aprendizaje constante siempre converge más rápido en términos de tiempo de reloj</button>
+        </div><div class="quiz-feedback" id="fb-q3"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 4 de 5</div>
+        <div class="quiz-q-text">En la fórmula de Grad-CAM, αₖᶜ se calcula promediando los gradientes ∂yᶜ/∂Aᵏ a través de la dimensión espacial/temporal. ¿Qué representa intuitivamente este peso αₖᶜ?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">La probabilidad de que el canal k contenga ruido en lugar de señal útil</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q4')">La importancia global del canal de características k (de la capa convolucional objetivo) para predecir la clase c — un αₖᶜ alto significa que ese canal, en promedio, contribuye fuertemente a aumentar la puntuación de la clase c cuando se activa</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">El número de neuronas activas en el canal k durante el forward pass</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q4')">La tasa de aprendizaje óptima para ese canal específico</button>
+        </div><div class="quiz-feedback" id="fb-q4"></div></div>
+      <div class="quiz-q"><div class="quiz-q-num">Pregunta 5 de 5</div>
+        <div class="quiz-q-text">Generas un mapa Grad-CAM para un clasificador de ECG y observas que resalta consistentemente la misma región temporal independientemente de si el modelo está entrenado o tiene pesos aleatorios. ¿Qué deberías concluir y qué acción tomar?</div>
+        <div class="quiz-options">
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Que el modelo está funcionando perfectamente — Grad-CAM siempre debe resaltar la misma región en cualquier ECG normal</button>
+          <button class="quiz-opt" onclick="answer(this,true,'q5')">Que el mapa de Grad-CAM probablemente refleja un artefacto de la arquitectura (por ejemplo, el padding o el pooling) en lugar de patrones aprendidos por el modelo. Debes ser escéptico sobre cualquier interpretación clínica basada en ese mapa, y reportar el AUROC de correlación entre el mapa entrenado y aleatorio como evidencia de que el método de explicación no es confiable en este caso</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Que se necesita más entrenamiento — con suficientes épocas adicionales el patrón cambiará</button>
+          <button class="quiz-opt" onclick="answer(this,false,'q5')">Que el código de Grad-CAM tiene un error de implementación que debe corregirse antes de continuar, sin importar el resultado</button>
+        </div><div class="quiz-feedback" id="fb-q5"></div></div>
+      <div class="quiz-score-bar" id="score-bar" style="display:none">
+        <span>Resultado:</span><span class="score-pill" id="score-text">0 / 5</span>
+        <span id="score-msg"></span><button class="quiz-reset" onclick="resetQuiz()">Reintentar</button>
+      </div>
+    </div>
+    <div class="summary-grid" style="margin-top:14px">
+      <div class="summary-block" style="background:var(--red-lt);border-left:3px solid var(--red)">
+        <h4 style="color:var(--red);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Conceptos clave — Módulo IV</h4>
+        <ul style="font-size:12.5px"><li>Backprop, gradient checking, Adam (S12)</li><li>CNN 1-D, ResNet, transfer learning (S13)</li><li>RNN/LSTM, BPTT, BiLSTM, CNN-LSTM híbrido (S14)</li><li>Dropout, BatchNorm, aumentación, LR schedules (S15)</li><li>Grad-CAM y verificaciones de confiabilidad (S15)</li></ul>
+      </div>
+      <div class="summary-block" style="background:var(--violet-lt);border-left:3px solid var(--violet)">
+        <h4 style="color:var(--violet);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Módulo V — Arquitecturas Avanzadas</h4>
+        <p style="font-size:13px">El Módulo V (Sesiones 16–20) introduce <strong>mecanismos de atención, Transformers, autoencoders y modelos generativos modernos</strong> (VAE, GAN, modelos de difusión). El acento cambia a <strong>violeta (#8B5CF6)</strong>.</p>
+      </div>
+    </div>
+    <div style="background:var(--red-lt);border:1px solid #FCA5A5;border-radius:10px;padding:12px 16px;font-size:13px;color:#7F1D1D">
+      <strong>✅ Módulo IV completado.</strong> Tienes ahora las bases completas de deep learning: backpropagation, CNN, RNN/LSTM, y las prácticas de entrenamiento e interpretabilidad necesarias para aplicar estos modelos de forma responsable en señales e imágenes biomédicas.
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=8;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===2)drawBN();if(current===3)drawAug();if(current===4)drawLR();if(current===5)drawGradCAM();if(current===6)drawSanity();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function rng(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xFFFFFFFF;return(s>>>0)/0xFFFFFFFF;};}
+
+function ecgWave(t){
+  const p=0.15*Math.exp(-((t-0.12)**2)/(2*0.015**2));
+  const r=1.0*Math.exp(-((t-0.22)**2)/(2*0.006**2));
+  const s=-0.12*Math.exp(-((t-0.24)**2)/(2*0.008**2));
+  const tw=0.25*Math.exp(-((t-0.38)**2)/(2*0.025**2));
+  return p+r+s+tw;
+}
+
+function drawBN(){
+  const c=document.getElementById('bn-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:40,r:10,t:20,b:30};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const n=15;
+  const curves=[
+    {n:'Tanh, sin BN',c:'#3B82F6',f:i=>Math.max(1e-6,Math.exp(-i*0.5))},
+    {n:'Tanh + BN',c:'#10B981',f:i=>0.3+0.1*Math.sin(i*0.3)*Math.exp(-i*0.02)},
+    {n:'ReLU, sin BN',c:'#F59E0B',f:i=>Math.max(1e-6,Math.exp(-i*0.25))},
+    {n:'ReLU + BN',c:'#8B5CF6',f:i=>0.4+0.08*Math.cos(i*0.3)*Math.exp(-i*0.02)},
+  ];
+  const minL=Math.log(1e-6),maxL=Math.log(1);
+  const toX=i=>pad.l+(i/(n-1))*w;
+  const toY=v=>pad.t+h-(Math.log(Math.max(v,1e-6))-minL)/(maxL-minL)*h;
+  curves.forEach(cv=>{
+    ctx.strokeStyle=cv.c;ctx.lineWidth=2;ctx.beginPath();
+    for(let i=0;i<n;i++){const v=cv.f(i);const x=toX(i),y=toY(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+  });
+  curves.forEach((cv,i)=>{
+    ctx.fillStyle=cv.c;ctx.fillRect(pad.l+(i%2)*150,H-26+Math.floor(i/2)*12,10,3);
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(cv.n,pad.l+(i%2)*150+13,H-23+Math.floor(i/2)*12);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Índice de capa (superficial→profunda)',pad.l+w/2,pad.t-6);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Norma del gradiente (log)',0,0);ctx.restore();
+}
+
+function drawAug(){
+  const c=document.getElementById('aug-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const r=rng(4);
+  const base=Array.from({length:120},(_,i)=>ecgWave(i/120));
+  const augs=[
+    {n:'Original',f:x=>x},
+    {n:'Escalado amp.',f:x=>x.map(v=>v*1.3)},
+    {n:'Despl. temporal',f:x=>[...x.slice(20),...x.slice(0,20)]},
+    {n:'Ruido gaussiano',f:x=>x.map(v=>v+(r()-0.5)*0.3)},
+    {n:'Deriva basal',f:x=>x.map((v,i)=>v+0.3*Math.sin(i*0.1))},
+    {n:'Cutout',f:x=>x.map((v,i)=>(i>40&&i<60)?0:v)},
+  ];
+  const cols=3,rows=2;const cw=W/cols,ch=H/rows;
+  augs.forEach((a,idx)=>{
+    const row=Math.floor(idx/cols),col=idx%cols;
+    const x0=col*cw+8,y0=row*ch+16,w=cw-16,h=ch-28;
+    ctx.fillStyle='#4A5568';ctx.font='bold 8px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(a.n,x0,y0-4);
+    ctx.strokeStyle='#CBD5E0';ctx.strokeRect(x0,y0,w,h);
+    const sig=a.f(base);
+    ctx.strokeStyle='#3B82F6';ctx.lineWidth=1.3;ctx.beginPath();
+    sig.forEach((v,i)=>{const x=x0+(i/sig.length)*w;const y=y0+h/2-v*h*0.4;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+  });
+}
+
+function drawLR(){
+  const c=document.getElementById('lr-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  const pad={l:40,r:10,t:16,b:34};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const T=100,etaMin=1e-5,etaMax=1e-2,warmup=10;
+  const cosineAnneal=(t,T)=>etaMin+0.5*(etaMax-etaMin)*(1+Math.cos(Math.PI*t/T));
+  const warmupCosine=t=>t<warmup? etaMax*t/warmup : cosineAnneal(t-warmup,T-warmup);
+  const curves=[
+    {n:'Constante',c:'#6B7280',f:()=>etaMax},
+    {n:'Decaim. escalonado',c:'#F59E0B',f:t=>etaMax*Math.pow(0.5,Math.floor(t/20))},
+    {n:'Recocido coseno',c:'#3B82F6',f:t=>cosineAnneal(t,T)},
+    {n:'Calentam.+coseno',c:'#10B981',f:warmupCosine},
+  ];
+  const minL=Math.log(etaMin),maxL=Math.log(etaMax);
+  const toX=t=>pad.l+(t/(T-1))*w;
+  const toY=v=>pad.t+h-(Math.log(Math.max(v,etaMin))-minL)/(maxL-minL)*h;
+  curves.forEach(cv=>{
+    ctx.strokeStyle=cv.c;ctx.lineWidth=2;ctx.beginPath();
+    for(let t=0;t<T;t++){const v=cv.f(t);const x=toX(t),y=toY(v);t===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+  });
+  curves.forEach((cv,i)=>{
+    ctx.fillStyle=cv.c;ctx.fillRect(pad.l+(i%2)*150,H-28+Math.floor(i/2)*12,10,3);
+    ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(cv.n,pad.l+(i%2)*150+13,H-25+Math.floor(i/2)*12);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Época',pad.l+w/2,pad.t-2);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Tasa de aprendizaje (log)',0,0);ctx.restore();
+}
+
+function drawGradCAM(){
+  const c=document.getElementById('gradcam-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=340;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const pad={l:8,r:8,t:20,b:10};const w=W-pad.l-pad.r;
+  const classes=['N (normal)','V (ventricular)','S (supravent.)'];
+  const ph=(H-pad.t-pad.b)/3;
+  classes.forEach((cls,row)=>{
+    const y0=pad.t+row*ph;
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(cls,pad.l,y0+10);
+    const n=120;
+    const sig=Array.from({length:n},(_,i)=>{
+      const t=i/n;
+      if(row===1){ // V — wider QRS
+        return 0.9*Math.exp(-((t-0.22)**2)/(2*0.025**2)) - 0.5*Math.exp(-((t-0.30)**2)/(2*0.02**2));
+      }
+      return ecgWave(t);
+    });
+    const camCenter=row===1?0.27:0.22;
+    const camWidth=row===1?0.10:0.05;
+    for(let i=0;i<n-1;i++){
+      const t=i/n;
+      const heat=Math.exp(-((t-camCenter)**2)/(2*camWidth**2));
+      const r=Math.round(255-heat*30),g=Math.round(255-heat*180),b=Math.round(255-heat*220);
+      const x0=pad.l+(i/n)*w,x1=pad.l+((i+1)/n)*w;
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.fillRect(x0,y0+14,x1-x0,ph-26);
+    }
+    ctx.strokeStyle='#1B3A6B';ctx.lineWidth=1.3;ctx.beginPath();
+    sig.forEach((v,i)=>{const x=pad.l+(i/n)*w;const y=y0+14+ph/2-14-v*(ph-26)*0.35;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+  });
+  ctx.fillStyle='#8896A8';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Rojo = mayor importancia Grad-CAM',W/2,H-2);
+}
+
+function drawSanity(){
+  const c=document.getElementById('sanity-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=280;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const r=rng(8);
+  const n=120;
+  const sig=Array.from({length:n},(_,i)=>ecgWave(i/n));
+  ['Red entrenada','Red aleatoria'].forEach((lbl,row)=>{
+    const y0=20+row*130;
+    ctx.fillStyle='#4A5568';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(lbl,8,y0);
+    ctx.strokeStyle='#1B3A6B';ctx.lineWidth=1.2;ctx.beginPath();
+    sig.forEach((v,i)=>{const x=8+(i/n)*(W-16);const y=y0+45-v*30;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    ctx.fillStyle='rgba(239,68,68,0.4)';ctx.beginPath();
+    let first=true;
+    for(let i=0;i<n;i++){
+      const t=i/n;
+      const cam=row===0? Math.exp(-((t-0.22)**2)/(2*0.04**2)) : 0.3+r()*0.4;
+      const x=8+(i/n)*(W-16);const y=y0+70-cam*30;
+      if(first){ctx.moveTo(x,y0+70);first=false;}
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W-8,y0+70);ctx.closePath();ctx.fill();
+  });
+  ctx.fillStyle='#4A5568';ctx.font='8px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Comparación CAM: red entrenada (concentrado) vs aleatoria (difuso)',W/2,H-4);
+}
+
+const feedbacks={
+  q1:['¡Correcto! Con un solo ejemplo en el batch, la varianza calculada sobre el batch es 0 (o indefinida), haciendo que la normalización sea inestable o sin sentido. Layer Norm resuelve esto normalizando sobre las características de cada muestra individual, sin depender del tamaño del batch.',
+      'Incorrecto. El problema es matemático/estadístico (varianza degenerada con N=1), no relacionado con GPU/CPU ni con errores de sintaxis. La solución estándar es Layer Normalization.'],
+  q2:['¡Correcto! Cada aumentación debe corresponder a una fuente real de variabilidad clínica. Transformaciones arbitrarias de visión por computadora (como rotaciones de imagen) no tienen sentido fisiológico para ECG y pueden introducir patrones que confunden al modelo en vez de mejorar su generalización.',
+      'Incorrecto. No es una cuestión de costo computacional ni de requisitos de hardware. La razón es que la aumentación debe preservar la plausibilidad fisiológica de la señal para ser útil.'],
+  q3:['¡Correcto! El calentamiento previene actualizaciones inestables al inicio (cuando los pesos aleatorios producen gradientes poco informativos), y el recocido coseno posterior permite refinar la solución con pasos cada vez más pequeños, evitando oscilaciones grandes cerca del mínimo.',
+      'Incorrecto. El calentamiento sí aporta beneficios empíricos bien documentados, es útil con Adam y SGD por igual, y la tasa constante no necesariamente converge más rápido — de hecho, suele converger a soluciones peores en términos de generalización.'],
+  q4:['¡Correcto! αₖᶜ mide cuánto, en promedio espacial/temporal, el canal k contribuye a aumentar la puntuación de la clase c. Es esencialmente la "importancia promedio" de ese mapa de características específico para esa clase particular.',
+      'Incorrecto. αₖᶜ no mide ruido, número de neuronas activas, ni tasa de aprendizaje. Es estrictamente el promedio del gradiente de la puntuación de clase respecto a las activaciones de ese canal — una medida de relevancia para la predicción.'],
+  q5:['¡Correcto! Cuando el mapa Grad-CAM es idéntico (o muy similar) entre red entrenada y aleatoria, esto indica que el patrón probablemente proviene de la arquitectura (por ejemplo, sesgos de padding/pooling) y no del aprendizaje real. Es necesario reportar esta verificación de cordura antes de hacer cualquier afirmación clínica basada en el mapa.',
+      'Incorrecto. No es necesariamente un patrón esperado ni deseable, no se resuelve con más entrenamiento si la causa es arquitectónica, y no implica automáticamente un bug — puede ser una limitación genuina del método de explicación en ese contexto específico.'],
+};
+let answered={},score=0;
+function answer(btn,isCorrect,qid){if(answered[qid])return;answered[qid]=true;const opts=btn.closest('.quiz-options').querySelectorAll('.quiz-opt');opts.forEach(o=>o.classList.add('answered'));if(isCorrect){btn.classList.add('correct');score++;}else{btn.classList.add('wrong');opts.forEach(o=>{if(o.onclick.toString().includes('true'))o.classList.add('reveal');});}const fb=document.getElementById('fb-'+qid);fb.textContent=feedbacks[qid][isCorrect?0:1];fb.className='quiz-feedback show '+(isCorrect?'ok':'bad');if(Object.keys(answered).length===5)showScore();}
+function showScore(){document.getElementById('score-bar').style.display='flex';document.getElementById('score-text').textContent=score+' / 5';const msgs=['Repasa regularización e interpretabilidad.','Buen progreso.','¡Bien!','¡Excelente comprensión!','¡Perfecto! Módulo IV completado.'];document.getElementById('score-msg').textContent=msgs[Math.min(score,4)];}
+function resetQuiz(){answered={};score=0;document.querySelectorAll('.quiz-opt').forEach(o=>{o.className='quiz-opt';});document.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.textContent='';});document.getElementById('score-bar').style.display='none';}
+</script>
+</body></html>

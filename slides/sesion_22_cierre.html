@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Sesión 22 — Cierre del Curso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B3A6B;--teal:#1A7A8A;--teal-lt:#E8F4F6;--amber:#D97706;--amber-lt:#FEF3C7;--slate:#4A5568;--muted:#8896A8;--bg:#F7F9FC;--white:#FFFFFF;--border:#CBD5E0;--correct:#059669;--wrong:#DC2626;--radius:10px;--font-display:'DM Serif Display',Georgia,serif;--font-body:'DM Sans',system-ui,sans-serif;--font-mono:'DM Mono',monospace;--slide-w:860px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html,body{height:100%;background:var(--navy);font-family:var(--font-body)}
+.shell{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:16px}
+.slide{display:none;width:var(--slide-w);max-width:100%;background:var(--white);border-radius:16px;box-shadow:0 8px 40px rgba(27,58,107,0.16);overflow:hidden;animation:slideIn .35s cubic-bezier(.22,.68,0,1.2) both}
+.slide.active{display:flex;flex-direction:column}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.slide-header{background:var(--navy);padding:18px 28px 16px;display:flex;align-items:center;gap:12px}
+.slide-badge{background:var(--amber);color:white;font-family:var(--font-mono);font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.slide-label{color:rgba(255,255,255,.7);font-size:12px;flex:1}.slide-counter{color:rgba(255,255,255,.4);font-family:var(--font-mono);font-size:11px}
+.slide-body{padding:28px 32px 24px;flex:1;overflow-y:auto}
+.cover-body{background:linear-gradient(145deg,#78350F 0%,#1B3A6B 50%,#0A1A30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:44px 40px;min-height:440px;position:relative;overflow:hidden}
+.cover-body::before{content:'';position:absolute;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,6,.25) 0%,transparent 70%);top:-120px;right:-120px}
+.cover-tag{background:rgba(217,119,6,.25);border:1px solid rgba(253,230,138,.5);color:#FDE68A;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:20px;position:relative;z-index:1}
+.cover-title{font-family:var(--font-display);font-size:32px;line-height:1.15;color:white;margin-bottom:10px;position:relative;z-index:1}
+.cover-title em{color:#FDE68A;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;position:relative;z-index:1}
+.cover-objectives{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:18px 22px;text-align:left;max-width:620px;width:100%;position:relative;z-index:1}
+.cover-objectives h3{color:#FDE68A;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.cover-objectives li{color:rgba(255,255,255,.8);font-size:13px;line-height:1.6;list-style:none;padding-left:16px;position:relative;margin-bottom:4px}
+.cover-objectives li::before{content:'→';position:absolute;left:0;color:#FCD34D;font-size:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}.two-col.wide{grid-template-columns:3fr 2fr}
+h2.slide-title{font-family:var(--font-display);font-size:24px;color:var(--navy);margin-bottom:16px;line-height:1.2}
+h2.slide-title span{color:var(--amber)}
+h3.section{font-size:13px;font-weight:600;color:var(--amber);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+p,li{font-size:13.5px;color:var(--slate);line-height:1.65}ul{padding-left:18px}ul li{margin-bottom:4px}
+.card{background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.card.blue{background:#EFF6FF;border-left:3px solid #3B82F6}.card.teal{background:var(--teal-lt);border-left:3px solid var(--teal)}.card.amber{background:var(--amber-lt);border-left:3px solid var(--amber)}.card.green{background:#F0FDF4;border-left:3px solid #059669}.card.violet{background:#EDE9FE;border-left:3px solid #8B5CF6}.card.red{background:#FEF2F2;border-left:3px solid #EF4444}
+pre{background:#0F172A;color:#E2E8F0;border-radius:8px;padding:12px 14px;font-family:var(--font-mono);font-size:10.5px;line-height:1.6;overflow-x:auto;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+th{background:var(--amber);color:white;padding:7px 10px;text-align:left;font-weight:500}
+td{padding:6px 10px;color:var(--slate);border-bottom:1px solid var(--border)}tr:nth-child(even) td{background:var(--bg)}
+.nb-wrap{display:flex;flex-direction:column;gap:10px}.nb-label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--slate)}.nb-label::before{content:'⚡';font-size:15px}
+.nb-frame{border-radius:10px;overflow:hidden;border:2px solid var(--border)}.nb-frame iframe{display:block;width:100%;height:380px;border:none}
+.nb-fallback{font-size:11.5px;color:var(--muted);text-align:center}.nb-fallback a{color:var(--amber)}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}.summary-block{border-radius:10px;padding:14px 16px}
+.cite{margin-top:8px;padding:7px 12px;background:var(--bg);border-radius:6px;border-left:3px solid var(--muted)}.cite p{font-size:11px;color:var(--muted);line-height:1.5;margin:0}.cite a{color:var(--amber)}
+.nav-bar{display:flex;align-items:center;gap:10px;width:var(--slide-w);max-width:100%}
+.nav-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 22px;border-radius:8px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .18s ease}
+.nav-btn:hover:not(:disabled){background:rgba(255,255,255,.22)}.nav-btn:disabled{opacity:.3;cursor:default}
+.nav-btn.primary{background:var(--amber);border-color:var(--amber);margin-left:auto;color:white;font-weight:600}.nav-btn.primary:hover{background:#B45309}
+.progress-dots{flex:1;display:flex;justify-content:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .18s ease}.dot.active{background:white;transform:scale(1.3)}.dot.visited{background:var(--amber)}
+.principle{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.principle:last-child{border-bottom:none}
+.principle-num{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--amber);min-width:28px}
+.principle-title{font-weight:600;color:var(--navy);font-size:13px;margin-bottom:2px}
+.principle-body{font-size:12.5px;color:var(--slate);line-height:1.5}
+@media(max-width:900px){:root{--slide-w:100%}.two-col,.two-col.wide,.summary-grid{grid-template-columns:1fr}.cover-title{font-size:26px}}
+</style>
+</head>
+<body><div class="shell">
+
+<!-- SLIDE 1 — PORTADA -->
+<div class="slide active" id="slide-1">
+  <div class="slide-header"><span class="slide-badge">Módulo VI · Cierre del Curso</span><span class="slide-label">Sesión Final</span><span class="slide-counter">1 / 9</span></div>
+  <div class="cover-body">
+    <div class="cover-tag">Sesión 22 · Cierre</div>
+    <h1 class="cover-title">Presentaciones de Proyecto<br>y <em>Retrospectiva del Curso</em></h1>
+    <p class="cover-subtitle">Reconocimiento de Patrones y Aprendizaje Automático · M.I. Oscar Yáñez Suárez</p>
+    <div class="cover-objectives">
+      <h3>Estructura de la sesión (2.5 horas)</h3>
+      <ul>
+        <li>Presentaciones de proyecto — 90 min (5–6 min por equipo + Q&A)</li>
+        <li>Taller de crítica entre pares — 20 min</li>
+        <li>Discusión de problemas abiertos — 20 min</li>
+        <li>Retrospectiva del curso completo — 20 min</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2 — RÚBRICA -->
+<div class="slide" id="slide-2">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Rúbrica del Proyecto Final</span><span class="slide-counter">2 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Rúbrica de <span>Autoevaluación — 100 Puntos</span></h2>
+    <table style="margin-bottom:12px">
+      <tr><th>Sección</th><th>Puntos</th><th>Componentes clave</th></tr>
+      <tr><td>Planteamiento del problema y datos</td><td>20</td><td>Pregunta clínica, dataset, ética/privacidad</td></tr>
+      <tr><td>Preprocesamiento y características</td><td>20</td><td>Normalización, prevención de fuga, reproducibilidad</td></tr>
+      <tr><td>Modelado</td><td>25</td><td>≥3 modelos, CV apropiada (LOSO), incertidumbre</td></tr>
+      <tr><td>Evaluación e interpretación</td><td>20</td><td>AUROC+IC, calibración, explicabilidad, equidad</td></tr>
+      <tr><td>Presentación y reproducibilidad</td><td>15</td><td>Código limpio, README, limitaciones</td></tr>
+    </table>
+    <div class="two-col">
+      <div class="card amber">
+        <h3 class="section">Especificación de entrega</h3>
+        <p style="font-size:13px">Repositorio GitHub: <code>README.md</code>, <code>notebooks/</code>, <code>src/</code>, <code>results/</code>, <code>report.pdf</code> (6-8 páginas, estilo NeurIPS/MICCAI).</p>
+      </div>
+      <div class="card green">
+        <h3 class="section">Bandas de calificación</h3>
+        <p style="font-size:13px">A: ≥90% · B: ≥80% · C: ≥70% · D: &lt;70%<br>El 75% es el objetivo razonable para un proyecto sólido y completo.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3 — CRÍTICA ENTRE PARES -->
+<div class="slide" id="slide-3">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Plantilla de Crítica Entre Pares</span><span class="slide-counter">3 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Crítica Entre Pares — <span>Especificidad Constructiva</span></h2>
+    <p style="font-size:13px;margin-bottom:12px">El objetivo no es "los resultados fueron buenos" sino algo verificable y específico: "el AUROC de 0.89 es competitivo con el benchmark de 0.87, aunque el IC es amplio por el test pequeño."</p>
+    <pre style="font-size:10px">1. ASPECTO MÁS SÓLIDO        — ¿qué se hizo particularmente bien?
+2. PREOCUPACIÓN METODOLÓGICA — ¿qué decisión podría afectar la validez?
+3. COMPONENTE FALTANTE       — ¿qué análisis importante falta?
+4. SUGERENCIA CONCRETA       — con una semana más, ¿qué priorizar?
+5. TRASLADABILIDAD CLÍNICA   — ¿sería desplegable en la práctica real?
+
+Impresión general (1-5): rigor · relevancia · claridad · reproducibilidad</pre>
+    <div class="card violet">
+      <h3 class="section">Por qué esta estructura importa</h3>
+      <p style="font-size:13px">Forzar la especificidad (números, líneas de código, referencias) convierte la retroalimentación de un ejercicio social vago en una herramienta real de mejora científica — la misma disciplina que se espera en la revisión por pares de una revista.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4 — PROBLEMAS ABIERTOS -->
+<div class="slide" id="slide-4">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Problemas Abiertos en ML Biomédico</span><span class="slide-counter">4 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Lo que <span>Aún No Está Resuelto</span></h2>
+    <canvas id="openproblems-canvas" width="780" height="320" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+    <p style="font-size:12px;margin-top:8px;text-align:center;color:var(--muted)">7 áreas de investigación activa — cualquiera podría convertirse en una tesis doctoral o un artículo</p>
+  </div>
+</div>
+
+<!-- SLIDE 5 — MAPA DEL CURSO -->
+<div class="slide" id="slide-5">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Mapa Retrospectivo del Curso</span><span class="slide-counter">5 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">22 Sesiones — <span>El Arco Completo</span></h2>
+    <canvas id="fullmap-canvas" width="780" height="320" style="display:block;width:100%;border-radius:8px;border:1px solid var(--border);background:var(--bg)"></canvas>
+    <p style="font-size:12px;margin-top:8px;text-align:center;color:var(--muted)">Eje x: nivel de abstracción · Eje y: alcance de modalidad de datos · Color: módulo</p>
+  </div>
+</div>
+
+<!-- SLIDE 6-7 — PRINCIPIOS (split across 2 slides) -->
+<div class="slide" id="slide-6">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Principios para Llevar Adelante (1/2)</span><span class="slide-counter">6 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Qué <span>Llevarte de Este Curso</span></h2>
+    <div class="principle">
+      <div class="principle-num">1</div>
+      <div><div class="principle-title">Evalúa con honestidad</div>
+      <div class="principle-body">Usa LOSO o CV estratificada por grupo para datos fisiológicos. Un modelo que se ve bien con k-fold aleatorio pero falla en LOSO no es un modelo — es un reconocedor de sujetos.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">2</div>
+      <div><div class="principle-title">Empareja el método con el régimen de datos</div>
+      <div class="principle-body">Regresión logística + AUROC en 50 muestras supera a una CNN mal regularizada. La complejidad no es progreso. Añádela solo cuando los métodos simples fallen por una razón diagnosticable.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">3</div>
+      <div><div class="principle-title">Reporta la incertidumbre</div>
+      <div class="principle-body">Un solo número sin intervalo de confianza es un resultado incompleto. Publica la distribución, no el pico.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">4</div>
+      <div><div class="principle-title">Comprende tu métrica</div>
+      <div class="principle-body">AUROC oculta calibración. Exactitud oculta desbalance. F1 oculta sensibilidad al umbral. El análisis de curva de decisión es la métrica más honesta clínicamente y la menos usada.</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="slide-7">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Principios para Llevar Adelante (2/2)</span><span class="slide-counter">7 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Qué <span>Llevarte de Este Curso</span></h2>
+    <div class="principle">
+      <div class="principle-num">5</div>
+      <div><div class="principle-title">Explica antes de desplegar</div>
+      <div class="principle-body">Un modelo que un clínico no puede interrogar es un modelo que no usará — o peor, usará sin entender. La interpretabilidad es un prerrequisito para la confianza, no un extra.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">6</div>
+      <div><div class="principle-title">Piensa en quién no está en tu conjunto de entrenamiento</div>
+      <div class="principle-body">Cada dataset es una muestra de una población. Pregunta quién fue excluido, por qué, y qué significa para el comportamiento del modelo en personas subrrepresentadas.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">7</div>
+      <div><div class="principle-title">La reproducibilidad es una forma de respeto</div>
+      <div class="principle-body">El revisor que no puede ejecutar tu código, el clínico que no puede replicar tus resultados, y el paciente afectado por tu modelo merecen un pipeline que puedan inspeccionar.</div></div>
+    </div>
+    <div class="principle">
+      <div class="principle-num">8</div>
+      <div><div class="principle-title">Mantente actualizado, mantente humilde</div>
+      <div class="principle-body">Los métodos de este curso quedarán parcialmente obsoletos en cinco años. El pensamiento estadístico, los hábitos de evaluación crítica, y los marcos éticos no lo harán.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 8 — CUADERNO -->
+<div class="slide" id="slide-8">
+  <div class="slide-header"><span class="slide-badge">Módulo VI</span><span class="slide-label">Cuaderno y Especificación Final</span><span class="slide-counter">8 / 9</span></div>
+  <div class="slide-body" style="padding-bottom:16px">
+    <h2 class="slide-title">Cuaderno Jupyter — <span>Herramientas para el Cierre</span></h2>
+    <p style="margin-bottom:14px;font-size:13px">Implementa la rúbrica de autoevaluación visualizada con gráfico de barras y pastel, la plantilla completa de crítica entre pares, la galería de 7 problemas abiertos en ML biomédico, el mapa retrospectivo de las 22 sesiones del curso completo, y los 8 principios finales para llevar adelante en tu carrera profesional.</p>
+    <div class="nb-wrap">
+      <div class="nb-label">JupyterLite — ejecuta el código directamente en tu navegador, sin instalación</div>
+      <div class="nb-frame"><iframe src="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_22_cierre.ipynb" title="Cuaderno Sesión 22" allow="cross-origin-isolated" loading="lazy"></iframe></div>
+      <p class="nb-fallback">¿No carga? <a href="https://oscarys.github.io/lini-jupyterlite/notebooks/?path=sesion_22_cierre.ipynb" target="_blank">Ábrelo en una pestaña nueva →</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 9 — CIERRE FINAL -->
+<div class="slide" id="slide-9">
+  <div class="slide-header"><span class="slide-badge">Módulo VI · Fin</span><span class="slide-label">Cierre del Curso Completo</span><span class="slide-counter">9 / 9</span></div>
+  <div class="slide-body">
+    <h2 class="slide-title">Gracias — <span>22 Sesiones Después</span></h2>
+    <div class="summary-grid" style="margin-top:6px">
+      <div class="summary-block" style="background:#EFF6FF;border-left:3px solid #3B82F6">
+        <h4 style="color:#3B82F6;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Módulo I-III: Fundamentos</h4>
+        <p style="font-size:13px">Probabilidad bayesiana, métricas de evaluación, validación rigurosa, modelos discriminativos clásicos, y modelos generativos (GMM, HMM) — las bases que nunca dejan de ser relevantes.</p>
+      </div>
+      <div class="summary-block" style="background:#FEF2F2;border-left:3px solid #EF4444">
+        <h4 style="color:#EF4444;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Módulo IV-V: Deep Learning</h4>
+        <p style="font-size:13px">Backpropagation desde cero, CNN, RNN/LSTM, Transformers, modelos generativos modernos (VAE/GAN/Difusión/LLM), y aprendizaje autosupervisado — el estado del arte actual.</p>
+      </div>
+    </div>
+    <div class="card amber" style="margin-top:8px">
+      <h3 class="section">Módulo VI: Integración y responsabilidad</h3>
+      <p style="font-size:13px">Sesgo algorítmico, deriva de dataset, privacidad, regulación, y los principios éticos que deben acompañar cada decisión técnica — la ingeniería biomédica con IA es, ante todo, una práctica de responsabilidad sobre vidas humanas.</p>
+    </div>
+    <div style="background:linear-gradient(135deg,#78350F,#1B3A6B);border-radius:10px;padding:20px 24px;margin-top:14px;text-align:center">
+      <p style="font-size:15px;color:#FDE68A;font-weight:600;margin-bottom:6px">El curso termina aquí. La práctica responsable de ML biomédico, no.</p>
+      <p style="font-size:12.5px;color:rgba(255,255,255,.75)">Licenciado bajo GPL-3.0 — contribuye correcciones y nuevos ejemplos al repositorio del curso.</p>
+    </div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" id="btn-prev" onclick="go(-1)" disabled>← Anterior</button>
+  <div class="progress-dots" id="dots"></div>
+  <button class="nav-btn primary" id="btn-next" onclick="go(1)">Siguiente →</button>
+</div>
+</div>
+<script>
+const N_SLIDES=9;let current=1;
+const dotsEl=document.getElementById('dots');
+for(let i=1;i<=N_SLIDES;i++){const d=document.createElement('div');d.className='dot'+(i===1?' active':'');d.onclick=()=>goTo(i);dotsEl.appendChild(d);}
+function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>{d.className='dot'+(i+1===current?' active':'')+(i+1<current?' visited':'');});}
+function goTo(n){document.getElementById('slide-'+current).classList.remove('active');current=Math.max(1,Math.min(N_SLIDES,n));const s=document.getElementById('slide-'+current);s.classList.add('active');s.style.animation='none';s.offsetHeight;s.style.animation='';document.getElementById('btn-prev').disabled=current===1;document.getElementById('btn-next').disabled=current===N_SLIDES;updateDots();window.scrollTo({top:0,behavior:'smooth'});if(current===4)drawOpenProblems();if(current===5)drawFullMap();}
+function go(dir){goTo(current+dir);}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')go(1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(-1);});
+
+function drawOpenProblems(){
+  const c=document.getElementById('openproblems-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=320;c.width=W;c.height=H;
+  ctx.clearRect(0,0,W,H);
+  const problems=[
+    {area:'Generalización',c:'#3B82F6',p:'Generalización entre sitios sin compartir datos'},
+    {area:'Etiquetas',c:'#F59E0B',p:'Aprender de pocos ejemplos biomédicos etiquetados'},
+    {area:'Temporal',c:'#10B981',p:'Trayectorias de pacientes a largo plazo'},
+    {area:'Causalidad',c:'#EF4444',p:'Predecir efectos de intervenciones, no solo asociaciones'},
+    {area:'Multimodal',c:'#8B5CF6',p:'Combinar EEG, fMRI, notas clínicas, genómica'},
+    {area:'Incertidumbre',c:'#92400E',p:'Saber cuándo el modelo no sabe'},
+    {area:'Continuo',c:'#0D9488',p:'Actualizar modelos sin olvido catastrófico'},
+  ];
+  const rh=H/problems.length;
+  problems.forEach((p,i)=>{
+    const y=i*rh+rh/2;
+    ctx.fillStyle=p.c;ctx.globalAlpha=0.85;
+    ctx.beginPath();ctx.roundRect(8,i*rh+4,120,rh-8,6);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='white';ctx.font='bold 9px DM Sans,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(p.area,68,y);
+    ctx.fillStyle='#1B3A6B';ctx.font='10px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(p.p,140,y);
+  });
+}
+
+function drawFullMap(){
+  const c=document.getElementById('fullmap-canvas');if(!c||c.dataset.drawn)return;c.dataset.drawn='1';
+  const ctx=c.getContext('2d'),W=c.offsetWidth,H=320;c.width=W;c.height=H;
+  const pad={l:40,r:20,t:30,b:36};const w=W-pad.l-pad.r,h=H-pad.t-pad.b;
+  ctx.clearRect(0,0,W,H);
+  const sessions=[
+    [1,1.0,3.0,'I','S01'],[2,1.2,3.2,'I','S02'],[3,1.4,2.8,'I','S03'],[4,1.5,2.6,'I','S04'],[5,1.8,4.0,'I','S05'],
+    [6,2.2,2.5,'II','S06'],[7,2.4,3.5,'II','S07'],[8,2.6,2.2,'II','S08'],[9,2.8,2.8,'II','S09'],
+    [10,3.2,4.2,'III','S10'],[11,3.4,4.5,'III','S11'],
+    [12,4.2,3.0,'IV','S12'],[13,5.0,5.0,'IV','S13'],[14,5.2,4.8,'IV','S14'],[15,4.8,3.5,'IV','S15'],
+    [16,6.0,4.5,'V','S16'],[17,6.5,3.8,'V','S17'],[18,7.0,6.0,'V','S18'],[19,7.5,6.5,'V','S19'],[20,6.8,5.5,'V','S20'],
+    [21,5.5,2.0,'VI','S21'],[22,5.0,2.5,'VI','S22'],
+  ];
+  const colors={'I':'#5B9BD5','II':'#ED7D31','III':'#70AD47','IV':'#FFC000','V':'#FF0000','VI':'#7030A0'};
+  const toX=v=>pad.l+(v/8.5)*w;
+  const toY=v=>pad.t+h-(v/8)*h;
+  ctx.fillStyle='rgba(59,130,246,0.04)';ctx.fillRect(toX(0),pad.t,toX(4.5)-toX(0),h);
+  ctx.fillStyle='rgba(239,68,68,0.04)';ctx.fillRect(toX(4.5),pad.t,toX(8.5)-toX(4.5),h);
+  ctx.fillStyle='#3B82F6';ctx.font='italic 9px DM Sans,sans-serif';ctx.textAlign='left';ctx.fillText('ML Clásico',toX(0.3),pad.t+12);
+  ctx.fillStyle='#EF4444';ctx.fillText('Deep Learning',toX(5.8),pad.t+12);
+  sessions.forEach(([s,x,y,mod,lbl])=>{
+    const cx=toX(x),cy=toY(y);
+    ctx.fillStyle=colors[mod];ctx.beginPath();ctx.arc(cx,cy,5,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle='white';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=colors[mod];ctx.font='7px DM Sans,sans-serif';ctx.textAlign='left';
+    ctx.fillText(lbl,cx+6,cy+3);
+  });
+  ctx.fillStyle='#4A5568';ctx.font='9px DM Sans,sans-serif';ctx.textAlign='center';
+  ctx.fillText('Nivel de abstracción (estadístico → profundo)',pad.l+w/2,H-6);
+  ctx.save();ctx.translate(12,pad.t+h/2);ctx.rotate(-Math.PI/2);ctx.fillText('Modalidad de datos (tabular → generativo)',0,0);ctx.restore();
+}
+</script>
+</body></html>
